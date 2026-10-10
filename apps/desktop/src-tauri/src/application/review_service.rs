@@ -30,13 +30,29 @@ impl<C: CardRepository, R: ReviewRepository, D: DeckRepository> ReviewService<C,
         }
     }
 
+    /// Default review window size — keeps IPC/memory bounded for large due queues.
+    pub const DEFAULT_DUE_WINDOW: u32 = 40;
+    const MAX_DUE_WINDOW: u32 = 100;
+
     pub fn list_due(
         &self,
         deck_id: Option<Uuid>,
         now: Option<DateTime<Utc>>,
     ) -> JabeXResult<Vec<Card>> {
+        self.list_due_window(deck_id, now, Some(Self::DEFAULT_DUE_WINDOW))
+    }
+
+    pub fn list_due_window(
+        &self,
+        deck_id: Option<Uuid>,
+        now: Option<DateTime<Utc>>,
+        limit: Option<u32>,
+    ) -> JabeXResult<Vec<Card>> {
         let now = now.unwrap_or_else(now_utc);
-        self.cards.list_due(deck_id, now)
+        let limit = limit
+            .unwrap_or(Self::DEFAULT_DUE_WINDOW)
+            .clamp(1, Self::MAX_DUE_WINDOW);
+        self.cards.list_due_limited(deck_id, now, limit)
     }
 
     pub fn load_profile_algorithm(&self) -> JabeXResult<ProfileLeitnerSettings> {

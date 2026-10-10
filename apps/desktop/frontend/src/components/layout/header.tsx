@@ -2,6 +2,7 @@
 
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { GlobalSearch } from "@/components/search/global-search";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +27,7 @@ export function Header({
   const toggleLabel = collapsed ? t.sidebar.expand : t.sidebar.collapse;
 
   return (
-    <header className="flex h-14 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <header className="flex h-14 items-center justify-between gap-3 border-b border-border bg-background/80 px-4 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="flex min-w-0 items-center gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
@@ -49,7 +50,7 @@ export function Header({
           <TooltipContent side="bottom">{toggleLabel}</TooltipContent>
         </Tooltip>
 
-        <div className="min-w-0">
+        <div className="min-w-0 max-sm:hidden">
           <h1 className="truncate text-sm font-semibold tracking-tight">
             {t.header.title}
           </h1>
@@ -57,6 +58,10 @@ export function Header({
             {t.header.foundation}
           </p>
         </div>
+      </div>
+
+      <div className="flex min-w-0 flex-1 justify-center px-2">
+        <GlobalSearch />
       </div>
 
       <div className="flex shrink-0 items-center gap-2">

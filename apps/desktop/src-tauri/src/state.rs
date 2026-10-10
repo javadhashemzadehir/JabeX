@@ -6,17 +6,19 @@ use uuid::Uuid;
 
 use crate::application::{
     AppPreferencesService, AttachmentService, BackupService, CardService, DeckService, InkService,
-    LanguageAssistService, MediaLibraryService, ProfileService, ReviewService, SettingsService,
-    StatsService, StudyActivityService, TrashService,
+    LanguageAssistService, MediaLibraryService, ProfileService, ReviewService, SearchService,
+    SettingsService, StatsService, StudyActivityService, TrashService,
 };
 use crate::domain::errors::JabeXResult;
 use crate::domain::profile::Profile;
+use crate::domain::search::SearchEntityType;
 use crate::infrastructure::database::{open_profile_database, AppPaths, Database};
 use crate::infrastructure::filesystem::LocalMediaStorage;
 use crate::infrastructure::registry::ProfileRegistry;
 use crate::infrastructure::repositories::{
     SqliteAttachmentRepository, SqliteCardRepository, SqliteDeckRepository,
-    SqliteInkDocumentRepository, SqliteReviewRepository, SqliteStudyActivityRepository,
+    SqliteInkDocumentRepository, SqliteRecentSearchRepository, SqliteReviewRepository,
+    SqliteSearchHistoryRepository, SqliteSearchIndexRepository, SqliteStudyActivityRepository,
     SqliteTrashRepository,
 };
 
@@ -44,6 +46,14 @@ pub struct ProfileSession {
     >,
     pub stats: StatsService,
     pub study_activity: StudyActivityService<SqliteStudyActivityRepository, SqliteReviewRepository>,
+    pub search: SearchService<
+        SqliteSearchIndexRepository,
+        SqliteRecentSearchRepository,
+        SqliteSearchHistoryRepository,
+        SqliteCardRepository,
+        SqliteDeckRepository,
+        SqliteAttachmentRepository,
+    >,
 }
 
 impl ProfileSession {
@@ -92,9 +102,52 @@ impl ProfileSession {
                 SqliteReviewRepository::new(db.clone()),
                 profile_id,
             ),
+            search: SearchService::new(
+                SqliteSearchIndexRepository::new(db.clone()),
+                SqliteRecentSearchRepository::new(db.clone()),
+                SqliteSearchHistoryRepository::new(db.clone()),
+                SqliteCardRepository::new(db.clone()),
+                SqliteDeckRepository::new(db.clone()),
+                SqliteAttachmentRepository::new(db.clone()),
+                profile_id,
+            ),
             media,
             db,
         }
+    }
+
+    /// Best-effort incremental index update after card mutations.
+    pub fn reindex_card(&self, card_id: uuid::Uuid) -> JabeXResult<()> {
+        let card = match self.cards.get_card(card_id) {
+            Ok(card) => card,
+            Err(_) => {
+                self.search
+                    .remove_entity(SearchEntityType::Card, &card_id.to_string())?;
+                return Ok(());
+            }
+        };
+        let deck_name = self
+            .decks
+            .get_deck(card.deck_id)
+            .map(|d| d.name)
+            .unwrap_or_default();
+        let attachments = self
+            .attachments
+            .list_attachments(crate::domain::attachment::AttachmentOwner::Card, card.id)?;
+        self.search.index_card(&card, &deck_name, &attachments)
+    }
+
+    pub fn reindex_deck(&self, deck_id: uuid::Uuid) -> JabeXResult<()> {
+        let deck = match self.decks.get_deck(deck_id) {
+            Ok(deck) => deck,
+            Err(_) => {
+                self.search
+                    .remove_entity(SearchEntityType::Deck, &deck_id.to_string())?;
+                return Ok(());
+            }
+        };
+        let count = self.cards.count_cards(deck_id)?;
+        self.search.index_deck(&deck, count)
     }
 }
 
@@ -221,6 +274,50 @@ impl AppState {
         };
         let service = LanguageAssistService::from_session(db, media);
         service.process_card(card_id, force)
+    }
+
+    /// Run language assist off the async IPC worker.
+    ///
+    /// `reqwest::blocking` (Google translate/TTS) builds its own Tokio runtime;
+    /// dropping that runtime on a `tokio-rt-worker` panics. Always call this from
+    /// async commands instead of [`Self::run_language_assist`].
+    pub async fn run_language_assist_blocking(
+        &self,
+        card_id: Uuid,
+        force: bool,
+    ) -> JabeXResult<crate::domain::card::Card> {
+        let (db, media) = {
+            let session = self.session.read();
+            (session.db.clone(), session.media.clone())
+        };
+        tokio::task::spawn_blocking(move || {
+            LanguageAssistService::from_session(db, media).process_card(card_id, force)
+        })
+        .await
+        .map_err(|err| crate::domain::errors::JabeXError::Internal(format!(
+            "language assist task failed: {err}"
+        )))?
+    }
+
+    /// Persist per-card overrides then re-run assist on a blocking thread.
+    pub async fn set_card_language_assist_blocking(
+        &self,
+        card_id: Uuid,
+        overrides: crate::domain::language_assist::LanguageAssistOverrides,
+    ) -> JabeXResult<crate::domain::card::Card> {
+        let (db, media) = {
+            let session = self.session.read();
+            (session.db.clone(), session.media.clone())
+        };
+        tokio::task::spawn_blocking(move || {
+            let service = LanguageAssistService::from_session(db, media);
+            let _ = service.set_card_overrides(card_id, overrides)?;
+            service.process_card(card_id, true)
+        })
+        .await
+        .map_err(|err| crate::domain::errors::JabeXError::Internal(format!(
+            "language assist task failed: {err}"
+        )))?
     }
 
     pub fn language_assist_settings(

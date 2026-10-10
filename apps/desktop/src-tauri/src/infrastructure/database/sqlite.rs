@@ -291,9 +291,13 @@ mod tests {
                 "attachments",
                 "ink_documents",
                 "settings",
+                "search_index",
+                "recent_searches",
+                "search_history",
             ] {
                 assert!(table_exists(conn, table)?, "missing table {table}");
             }
+            assert!(table_exists(conn, "search_index_fts")?);
             assert!(!table_exists(conn, "drawings")?, "legacy drawings should be gone");
 
             for column in [
@@ -347,7 +351,7 @@ mod tests {
             })
             .expect("version2");
         assert_eq!(version1, version2);
-        assert!(version2 >= 7, "expected migrations through V7, got {version2}");
+        assert!(version2 >= 9, "expected migrations through V9, got {version2}");
     }
 
     #[test]

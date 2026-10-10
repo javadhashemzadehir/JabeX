@@ -10,6 +10,7 @@ export function DeckCardsView() {
   const t = useTranslations();
   const searchParams = useSearchParams();
   const deckId = searchParams.get("id");
+  const openCreate = searchParams.get("create") === "1";
 
   if (!deckId) {
     return (
@@ -22,5 +23,5 @@ export function DeckCardsView() {
     );
   }
 
-  return <CardsPanel deckId={deckId} />;
+  return <CardsPanel deckId={deckId} openCreate={openCreate} />;
 }

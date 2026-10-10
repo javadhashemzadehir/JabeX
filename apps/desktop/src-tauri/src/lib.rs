@@ -114,6 +114,15 @@ pub fn run() {
             commands::list_deleted_items,
             commands::restore_item,
             commands::permanently_delete_item,
+            commands::search_global,
+            commands::rebuild_search_index,
+            commands::list_recent_searches,
+            commands::clear_recent_searches,
+            commands::delete_recent_search,
+            commands::list_popular_searches,
+            commands::record_search_selection,
+            commands::list_search_history,
+            commands::clear_search_history,
         ])
         .run(tauri::generate_context!())
         .expect("error while running JabeX");

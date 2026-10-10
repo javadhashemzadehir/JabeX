@@ -63,6 +63,20 @@ pub const CARD_LIST_BY_DECK_ACTIVE: &str = "SELECT id, deck_id, card_type, front
  WHERE deck_id = ?1 AND deleted_at IS NULL
  ORDER BY created_at ASC";
 
+pub const CARD_LIST_BY_DECK_ACTIVE_PAGE: &str = "SELECT id, deck_id, card_type, front_content, back_content,
+        box_position, due_at, state, review_count, lapse_count,
+        difficulty, revision, created_at, updated_at, deleted_at,
+        detected_language, translation, pronunciation_audio_path,
+        transliteration_json, language_assist_status, deleted_by,
+        language_assist_overrides_json
+ FROM cards
+ WHERE deck_id = ?1 AND deleted_at IS NULL
+ ORDER BY created_at ASC
+ LIMIT ?2 OFFSET ?3";
+
+pub const CARD_COUNT_BY_DECK_ACTIVE: &str =
+    "SELECT COUNT(*) FROM cards WHERE deck_id = ?1 AND deleted_at IS NULL";
+
 pub const CARD_LIST_BY_DECK_ALL: &str = "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
@@ -100,6 +114,18 @@ pub const CARD_LIST_DUE_BY_DECK: &str = "SELECT id, deck_id, card_type, front_co
    AND state != 'suspended'
  ORDER BY due_at ASC";
 
+pub const CARD_LIST_DUE_BY_DECK_LIMITED: &str = "SELECT id, deck_id, card_type, front_content, back_content,
+        box_position, due_at, state, review_count, lapse_count,
+        difficulty, revision, created_at, updated_at, deleted_at,
+        detected_language, translation, pronunciation_audio_path,
+        transliteration_json, language_assist_status, deleted_by,
+        language_assist_overrides_json
+ FROM cards
+ WHERE deck_id = ?1 AND deleted_at IS NULL AND due_at <= ?2
+   AND state != 'suspended'
+ ORDER BY due_at ASC
+ LIMIT ?3";
+
 pub const CARD_LIST_DUE_ALL: &str = "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
@@ -110,3 +136,15 @@ pub const CARD_LIST_DUE_ALL: &str = "SELECT id, deck_id, card_type, front_conten
  WHERE deleted_at IS NULL AND due_at <= ?1
    AND state != 'suspended'
  ORDER BY due_at ASC";
+
+pub const CARD_LIST_DUE_ALL_LIMITED: &str = "SELECT id, deck_id, card_type, front_content, back_content,
+        box_position, due_at, state, review_count, lapse_count,
+        difficulty, revision, created_at, updated_at, deleted_at,
+        detected_language, translation, pronunciation_audio_path,
+        transliteration_json, language_assist_status, deleted_by,
+        language_assist_overrides_json
+ FROM cards
+ WHERE deleted_at IS NULL AND due_at <= ?1
+   AND state != 'suspended'
+ ORDER BY due_at ASC
+ LIMIT ?2";

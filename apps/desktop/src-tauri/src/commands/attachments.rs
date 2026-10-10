@@ -37,14 +37,14 @@ pub async fn create_attachment(
     tracing::debug!(command = "create_attachment", "command invoked");
     let owner = parse_owner(&input.owner_type)?;
     state.with_session(|session| {
-        if let Some(path) = input.source_path.as_ref() {
+        let attachment = if let Some(path) = input.source_path.as_ref() {
             session.attachments.create_from_path(
                 owner,
                 input.owner_id,
                 path,
                 Some(input.file_name.clone()),
                 input.mime_type.clone(),
-            )
+            )?
         } else if let Some(bytes) = input.bytes.as_ref() {
             session.attachments.create_from_bytes(
                 owner,
@@ -52,12 +52,17 @@ pub async fn create_attachment(
                 input.file_name.clone(),
                 input.mime_type.clone(),
                 bytes,
-            )
+            )?
         } else {
-            Err(JabeXError::Validation(
+            return Err(JabeXError::Validation(
                 "create_attachment requires bytes or sourcePath".into(),
-            ))
+            ));
+        };
+        let _ = session.search.index_attachment(&attachment);
+        if owner == AttachmentOwner::Card {
+            let _ = session.reindex_card(input.owner_id);
         }
+        Ok(attachment)
     })
 }
 
@@ -76,6 +81,10 @@ pub async fn delete_attachment(state: State<'_, AppState>, id: Uuid) -> Result<(
     tracing::debug!(command = "delete_attachment", "command invoked");
     let deleted_by = state.active_profile_id();
     state.with_session(|session| {
+        let _ = session.search.remove_entity(
+            crate::domain::search::SearchEntityType::Attachment,
+            &id.to_string(),
+        );
         session.trash.soft_delete_item(
             crate::domain::trash::TrashEntityKind::Attachment,
             id,

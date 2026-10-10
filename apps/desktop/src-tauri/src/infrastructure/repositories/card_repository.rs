@@ -82,6 +82,35 @@ impl CardRepository for SqliteCardRepository {
         self.list_by_deck_all(deck_id, false)
     }
 
+    fn list_by_deck_page(
+        &self,
+        deck_id: Uuid,
+        limit: u32,
+        offset: u32,
+    ) -> JabeXResult<Vec<Card>> {
+        self.db.with_conn(|conn| {
+            let mut stmt = conn.prepare(cards::CARD_LIST_BY_DECK_ACTIVE_PAGE)?;
+            let rows = stmt
+                .query_map(
+                    params![deck_id.to_string(), limit as i64, offset as i64],
+                    map_card,
+                )?
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(rows)
+        })
+    }
+
+    fn count_by_deck(&self, deck_id: Uuid) -> JabeXResult<u32> {
+        self.db.with_conn(|conn| {
+            let count: i64 = conn.query_row(
+                cards::CARD_COUNT_BY_DECK_ACTIVE,
+                params![deck_id.to_string()],
+                |row| row.get(0),
+            )?;
+            Ok(count.max(0) as u32)
+        })
+    }
+
     fn list_by_deck_all(&self, deck_id: Uuid, include_deleted: bool) -> JabeXResult<Vec<Card>> {
         self.db.with_conn(|conn| {
             let sql = if include_deleted {
@@ -125,6 +154,31 @@ impl CardRepository for SqliteCardRepository {
                 let mut stmt = conn.prepare(cards::CARD_LIST_DUE_ALL)?;
                 let rows = stmt
                     .query_map(params![now_s], map_card)?
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(rows)
+            }
+        })
+    }
+
+    fn list_due_limited(
+        &self,
+        deck_id: Option<Uuid>,
+        now: DateTime<Utc>,
+        limit: u32,
+    ) -> JabeXResult<Vec<Card>> {
+        self.db.with_conn(|conn| {
+            let now_s = now.to_rfc3339();
+            let limit_i = limit as i64;
+            if let Some(deck_id) = deck_id {
+                let mut stmt = conn.prepare(cards::CARD_LIST_DUE_BY_DECK_LIMITED)?;
+                let rows = stmt
+                    .query_map(params![deck_id.to_string(), now_s, limit_i], map_card)?
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(rows)
+            } else {
+                let mut stmt = conn.prepare(cards::CARD_LIST_DUE_ALL_LIMITED)?;
+                let rows = stmt
+                    .query_map(params![now_s, limit_i], map_card)?
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(rows)
             }

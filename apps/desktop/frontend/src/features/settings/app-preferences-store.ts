@@ -1,7 +1,8 @@
 "use client";
 
 import { create } from "zustand";
-import type { AppPreferences } from "@jabex/types";
+import type { AppPreferences, KeyboardShortcuts } from "@jabex/types";
+import { DEFAULT_KEYBOARD_SHORTCUTS } from "@/features/shortcuts/defaults";
 import { api, isTauri } from "@/lib/tauri";
 
 const defaults: AppPreferences = {
@@ -9,7 +10,19 @@ const defaults: AppPreferences = {
   closeButtonHidesToTray: true,
   startMinimized: false,
   launchOnStartup: false,
+  keyboardShortcuts: { ...DEFAULT_KEYBOARD_SHORTCUTS },
 };
+
+function mergePreferences(prefs: AppPreferences): AppPreferences {
+  return {
+    ...defaults,
+    ...prefs,
+    keyboardShortcuts: {
+      ...DEFAULT_KEYBOARD_SHORTCUTS,
+      ...(prefs.keyboardShortcuts ?? {}),
+    },
+  };
+}
 
 interface AppPreferencesState {
   preferences: AppPreferences;
@@ -19,6 +32,11 @@ interface AppPreferencesState {
   desktop: boolean;
   hydrate: () => Promise<void>;
   update: (patch: Partial<AppPreferences>) => Promise<AppPreferences | null>;
+  setShortcut: (
+    action: keyof KeyboardShortcuts,
+    chord: string,
+  ) => Promise<AppPreferences | null>;
+  resetShortcuts: () => Promise<AppPreferences | null>;
 }
 
 export const useAppPreferencesStore = create<AppPreferencesState>((set, get) => ({
@@ -34,7 +52,7 @@ export const useAppPreferencesStore = create<AppPreferencesState>((set, get) => 
     }
     set({ loading: true, error: null, desktop: true });
     try {
-      const preferences = await api.getAppPreferences();
+      const preferences = mergePreferences(await api.getAppPreferences());
       set({ preferences, loading: false });
     } catch (err) {
       set({
@@ -45,10 +63,10 @@ export const useAppPreferencesStore = create<AppPreferencesState>((set, get) => 
   },
   update: async (patch) => {
     if (!isTauri()) return null;
-    const next = { ...get().preferences, ...patch };
+    const next = mergePreferences({ ...get().preferences, ...patch });
     set({ saving: true, error: null, preferences: next });
     try {
-      const preferences = await api.setAppPreferences(next);
+      const preferences = mergePreferences(await api.setAppPreferences(next));
       set({ preferences, saving: false });
       return preferences;
     } catch (err) {
@@ -58,5 +76,17 @@ export const useAppPreferencesStore = create<AppPreferencesState>((set, get) => 
       });
       throw err;
     }
+  },
+  setShortcut: async (action, chord) => {
+    const keyboardShortcuts = {
+      ...get().preferences.keyboardShortcuts,
+      [action]: chord,
+    };
+    return get().update({ keyboardShortcuts });
+  },
+  resetShortcuts: async () => {
+    return get().update({
+      keyboardShortcuts: { ...DEFAULT_KEYBOARD_SHORTCUTS },
+    });
   },
 }));

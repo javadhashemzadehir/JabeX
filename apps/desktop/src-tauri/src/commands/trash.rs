@@ -31,7 +31,31 @@ pub async fn restore_item(
         id = %input.id,
         "command invoked"
     );
-    state.with_session(|session| session.trash.restore_item(input.entity_kind, input.id))
+    state.with_session(|session| {
+        session
+            .trash
+            .restore_item(input.entity_kind, input.id)?;
+        match input.entity_kind {
+            TrashEntityKind::Card => {
+                let _ = session.reindex_card(input.id);
+            }
+            TrashEntityKind::Deck => {
+                let _ = session.reindex_deck(input.id);
+                if let Ok(cards) = session.cards.list_cards(input.id) {
+                    for card in cards {
+                        let _ = session.reindex_card(card.id);
+                    }
+                }
+            }
+            TrashEntityKind::Attachment => {
+                if let Ok(att) = session.attachments.get_attachment(input.id) {
+                    let _ = session.search.index_attachment(&att);
+                }
+            }
+            TrashEntityKind::InkDocument => {}
+        }
+        Ok(())
+    })
 }
 
 #[tauri::command]

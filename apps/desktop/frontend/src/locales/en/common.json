@@ -21,13 +21,61 @@
     "title": "JabeX",
     "foundation": "Local profiles · offline study"
   },
+  "search": {
+    "title": "Search",
+    "open": "Open search",
+    "placeholder": "Search everything…",
+    "loading": "Searching…",
+    "empty": "No results",
+    "error": "Search failed",
+    "results": "Results",
+    "recent": "Recent searches",
+    "recentEmpty": "Type to search cards, decks, tags, and commands.",
+    "clearRecent": "Clear all",
+    "removeRecent": "Remove this search",
+    "popular": "Popular searches",
+    "filtersLabel": "Search filters",
+    "desktopOnly": "Global search runs in the desktop app.",
+    "filters": {
+      "all": "All",
+      "cards": "Cards",
+      "decks": "Decks",
+      "tags": "Tags",
+      "reviews": "Reviews",
+      "commands": "Commands"
+    },
+    "entity": {
+      "card": "Card",
+      "deck": "Deck",
+      "tag": "Tag",
+      "review": "Review",
+      "note": "Note",
+      "attachment": "Attachment",
+      "setting": "Setting",
+      "command": "Command"
+    }
+  },
   "home": {
     "welcome": "Welcome to JabeX",
     "description": "Study with a private Leitner box. Switch local profiles on this device, and back up with a portable .jbx file — no account required.",
     "cta": "Create your first deck",
     "ctaHint": "Aim for under 30 seconds — name it and start adding cards next.",
+    "ctaNew": "Create new deck",
+    "ctaNewHint": "Open decks to add another, organize cards, or start a review.",
+    "sampleCta": "Try a sample deck",
+    "sampleHint": "Three practice cards — start a review in under two minutes. You can delete the sample anytime.",
+    "sampleCreated": "Sample deck ready — open Review when you want to study.",
     "dueToday": "Cards due",
     "profiles": "Local profiles"
+  },
+  "onboarding": {
+    "sampleDeckName": "Sample — Getting started",
+    "sampleDeckDescription": "A few practice cards so you can try a review right away. Safe to delete.",
+    "sampleCards": [
+      { "front": "Hello", "back": "A greeting — say this when you meet someone." },
+      { "front": "Leitner box", "back": "A spaced-repetition system that moves cards up or down by how well you recall them." },
+      { "front": "Private by default", "back": "JabeX keeps decks and progress on this device — no account required." }
+    ]
   },
   "stats": {
     "title": "Study progress",
@@ -98,9 +146,11 @@
     "loading": "Loading due cards…",
     "emptyTitle": "Nothing due right now",
     "emptyHint": "Add cards in a deck, or come back when reviews are due.",
+    "emptyHintDeck": "This deck has nothing due. Add cards, then come back to review.",
     "sessionDoneTitle": "Session complete",
     "sessionDoneHint": "You reviewed {count} cards. Great work — data stayed on this device.",
     "goToDecks": "Go to decks",
+    "addCards": "Add cards",
     "refresh": "Check again",
     "progress": "{done} of {total} reviewed",
     "remaining": "{count} left",
@@ -130,8 +180,6 @@
     "toolbar": "Formatting",
     "modes": "Editor modes",
     "modeEdit": "Edit",
-    "modePreview": "Preview",
-    "modeJson": "JSON",
     "modeMarkdown": "Markdown",
     "copy": "Copy",
     "cancel": "Cancel",
@@ -175,7 +223,6 @@
     "tableMerge": "Merge cells",
     "tableSplit": "Split cell",
     "tableDelete": "Delete table",
-    "jsonInvalid": "Invalid JSON document",
     "jsonPasteTitle": "Paste JSON",
     "jsonPasteDescription": "This clipboard content looks like JSON. Paste it as a rich document or as a formatted code block.",
     "jsonPasteAsDocument": "Paste as JSON document",
@@ -461,6 +508,24 @@
       "startMinimizedHint": "Launch hidden in the tray (requires tray enabled).",
       "launchOnStartup": "Launch on system startup",
       "launchOnStartupHint": "Start JabeX when you sign in to Windows (current user only)."
+    },
+    "shortcuts": {
+      "title": "Keyboard shortcuts",
+      "description": "Every shortcut has a default and can be changed. These apply to the whole device.",
+      "change": "Change",
+      "cancel": "Cancel",
+      "resetAll": "Reset to defaults",
+      "pressKeys": "Press the new keys… (Esc to cancel)",
+      "conflict": "That shortcut is already used by “{action}”.",
+      "actions": {
+        "openSearch": "Open search",
+        "reviewFlipOrGood": "Reveal answer / grade Good",
+        "reviewFlipOrGoodAlt": "Reveal answer / grade Good (alternate)",
+        "reviewGradeAgain": "Grade: Again",
+        "reviewGradeHard": "Grade: Hard",
+        "reviewGradeGood": "Grade: Good",
+        "reviewGradeEasy": "Grade: Easy"
+      }
     }
   },
   "theme": {

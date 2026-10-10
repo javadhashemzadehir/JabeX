@@ -299,6 +299,31 @@ export interface Card {
   deletedBy?: string | null;
 }
 
+/** List-row projection without full rich-text documents. */
+export interface CardSummary {
+  id: CardId;
+  deckId: DeckId;
+  frontPreview: string;
+  backPreview: string;
+  boxPosition: number;
+  dueAt: string;
+  state: CardState;
+  detectedLanguage?: string | null;
+  languageAssistStatus?: LanguageAssistStatus;
+  revision: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Paginated card list from `list_cards`. */
+export interface CardListPage {
+  items: CardSummary[];
+  total: number;
+  offset: number;
+  limit: number;
+  hasMore: boolean;
+}
+
 export interface Review {
   id: ReviewId;
   cardId: CardId;
@@ -317,12 +342,24 @@ export interface AppSettings {
   theme: ThemePreference;
 }
 
+/** Device-level keyboard shortcut chords (`mod+k`, `space`, `1`, …). */
+export interface KeyboardShortcuts {
+  openSearch: string;
+  reviewFlipOrGood: string;
+  reviewFlipOrGoodAlt: string;
+  reviewGradeAgain: string;
+  reviewGradeHard: string;
+  reviewGradeGood: string;
+  reviewGradeEasy: string;
+}
+
 /** Device-level preferences (tray / window) — not per-profile study settings. */
 export interface AppPreferences {
   enableMinimizeToTray: boolean;
   closeButtonHidesToTray: boolean;
   startMinimized: boolean;
   launchOnStartup: boolean;
+  keyboardShortcuts: KeyboardShortcuts;
 }
 
 /** Payload for `tray://action` (Rust emits; frontend listens). */
@@ -418,3 +455,70 @@ export interface ImportBackupResult {
 }
 
 export type ImportBackupMode = "create_profile" | "replace_active";
+
+/** Extensible global search entity kinds (ADR 015). */
+export type SearchEntityType =
+  | "card"
+  | "deck"
+  | "tag"
+  | "review"
+  | "note"
+  | "attachment"
+  | "setting"
+  | "command";
+
+export type SearchFilter =
+  | "all"
+  | "cards"
+  | "decks"
+  | "tags"
+  | "reviews"
+  | "commands";
+
+export interface SearchHighlightRange {
+  start: number;
+  end: number;
+}
+
+export interface SearchResult {
+  entityType: SearchEntityType;
+  entityId: string;
+  title: string;
+  snippet: string;
+  breadcrumb?: string | null;
+  highlights: SearchHighlightRange[];
+  score: number;
+  href?: string | null;
+  metadata: Record<string, unknown>;
+  textDirection: "rtl" | "ltr" | string;
+}
+
+export interface SearchResponse {
+  results: SearchResult[];
+  query: string;
+  filter: SearchFilter;
+}
+
+export interface RecentSearch {
+  id: string;
+  profileId: string;
+  query: string;
+  filters: SearchFilter[];
+  createdAt: string;
+}
+
+export interface SearchHistoryEntry {
+  id: string;
+  profileId: string;
+  query: string;
+  entityType?: SearchEntityType | null;
+  entityId?: string | null;
+  createdAt: string;
+}
+
+/** Aggregated local query frequency (from search history — never uploaded). */
+export interface PopularSearch {
+  query: string;
+  hitCount: number;
+  lastSearchedAt: string;
+}

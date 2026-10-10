@@ -134,4 +134,62 @@ impl Card {
     pub fn clamp_box(position: u32) -> u32 {
         position.clamp(Self::MIN_BOX, Self::MAX_BOX)
     }
+
+    /// Lightweight list row — omits full rich-text documents.
+    pub fn to_summary(&self) -> CardSummary {
+        CardSummary {
+            id: self.id,
+            deck_id: self.deck_id,
+            front_preview: truncate_preview(&self.front_content.plain_text()),
+            back_preview: truncate_preview(&self.back_content.plain_text()),
+            box_position: self.box_position,
+            due_at: self.due_at,
+            state: self.state,
+            detected_language: self.detected_language.clone(),
+            language_assist_status: self.language_assist_status,
+            revision: self.revision,
+            created_at: self.created_at,
+            updated_at: self.updated_at,
+        }
+    }
+}
+
+const PREVIEW_MAX_CHARS: usize = 160;
+
+fn truncate_preview(text: &str) -> String {
+    let trimmed = text.trim();
+    if trimmed.chars().count() <= PREVIEW_MAX_CHARS {
+        return trimmed.to_string();
+    }
+    let truncated: String = trimmed.chars().take(PREVIEW_MAX_CHARS).collect();
+    format!("{truncated}…")
+}
+
+/// Card list projection for UI lists (no full front/back documents).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CardSummary {
+    pub id: Uuid,
+    pub deck_id: Uuid,
+    pub front_preview: String,
+    pub back_preview: String,
+    pub box_position: u32,
+    pub due_at: DateTime<Utc>,
+    pub state: CardState,
+    pub detected_language: Option<String>,
+    pub language_assist_status: LanguageAssistStatus,
+    pub revision: u32,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+/// Paginated card list response.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CardListPage {
+    pub items: Vec<CardSummary>,
+    pub total: u32,
+    pub offset: u32,
+    pub limit: u32,
+    pub has_more: bool,
 }

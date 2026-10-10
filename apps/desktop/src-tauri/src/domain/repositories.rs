@@ -7,6 +7,10 @@ use super::deck::Deck;
 use super::errors::JabeXResult;
 use super::ink::{InkDocumentRef, InkOwner};
 use super::review::Review;
+use super::search::{
+    PopularSearch, RecentSearch, SearchEntityType, SearchFilter, SearchHistoryEntry,
+    SearchIndexDocument,
+};
 use super::study_activity::StudyActivity;
 
 /// Port for deck persistence. Domain never depends on SQLite.
@@ -33,10 +37,25 @@ pub trait CardRepository: Send + Sync {
     fn find(&self, id: Uuid) -> JabeXResult<Option<Card>>;
     fn find_any(&self, id: Uuid) -> JabeXResult<Option<Card>>;
     fn list_by_deck(&self, deck_id: Uuid) -> JabeXResult<Vec<Card>>;
+    /// Active cards in a deck with SQL pagination (ordered by `created_at` ASC).
+    fn list_by_deck_page(
+        &self,
+        deck_id: Uuid,
+        limit: u32,
+        offset: u32,
+    ) -> JabeXResult<Vec<Card>>;
+    fn count_by_deck(&self, deck_id: Uuid) -> JabeXResult<u32>;
     /// Cards in a deck, optionally including soft-deleted.
     fn list_by_deck_all(&self, deck_id: Uuid, include_deleted: bool) -> JabeXResult<Vec<Card>>;
     fn list_all(&self, include_deleted: bool) -> JabeXResult<Vec<Card>>;
     fn list_due(&self, deck_id: Option<Uuid>, now: DateTime<Utc>) -> JabeXResult<Vec<Card>>;
+    /// Due cards capped for review session windows.
+    fn list_due_limited(
+        &self,
+        deck_id: Option<Uuid>,
+        now: DateTime<Utc>,
+        limit: u32,
+    ) -> JabeXResult<Vec<Card>>;
     fn update(&self, card: &Card) -> JabeXResult<()>;
     fn soft_delete(
         &self,
@@ -110,6 +129,58 @@ pub trait StudyActivityRepository: Send + Sync {
 
     /// Replace-all helper for `.jbx` import.
     fn create(&self, activity: &StudyActivity) -> JabeXResult<()>;
+}
+
+/// Port for the denormalized search index (FTS5-backed in infrastructure).
+pub trait SearchIndexRepository: Send + Sync {
+    fn upsert(&self, doc: &SearchIndexDocument) -> JabeXResult<()>;
+    fn remove(&self, entity_type: SearchEntityType, entity_id: &str) -> JabeXResult<()>;
+    fn remove_by_entity_types(&self, entity_types: &[SearchEntityType]) -> JabeXResult<()>;
+    fn clear(&self) -> JabeXResult<()>;
+    fn count(&self) -> JabeXResult<u64>;
+    /// Raw candidate rows for ranking (FTS MATCH + fuzzy fallback).
+    fn search_candidates(
+        &self,
+        fts_query: &str,
+        entity_types: Option<&[SearchEntityType]>,
+        limit: usize,
+    ) -> JabeXResult<Vec<SearchIndexDocument>>;
+    /// Broad fallback when FTS returns few rows (prefix / LIKE on normalized).
+    fn search_normalized_fallback(
+        &self,
+        normalized_prefix: &str,
+        entity_types: Option<&[SearchEntityType]>,
+        limit: usize,
+    ) -> JabeXResult<Vec<SearchIndexDocument>>;
+}
+
+/// Port for recent search queries (per profile).
+pub trait RecentSearchRepository: Send + Sync {
+    fn list(&self, profile_id: Uuid, limit: usize) -> JabeXResult<Vec<RecentSearch>>;
+    fn push(
+        &self,
+        profile_id: Uuid,
+        query: &str,
+        filters: &[SearchFilter],
+        max_size: usize,
+    ) -> JabeXResult<RecentSearch>;
+    fn remove(&self, profile_id: Uuid, id: Uuid) -> JabeXResult<()>;
+    fn clear(&self, profile_id: Uuid) -> JabeXResult<()>;
+}
+
+/// Port for local search selection history (never leaves the device).
+pub trait SearchHistoryRepository: Send + Sync {
+    fn record(
+        &self,
+        profile_id: Uuid,
+        query: &str,
+        entity_type: Option<SearchEntityType>,
+        entity_id: Option<&str>,
+        max_size: usize,
+    ) -> JabeXResult<SearchHistoryEntry>;
+    fn list(&self, profile_id: Uuid, limit: usize) -> JabeXResult<Vec<SearchHistoryEntry>>;
+    fn list_popular(&self, profile_id: Uuid, limit: usize) -> JabeXResult<Vec<PopularSearch>>;
+    fn clear(&self, profile_id: Uuid) -> JabeXResult<()>;
 }
 
 /// Port for ink document references (JSON via InkStorage).

@@ -1,5 +1,63 @@
 use serde::{Deserialize, Serialize};
 
+/// Device-level keyboard shortcut chords (e.g. `mod+k`, `space`, `1`).
+///
+/// Stored with app preferences so they stay stable across local profiles.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct KeyboardShortcuts {
+    #[serde(default = "default_open_search")]
+    pub open_search: String,
+    #[serde(default = "default_review_flip_or_good")]
+    pub review_flip_or_good: String,
+    #[serde(default = "default_review_flip_or_good_alt")]
+    pub review_flip_or_good_alt: String,
+    #[serde(default = "default_review_grade_again")]
+    pub review_grade_again: String,
+    #[serde(default = "default_review_grade_hard")]
+    pub review_grade_hard: String,
+    #[serde(default = "default_review_grade_good")]
+    pub review_grade_good: String,
+    #[serde(default = "default_review_grade_easy")]
+    pub review_grade_easy: String,
+}
+
+fn default_open_search() -> String {
+    "mod+k".into()
+}
+fn default_review_flip_or_good() -> String {
+    "space".into()
+}
+fn default_review_flip_or_good_alt() -> String {
+    "enter".into()
+}
+fn default_review_grade_again() -> String {
+    "1".into()
+}
+fn default_review_grade_hard() -> String {
+    "2".into()
+}
+fn default_review_grade_good() -> String {
+    "3".into()
+}
+fn default_review_grade_easy() -> String {
+    "4".into()
+}
+
+impl Default for KeyboardShortcuts {
+    fn default() -> Self {
+        Self {
+            open_search: default_open_search(),
+            review_flip_or_good: default_review_flip_or_good(),
+            review_flip_or_good_alt: default_review_flip_or_good_alt(),
+            review_grade_again: default_review_grade_again(),
+            review_grade_hard: default_review_grade_hard(),
+            review_grade_good: default_review_grade_good(),
+            review_grade_easy: default_review_grade_easy(),
+        }
+    }
+}
+
 /// Device-level application preferences (not per-profile study settings).
 ///
 /// Stored in `app.sqlite` `app_meta` so tray/window behaviour stays stable
@@ -15,6 +73,9 @@ pub struct AppPreferences {
     pub start_minimized: bool,
     /// When true on Windows, register JabeX under the current-user Run key.
     pub launch_on_startup: bool,
+    /// Customizable keyboard shortcuts (defaults applied when missing).
+    #[serde(default)]
+    pub keyboard_shortcuts: KeyboardShortcuts,
 }
 
 impl Default for AppPreferences {
@@ -25,6 +86,7 @@ impl Default for AppPreferences {
             close_button_hides_to_tray: true,
             start_minimized: false,
             launch_on_startup: false,
+            keyboard_shortcuts: KeyboardShortcuts::default(),
         }
     }
 }
@@ -63,5 +125,18 @@ mod tests {
         assert!(prefs.should_start_hidden());
         prefs.enable_minimize_to_tray = false;
         assert!(!prefs.should_start_hidden());
+    }
+
+    #[test]
+    fn deserializes_legacy_prefs_without_shortcuts() {
+        let json = r#"{
+            "enableMinimizeToTray": true,
+            "closeButtonHidesToTray": true,
+            "startMinimized": false,
+            "launchOnStartup": false
+        }"#;
+        let prefs: AppPreferences = serde_json::from_str(json).expect("deserialize");
+        assert_eq!(prefs.keyboard_shortcuts.open_search, "mod+k");
+        assert_eq!(prefs.keyboard_shortcuts.review_grade_good, "3");
     }
 }

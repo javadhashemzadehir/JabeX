@@ -3,6 +3,7 @@ mod card;
 mod deck;
 mod ink;
 mod review;
+pub(crate) mod search;
 mod study_activity;
 mod trash;
 

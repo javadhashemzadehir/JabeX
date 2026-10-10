@@ -33,7 +33,7 @@ export function DecksPanel() {
   const router = useRouter();
   const tauri = useIsTauri();
   const activeProfileId = useProfileStore((s) => s.active?.id);
-  const { decks, loading, desktop, hydrate, create, rename, remove } =
+  const { decks, loading, error, desktop, hydrate, create, rename, remove } =
     useDeckStore();
 
   const [dialog, setDialog] = useState<DialogMode>(null);
@@ -150,9 +150,15 @@ export function DecksPanel() {
         </Button>
       </div>
 
+      {error && decks.length === 0 ? (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      ) : null}
+
       {loading && decks.length === 0 ? <ListSkeleton rows={4} /> : null}
 
-      {!loading && decks.length === 0 ? (
+      {!loading && !error && decks.length === 0 ? (
         <div className="flex flex-col items-start gap-4 rounded-lg border border-dashed border-border/80 bg-muted/20 px-6 py-10">
           <div className="flex size-10 items-center justify-center rounded-md bg-muted">
             <Layers className="size-5 text-muted-foreground" />
@@ -168,7 +174,9 @@ export function DecksPanel() {
             {t.decks.create}
           </Button>
         </div>
-      ) : (
+      ) : null}
+
+      {decks.length > 0 ? (
         <ul className="divide-y divide-border rounded-lg border border-border/60">
           {decks.map((deck, index) => (
             <motion.li
@@ -221,7 +229,7 @@ export function DecksPanel() {
             </motion.li>
           ))}
         </ul>
-      )}
+      ) : null}
 
       <Dialog
         open={dialog === "create" || dialog === "rename"}

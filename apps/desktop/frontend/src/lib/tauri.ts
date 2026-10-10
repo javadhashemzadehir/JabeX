@@ -6,6 +6,7 @@ import type {
   AttachmentOwnerType,
   Card,
   CardId,
+  CardListPage,
   Deck,
   DeckId,
   DeckSettings,
@@ -29,6 +30,12 @@ import type {
   ProfileLeitnerSettings,
   ReviewOutcome,
   RichTextDocument,
+  PopularSearch,
+  RecentSearch,
+  SearchFilter,
+  SearchHistoryEntry,
+  SearchEntityType,
+  SearchResponse,
   StudyConsistencyStats,
   StudyStats,
   TrashEntityKind,
@@ -88,7 +95,12 @@ export const api = {
       input: { inherit },
     }),
 
-  listCards: (deckId: DeckId) => call<Card[]>("list_cards", { deckId }),
+  listCards: (deckId: DeckId, limit?: number, offset?: number) =>
+    call<CardListPage>("list_cards", {
+      deckId,
+      limit: limit ?? null,
+      offset: offset ?? null,
+    }),
   getCard: (id: CardId) => call<Card>("get_card", { id }),
   createCard: (
     deckId: DeckId,
@@ -119,8 +131,11 @@ export const api = {
       input: { cardId, overrides },
     }),
 
-  listDueCards: (deckId?: DeckId | null) =>
-    call<Card[]>("list_due_cards", { deckId: deckId ?? null }),
+  listDueCards: (deckId?: DeckId | null, limit?: number) =>
+    call<Card[]>("list_due_cards", {
+      deckId: deckId ?? null,
+      limit: limit ?? null,
+    }),
   submitReview: (cardId: string, grade: Grade, durationMs?: number) =>
     call<ReviewOutcome>("submit_review", {
       input: { cardId, grade, durationMs },
@@ -195,4 +210,39 @@ export const api = {
     call<void>("restore_item", { input: { entityKind, id } }),
   permanentlyDeleteTrashItem: (entityKind: TrashEntityKind, id: string) =>
     call<void>("permanently_delete_item", { input: { entityKind, id } }),
+
+  searchGlobal: (
+    query: string,
+    filter: SearchFilter = "all",
+    limit?: number,
+    recordRecent = false,
+  ) =>
+    call<SearchResponse>("search_global", {
+      input: { query, filter, limit: limit ?? null, recordRecent },
+    }),
+  rebuildSearchIndex: () => call<number>("rebuild_search_index"),
+  listRecentSearches: (limit?: number) =>
+    call<RecentSearch[]>("list_recent_searches", { limit: limit ?? null }),
+  clearRecentSearches: () => call<void>("clear_recent_searches"),
+  deleteRecentSearch: (id: string) =>
+    call<void>("delete_recent_search", { id }),
+  listPopularSearches: (limit?: number) =>
+    call<PopularSearch[]>("list_popular_searches", { limit: limit ?? null }),
+  recordSearchSelection: (
+    query: string,
+    entityType?: SearchEntityType | null,
+    entityId?: string | null,
+  ) =>
+    call<SearchHistoryEntry>("record_search_selection", {
+      input: {
+        query,
+        entityType: entityType ?? null,
+        entityId: entityId ?? null,
+      },
+    }),
+  listSearchHistory: (limit?: number) =>
+    call<SearchHistoryEntry[]>("list_search_history", {
+      limit: limit ?? null,
+    }),
+  clearSearchHistory: () => call<void>("clear_search_history"),
 };

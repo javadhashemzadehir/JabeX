@@ -30,9 +30,9 @@ pub async fn regenerate_language_assist(
     card_id: Uuid,
 ) -> Result<Card, JabeXError> {
     tracing::debug!(command = "regenerate_language_assist", %card_id, "command invoked");
-    // Synchronous regenerate so the UI gets immediate metadata; audio/translate
-    // may still hit the network when enabled — caller chose regenerate explicitly.
-    let card = state.run_language_assist(card_id, true)?;
+    // Await blocking job so the UI gets updated metadata; network work stays off
+    // the async IPC worker (reqwest::blocking must not run on tokio-rt-worker).
+    let card = state.run_language_assist_blocking(card_id, true).await?;
     let _ = app;
     Ok(card)
 }
@@ -65,9 +65,11 @@ pub async fn set_card_language_assist(
         card_id = %input.card_id,
         "command invoked"
     );
-    let _ = state.set_card_language_assist_overrides(input.card_id, input.overrides)?;
-    // Apply immediately so disabling pronunciation clears cached audio.
-    let card = state.run_language_assist(input.card_id, true)?;
+    // Apply on a blocking thread so disabling pronunciation clears cached audio
+    // without dropping a nested Tokio runtime on the async IPC worker.
+    let card = state
+        .set_card_language_assist_blocking(input.card_id, input.overrides)
+        .await?;
     let _ = app;
     Ok(card)
 }

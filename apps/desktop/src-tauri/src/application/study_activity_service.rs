@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local, NaiveDate, Utc};
+use chrono::{DateTime, Duration, Local, NaiveDate, Utc};
 use uuid::Uuid;
 
 use crate::domain::errors::JabeXResult;
@@ -88,13 +88,19 @@ impl<A: StudyActivityRepository, R: ReviewRepository> StudyActivityService<A, R>
     pub fn get_consistency_stats(&self) -> JabeXResult<StudyConsistencyStats> {
         self.ensure_backfilled()?;
         let today = local_activity_date(now_utc());
-        let activities = self.activities.list_by_profile(self.profile_id)?;
+        // Heatmap is 12 months — avoid loading the entire activity history.
+        let from = today - Duration::days(366);
+        let activities = self
+            .activities
+            .list_range(self.profile_id, from, today)?;
         Ok(calculate_statistics(&activities, today))
     }
 
     pub fn list_activity(&self) -> JabeXResult<Vec<StudyActivity>> {
         self.ensure_backfilled()?;
-        self.activities.list_by_profile(self.profile_id)
+        let today = local_activity_date(now_utc());
+        let from = today - Duration::days(366);
+        self.activities.list_range(self.profile_id, from, today)
     }
 
     /// One-time projection of historical reviews into daily activity rows.

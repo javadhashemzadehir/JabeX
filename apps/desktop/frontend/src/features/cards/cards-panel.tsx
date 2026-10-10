@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -11,9 +11,10 @@ import {
   SquareStack,
   Trash2,
 } from "lucide-react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import type { Card, RichTextDocument } from "@jabex/types";
+import type { Card, CardSummary, RichTextDocument } from "@jabex/types";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/feedback/list-skeleton";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
@@ -49,56 +50,113 @@ import { cn } from "@/lib/utils";
 import { useCardStore } from "./card-store";
 
 type DialogMode = "create" | "edit" | "delete" | null;
+const ROW_ESTIMATE = 96;
 
-export function CardsPanel({ deckId }: { deckId: string }) {
+export function CardsPanel({
+  deckId,
+  openCreate: openCreateOnMount = false,
+}: {
+  deckId: string;
+  openCreate?: boolean;
+}) {
   const t = useTranslations();
   const tauri = useIsTauri();
   const activeProfileId = useProfileStore((s) => s.active?.id);
   const {
     deck,
     cards,
+    total,
+    hasMore,
     loading,
+    loadingMore,
     error,
     desktop,
     hydrate,
+    loadMore,
     create,
     update,
     remove,
+    getCard,
     setDeck,
     reset,
   } = useCardStore();
 
   const [dialog, setDialog] = useState<DialogMode>(null);
   const [target, setTarget] = useState<Card | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CardSummary | null>(null);
   const [front, setFront] = useState<RichTextDocument>(emptyRichTextDocument);
   const [back, setBack] = useState<RichTextDocument>(emptyRichTextDocument);
   const [busy, setBusy] = useState(false);
   const [editorLayout, setEditorLayout] =
     useState<EditorLayoutWidth>("medium");
+  const openedCreateFromQuery = useRef(false);
+  const listParentRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: cards.length,
+    getScrollElement: () => listParentRef.current,
+    estimateSize: () => ROW_ESTIMATE,
+    overscan: 8,
+  });
 
   const canSave = !isRichTextBlank(front) && !isRichTextBlank(back);
 
   useEffect(() => {
+    openedCreateFromQuery.current = false;
     void hydrate(deckId);
     return () => reset();
   }, [hydrate, reset, deckId, activeProfileId]);
 
+  useEffect(() => {
+    if (!openCreateOnMount || loading || openedCreateFromQuery.current) return;
+    openedCreateFromQuery.current = true;
+    setTarget(null);
+    setFront(emptyRichTextDocument());
+    setBack(emptyRichTextDocument());
+    setDialog("create");
+  }, [openCreateOnMount, loading, deckId]);
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const lastVirtualIndex = virtualItems[virtualItems.length - 1]?.index ?? -1;
+
+  useEffect(() => {
+    if (lastVirtualIndex < 0 || !hasMore || loadingMore) return;
+    if (lastVirtualIndex >= cards.length - 8) {
+      void loadMore();
+    }
+  }, [lastVirtualIndex, hasMore, loadingMore, cards.length, loadMore]);
+
   function openCreate() {
     setTarget(null);
+    setDeleteTarget(null);
     setFront(emptyRichTextDocument());
     setBack(emptyRichTextDocument());
     setDialog("create");
   }
 
-  function openEdit(card: Card) {
-    setTarget(card);
-    setFront(card.frontContent);
-    setBack(card.backContent);
-    setDialog("edit");
+  async function openEdit(summary: CardSummary) {
+    setBusy(true);
+    try {
+      const card = await getCard(summary.id);
+      if (!card) {
+        toast.error(t.cards.error);
+        return;
+      }
+      setDeleteTarget(null);
+      setTarget(card);
+      setFront(card.frontContent);
+      setBack(card.backContent);
+      setDialog("edit");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.cards.error);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function openDelete(card: Card) {
-    setTarget(card);
+  function openDelete(summary: CardSummary) {
+    setTarget(null);
+    setDeleteTarget(summary);
     setDialog("delete");
   }
 
@@ -106,6 +164,7 @@ export function CardsPanel({ deckId }: { deckId: string }) {
     if (busy) return;
     setDialog(null);
     setTarget(null);
+    setDeleteTarget(null);
   }
 
   async function handleCreate() {
@@ -142,13 +201,13 @@ export function CardsPanel({ deckId }: { deckId: string }) {
   }
 
   async function handleDelete() {
-    if (!target) return;
+    if (!deleteTarget) return;
     setBusy(true);
     try {
-      await remove(target.id);
+      await remove(deleteTarget.id);
       toast.success(t.cards.deleted);
       setDialog(null);
-      setTarget(null);
+      setDeleteTarget(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t.cards.error);
     } finally {
@@ -222,7 +281,7 @@ export function CardsPanel({ deckId }: { deckId: string }) {
 
       {loading && cards.length === 0 ? <ListSkeleton rows={5} /> : null}
 
-      {!loading && cards.length === 0 ? (
+      {!loading && !error && cards.length === 0 ? (
         <div className="flex flex-col items-start gap-4 rounded-lg border border-dashed border-border/80 bg-muted/20 px-6 py-10">
           <div className="flex size-10 items-center justify-center rounded-md bg-muted">
             <SquareStack className="size-5 text-muted-foreground" />
@@ -238,61 +297,86 @@ export function CardsPanel({ deckId }: { deckId: string }) {
             {t.cards.create}
           </Button>
         </div>
-      ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border/60">
-          {cards.map((card, index) => (
-            <motion.li
-              key={card.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.03 * index, duration: 0.25 }}
-              className="flex flex-wrap items-start justify-between gap-3 px-4 py-3"
+      ) : cards.length > 0 ? (
+        <div className="space-y-2">
+          {total > 0 ? (
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {cards.length}
+              {total > cards.length ? ` / ${total}` : ""}
+            </p>
+          ) : null}
+          <div
+            ref={listParentRef}
+            className="max-h-[min(70vh,40rem)] overflow-auto rounded-lg border border-border/60"
+          >
+            <ul
+              className="relative w-full"
+              style={{ height: `${virtualizer.getTotalSize()}px` }}
             >
-              <button
-                type="button"
-                onClick={() => openEdit(card)}
-                className="min-w-0 flex-1 space-y-1 rounded-md text-start outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="line-clamp-2 font-medium">
-                    {plainTextFromDocument(card.frontContent)}
-                  </p>
-                  <LanguageBadge card={card} />
-                </div>
-                <p className="line-clamp-2 text-sm text-muted-foreground">
-                  {plainTextFromDocument(card.backContent)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {t.cards.boxLabel.replace(
-                    "{box}",
-                    String(card.boxPosition),
-                  )}
-                </p>
-              </button>
-              <div className="flex shrink-0 flex-wrap items-center gap-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openEdit(card)}
-                >
-                  <SquareStack className="size-4" />
-                  {t.cards.open}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t.cards.delete}
-                  onClick={() => openDelete(card)}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
-            </motion.li>
-          ))}
-        </ul>
-      )}
+              {virtualizer.getVirtualItems().map((virtualRow) => {
+                const card = cards[virtualRow.index];
+                if (!card) return null;
+                return (
+                  <li
+                    key={card.id}
+                    data-index={virtualRow.index}
+                    ref={virtualizer.measureElement}
+                    className="absolute start-0 top-0 flex w-full flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3"
+                    style={{
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => void openEdit(card)}
+                      className="min-w-0 flex-1 space-y-1 rounded-md text-start outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="line-clamp-2 font-medium">
+                          {card.frontPreview}
+                        </p>
+                        <LanguageBadge card={card} />
+                      </div>
+                      <p className="line-clamp-2 text-sm text-muted-foreground">
+                        {card.backPreview}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {t.cards.boxLabel.replace(
+                          "{box}",
+                          String(card.boxPosition),
+                        )}
+                      </p>
+                    </button>
+                    <div className="flex shrink-0 flex-wrap items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void openEdit(card)}
+                      >
+                        <SquareStack className="size-4" />
+                        {t.cards.open}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t.cards.delete}
+                        onClick={() => openDelete(card)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          {loadingMore ? (
+            <p className="text-xs text-muted-foreground">{t.cards.loading}</p>
+          ) : null}
+        </div>
+      ) : null}
 
       {deck ? (
         <div className="grid gap-4 lg:grid-cols-2">
@@ -388,7 +472,21 @@ export function CardsPanel({ deckId }: { deckId: string }) {
                     setTarget(next);
                     useCardStore.setState((state) => ({
                       cards: state.cards.map((c) =>
-                        c.id === next.id ? next : c,
+                        c.id === next.id
+                          ? {
+                              ...c,
+                              detectedLanguage: next.detectedLanguage,
+                              languageAssistStatus: next.languageAssistStatus,
+                              frontPreview:
+                                plainTextFromDocument(next.frontContent) ||
+                                c.frontPreview,
+                              backPreview:
+                                plainTextFromDocument(next.backContent) ||
+                                c.backPreview,
+                              revision: next.revision,
+                              updatedAt: next.updatedAt,
+                            }
+                          : c,
                       ),
                     }));
                   }}
@@ -423,7 +521,7 @@ export function CardsPanel({ deckId }: { deckId: string }) {
         title={t.cards.deleteTitle}
         description={t.cards.deleteHint.replace(
           "{front}",
-          plainTextFromDocument(target?.frontContent) || "…",
+          deleteTarget?.frontPreview || "…",
         )}
         cancelLabel={t.cards.cancel}
         deleteLabel={t.cards.delete}

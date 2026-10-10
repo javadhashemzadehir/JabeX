@@ -1,10 +1,14 @@
 use uuid::Uuid;
 
-use crate::domain::card::Card;
+use crate::domain::card::{Card, CardListPage};
 use crate::domain::errors::{JabeXError, JabeXResult};
 use crate::domain::repositories::{CardRepository, DeckRepository};
 use crate::domain::rich_text::RichTextDocument;
 use crate::shared::time::now_utc;
+
+/// Default page size for card list IPC (large decks).
+pub const DEFAULT_CARD_LIST_LIMIT: u32 = 50;
+const MAX_CARD_LIST_LIMIT: u32 = 200;
 
 pub struct CardService<C: CardRepository, D: DeckRepository> {
     cards: C,
@@ -39,6 +43,36 @@ impl<C: CardRepository, D: DeckRepository> CardService<C, D> {
     pub fn list_cards(&self, deck_id: Uuid) -> JabeXResult<Vec<Card>> {
         self.ensure_deck(deck_id)?;
         self.cards.list_by_deck(deck_id)
+    }
+
+    pub fn count_cards(&self, deck_id: Uuid) -> JabeXResult<u32> {
+        self.ensure_deck(deck_id)?;
+        self.cards.count_by_deck(deck_id)
+    }
+
+    /// Paginated list projections without full TipTap documents.
+    pub fn list_card_summaries(
+        &self,
+        deck_id: Uuid,
+        limit: Option<u32>,
+        offset: Option<u32>,
+    ) -> JabeXResult<CardListPage> {
+        self.ensure_deck(deck_id)?;
+        let limit = limit
+            .unwrap_or(DEFAULT_CARD_LIST_LIMIT)
+            .clamp(1, MAX_CARD_LIST_LIMIT);
+        let offset = offset.unwrap_or(0);
+        let total = self.cards.count_by_deck(deck_id)?;
+        let cards = self.cards.list_by_deck_page(deck_id, limit, offset)?;
+        let items = cards.iter().map(Card::to_summary).collect::<Vec<_>>();
+        let loaded = offset.saturating_add(items.len() as u32);
+        Ok(CardListPage {
+            items,
+            total,
+            offset,
+            limit,
+            has_more: loaded < total,
+        })
     }
 
     pub fn update_card_content(

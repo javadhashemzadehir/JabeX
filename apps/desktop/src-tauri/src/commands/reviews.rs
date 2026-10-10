@@ -27,9 +27,10 @@ pub struct ReviewOutcomeDto {
 pub async fn list_due_cards(
     state: State<'_, AppState>,
     deck_id: Option<Uuid>,
+    limit: Option<u32>,
 ) -> Result<Vec<Card>, JabeXError> {
     tracing::debug!(command = "list_due_cards", "command invoked");
-    state.with_session(|session| session.reviews.list_due(deck_id, None))
+    state.with_session(|session| session.reviews.list_due_window(deck_id, None, limit))
 }
 
 #[tauri::command]
