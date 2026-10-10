@@ -1,6 +1,6 @@
 # Roadmap
 
-## Phase 0 — Foundation (current)
+## Phase 0 — Foundation
 
 - [x] Cursor agent rules
 - [x] Product & architecture docs + ADRs
@@ -51,7 +51,7 @@
 ## Phase 2.5b — Advanced card editor
 
 - [x] `document_v2`: spoilers, KaTeX math, tables, highlighted code (ADR 014)
-- [x] Edit / Preview / JSON / Markdown modes
+- [x] Edit / Markdown modes (storage remains TipTap JSON; no raw JSON editing UI)
 - [x] Markdown ↔ JSON converters + ChatGPT-aware paste pipeline
 - [x] Telegram-style spoiler reveal in review; RTL text with LTR math/code
 
@@ -69,12 +69,19 @@
 - [x] Trash UI in sidebar; hold-to-confirm delete forever
 - [x] `.jbx` v3 includes soft-deleted entities (ADR 012)
 
-## Phase 3 — Polish & Distribution
+## Phase 2.8 — Global search
 
-- [ ] Packaging for Windows / macOS / Linux
-- [ ] Onboarding polish
-- [ ] Performance pass on large decks
-- [ ] Contributor documentation maturity
+- [x] Header command palette (Ctrl/Cmd+K) with filters + recent searches
+- [x] SQLite FTS5 search index + incremental updates (ADR 015)
+- [x] Rich-text / Markdown / HTML / LaTeX extraction + Persian/English fuzzy ranking
+- [x] Local search history (never uploaded)
+
+## Phase 3 — Polish & Distribution (current)
+
+- [x] Packaging for Windows / macOS / Linux
+- [x] Onboarding polish
+- [x] Performance pass on large decks
+- [x] Contributor documentation maturity
 
 ## Explicitly Deferred / Out of Scope
 

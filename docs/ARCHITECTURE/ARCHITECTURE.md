@@ -101,6 +101,11 @@ See [DEVELOPMENT.md](../DEVELOPMENT/DEVELOPMENT.md#system-tray-windows) for user
 - [012 — Soft delete & Trash](../ADR/012-soft-delete-and-trash/012-soft-delete-and-trash.md)
 - [013 — Study activity & learning consistency](../ADR/013-study-activity-consistency/013-study-activity-consistency.md)
 - [014 — Advanced card editor](../ADR/014-advanced-card-editor/014-advanced-card-editor.md)
+- [015 — Global search (FTS5)](../ADR/015-global-search-fts5/015-global-search-fts5.md)
+
+## Global search
+
+Header command palette (`components/search`) calls `search_global` over IPC. Rust maintains a per-profile SQLite FTS5 index (`search_index` / `search_index_fts`) with incremental updates on card/deck/attachment mutations. Domain modules own text extraction, Persian/Arabic normalization, fuzzy ranking, and highlighting; infrastructure owns FTS queries. Recent searches (clear-all or delete-one), popular queries (from local history), and selection history stay on-device (no telemetry). Keyboard shortcuts (including search open) are device-level in `app_preferences` with defaults and remapping in Settings. See [ADR 015](../ADR/015-global-search-fts5/015-global-search-fts5.md).
 
 ## Soft delete & Trash
 
@@ -108,7 +113,7 @@ Normal study actions never hard-delete. Soft-deleted decks, cards, attachments, 
 
 ## Card editor (rich text)
 
-Card faces are TipTap JSON (`document_v2` writes; v1 readable). UI lives in `features/editor` (Edit / Preview / JSON / Markdown modes). Spoilers, KaTeX math, tables, and highlighted code are schema nodes — never stored as free HTML. See [ADR 014](../ADR/014-advanced-card-editor/014-advanced-card-editor.md).
+Card faces are TipTap JSON (`document_v2` writes; v1 readable). UI lives in `features/editor` (Edit / Markdown modes). Spoilers, KaTeX math, tables, and highlighted code are schema nodes — never stored as free HTML. See [ADR 014](../ADR/014-advanced-card-editor/014-advanced-card-editor.md).
 
 ## Rich content (media + ink)
 

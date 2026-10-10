@@ -13,10 +13,31 @@ Full Git / branch / release details: **[docs/GIT_WORKFLOW/GIT_WORKFLOW.md](./doc
 
 ## Getting started
 
-1. Read `docs/PRODUCT/PRODUCT.md`, `docs/ARCHITECTURE/ARCHITECTURE.md`, and ADRs
-2. Follow `docs/DEVELOPMENT/DEVELOPMENT.md` for local setup
-3. Read `docs/GIT_WORKFLOW/GIT_WORKFLOW.md` for branching and commits
-4. Prefer small pull requests with a clear purpose
+1. Browse the docs index: [`docs/README.md`](./docs/README.md)
+2. Read `docs/PRODUCT/PRODUCT.md`, `docs/ARCHITECTURE/ARCHITECTURE.md`, and ADRs
+3. Follow `docs/DEVELOPMENT/DEVELOPMENT.md` for local setup (including OS-specific Tauri prereqs)
+4. Read `docs/GIT_WORKFLOW/GIT_WORKFLOW.md` for branching and commits
+5. Prefer small pull requests with a clear purpose
+6. Follow the [Code of Conduct](./CODE_OF_CONDUCT.md)
+
+## First contribution
+
+A good first path:
+
+1. Branch from `develop` (`feature/<short-name>` or `bugfix/<short-name>`)
+2. Make a focused change (docs typo, small UI polish, or a labeled good-first-issue)
+3. Run `pnpm lint && pnpm typecheck && pnpm test` (and Rust checks if you touched `src-tauri`)
+4. Open a PR into **`develop`** with a Conventional Commit title
+5. Wait for CI (frontend + Rust) to pass
+
+Where to change code:
+
+| Goal | Start in |
+| ---- | -------- |
+| UI / i18n | `apps/desktop/frontend/src/` |
+| IPC / persistence / scheduler | `apps/desktop/src-tauri/src/` |
+| Shared contracts | `packages/types/` |
+| Docs / ADRs | `docs/` |
 
 ## Contributor workflow
 
@@ -64,11 +85,14 @@ Full Git / branch / release details: **[docs/GIT_WORKFLOW/GIT_WORKFLOW.md](./doc
 
 ```bash
 pnpm install
-pnpm dev
+pnpm dev                 # frontend only (browser)
+pnpm tauri:dev           # full desktop app (requires Rust)
 pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm db:seed             # optional local mock study data
+pnpm db:unseed
 ```
 
 Rust:
@@ -79,6 +103,9 @@ cargo fmt
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test
 ```
+
+Testing overview: [docs/TESTING/TESTING.md](./docs/TESTING/TESTING.md).
+Packaging / installers: [docs/PACKAGING/PACKAGING.md](./docs/PACKAGING/PACKAGING.md).
 
 ## Code guidelines
 

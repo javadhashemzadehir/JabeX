@@ -9,15 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Repository Git workflow, CI/CD, and contribution infrastructure
+- Phase 3 polish: packaging docs + bundle metadata, first-run onboarding (sample deck), large-deck card list pagination/virtualization, contributor docs index
 
-## [0.1.0] - TBD
+## [0.1.0] - 2026-10-10
 
 ### Added
 
-- Initial private, offline-first Leitner Box foundation
-- Next.js frontend with Persian-first (RTL) UX
-- Tauri 2 desktop shell with local SQLite storage
+- Private, offline-first digital Leitner Box (desktop)
+- Next.js frontend with Persian-first RTL UX and English LTR
+- Tauri 2 shell with local SQLite persistence and clean-architecture Rust backend
+- Deck and card CRUD with TipTap rich-text documents (`document_v1` / `document_v2`)
+- Media attachments and ink/handwriting layers (local-only)
+- Leitner review sessions with box promotion/demotion and due-card queue
+- Local multi-profile registry with per-profile SQLite isolation
+- Versioned `.jbx` profile backup import/export
+- Keyboard shortcuts, local study stats, streaks, and 12-month heatmap
+- Leitner interval presets per deck/profile
+- Soft delete with Trash (list / restore / permanent delete)
+- Offline language assist (detection, optional translate/TTS behind ports)
+- Global search command palette (FTS5 + fuzzy ranking; local history only)
+- Accessibility pass (RTL/LTR), hold-to-confirm deletes, theme system
+
+### Security
+
+- No accounts, analytics, or required network for core study flows
+- Least-privilege Tauri capabilities; user data stays on device
 
 [Unreleased]: https://github.com/jabex/jabex/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/jabex/jabex/releases/tag/v0.1.0

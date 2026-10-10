@@ -67,6 +67,9 @@ Migrations remain versioned SQL under `infrastructure/database/migrations/` (`V{
 | `attachments` | Owner-polymorphic metadata only; files under `media/attachments/`; `revision`; soft-delete + library purge (hard delete) via media library |
 | `ink_documents` | Ink JSON references under `media/ink/`; `content_hash`; `revision` (replaces V1 `drawings`) |
 | `settings` | Key/value JSON; soft-delete; `revision` |
+| `search_index` + `search_index_fts` | Denormalized global search documents + FTS5 (ADR 015); soft-delete aware; profile-scoped |
+| `recent_searches` | Last queries per profile for the command palette (capped; deletable per row) |
+| `search_history` | Local selection history; also powers popular-query aggregation — never leaves the device |
 
 Every table includes `created_at` / `updated_at` (ISO-8601 UTC), except `study_activity` which has `created_at` only (daily aggregate rows are upserted in place).
 
@@ -148,6 +151,8 @@ Versioned ZIP of normalized JSON documents + optional media. See [ADR 008](../AD
 | V6 | Soft-delete metadata: `deleted_by` on decks/cards/attachments/ink_documents/settings + trash indexes (ADR 012) |
 | V7 | Per-card language-assist overrides (`cards.language_assist_overrides_json`); deck overrides remain in `decks.settings` JSON |
 | V8 | `study_activity` daily aggregates for learning consistency (ADR 013) |
+| V9 | Global search: `search_index` + FTS5, `recent_searches`, `search_history` (ADR 015) |
+| V10 | Partial indexes for active card lists / due queues (`idx_cards_deck_active_created`, `idx_cards_due_active`) |
 
 ## Privacy Notes
 

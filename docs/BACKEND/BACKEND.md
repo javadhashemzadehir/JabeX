@@ -93,7 +93,8 @@ Backup: `export_backup`, `validate_backup`, `import_backup` (tray Create Backup 
 Attachments: `create_attachment`, `list_attachments`, `delete_attachment`, `restore_attachment`, `read_attachment_bytes`  
 Media library: `list_media_library`, `get_media_library_stats`, `purge_attachment`, `purge_deleted_attachments`, `remove_orphan_media_dirs`, `verify_media_library`  
 Ink: `create_ink_document`, `get_ink_document`, `list_ink_documents`, `save_ink_document`, `delete_ink_document`  
-Trash: `list_deleted_items`, `restore_item`, `permanently_delete_item` (ADR 012; `delete_deck` / `delete_card` soft-delete with cascade)
+Trash: `list_deleted_items`, `restore_item`, `permanently_delete_item` (ADR 012; `delete_deck` / `delete_card` soft-delete with cascade)  
+Search: `search_global`, `rebuild_search_index`, `list_recent_searches`, `clear_recent_searches`, `delete_recent_search`, `list_popular_searches`, `record_search_selection`, `list_search_history`, `clear_search_history` (ADR 015; FTS5 index, local-only)
 
 Tray menu emits frontend event `tray://action` for UI-only flows (`switch-profile`, settings, restore). Switch Profile only emits the event after showing the window; the frontend opens the existing profile switcher.
 

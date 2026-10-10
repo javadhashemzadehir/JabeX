@@ -7,6 +7,7 @@ Related files:
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — how to contribute
 - [CHANGELOG.md](../../CHANGELOG.md) — Keep a Changelog
 - [SECURITY.md](../../SECURITY.md) — vulnerability reporting
+- [PACKAGING.md](../PACKAGING/PACKAGING.md) — local installers and release artifacts
 - `.github/workflows/` — CI, release, security, stale automation
 
 ---
@@ -215,6 +216,8 @@ Keep these in sync when cutting a release:
 | Windows | `.msi` |
 | macOS | `.dmg` |
 | Linux | `.AppImage` |
+
+Local smoke builds, artifact paths, and signing status: [PACKAGING.md](../PACKAGING/PACKAGING.md).
 
 ---
 

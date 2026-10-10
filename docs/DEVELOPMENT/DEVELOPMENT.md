@@ -4,8 +4,16 @@
 
 - Node.js 22+ (LTS recommended)
 - pnpm 9+
-- Rust stable + Cargo (required for Tauri builds)
-- Platform deps for Tauri: see [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)
+- Rust stable + Cargo via [rustup](https://rustup.rs/) (required for Tauri builds)
+- Platform deps for Tauri (summary below; full detail: [Tauri v2 prerequisites](https://v2.tauri.app/start/prerequisites/))
+
+### OS-specific Tauri dependencies
+
+| OS | Required |
+| -- | -------- |
+| **Windows** | [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with the **Desktop development with C++** workload (`link.exe`), plus WebView2 (usually preinstalled on Windows 10/11) |
+| **macOS** | Xcode Command Line Tools (`xcode-select --install`) |
+| **Linux** | WebKitGTK and related packages (Ubuntu example: `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`, `librsvg2-dev`, `patchelf`) — match versions in `.github/workflows/ci.yml` / `release.yml` |
 
 ## Repository Setup
 
@@ -13,6 +21,16 @@
 pnpm install
 cp .env.example .env
 ```
+
+## First successful desktop run
+
+1. Install prerequisites for your OS (table above)
+2. `pnpm install` and copy `.env.example` → `.env`
+3. `pnpm tauri:dev` from the repo root
+4. Confirm the window opens, sidebar navigates, and you can create a deck
+5. Optional: `pnpm db:seed` for mock study data (quit the app first if SQLite is busy)
+
+Frontend-only (no Rust): `pnpm dev` → [http://localhost:3000](http://localhost:3000). Profile setup and IPC features require the desktop shell.
 
 ## Common Commands
 
@@ -67,6 +85,7 @@ Seed scripts target the local app-data directory (`directories` ProjectDirs). Qu
 - Prod: Next static export consumed by Tauri
 - Keep capabilities minimal (`dialog:allow-open` / `dialog:allow-save` for `.jbx` pickers only)
 - Backend docs: `docs/BACKEND/BACKEND.md`
+- Packaging / installers: [PACKAGING.md](../PACKAGING/PACKAGING.md)
 - Run Rust tests: `cd apps/desktop/src-tauri && cargo test`
 - Windows requires MSVC Build Tools (`link.exe`) for `cargo` / Tauri builds
 

@@ -13,7 +13,7 @@ Accepted
 - Tables (including ChatGPT / Markdown paste)
 - Code blocks with language highlighting
 - Markdown ↔ JSON interoperability
-- Edit / Preview / JSON / Markdown modes
+- Edit / Markdown modes (JSON remains the storage format, not an editing surface)
 - Safe clipboard handling without storing raw HTML
 
 Constraints: offline-first, no HTML as storage, no new cloud deps, Persian RTL + LTR math/code, future `.jbx` / sync readiness.
@@ -47,7 +47,7 @@ Constraints: offline-first, no HTML as storage, no new cloud deps, Persian RTL +
 | Markdown | Custom JSON ↔ MD walker (spoilers `\|\|…\|\|`, `:::spoiler`, `$` / `$$`) |
 | Paste | Schema-bound HTML first; Markdown heuristic; JSON choice dialog |
 
-UI modes on each face: **Edit | Preview | JSON | Markdown**. Media binaries stay in the attachment layer ([ADR 010](../010-rich-content-storage/010-rich-content-storage.md)) — not base64/HTML `src` inside TipTap JSON.
+UI modes on each face: **Edit | Markdown**. Preview and raw-JSON editing are intentionally omitted (WYSIWYG already shows the live result; storage JSON is not an end-user editing surface). Media binaries stay in the attachment layer ([ADR 010](../010-rich-content-storage/010-rich-content-storage.md)) — not base64/HTML `src` inside TipTap JSON.
 
 ### Security
 

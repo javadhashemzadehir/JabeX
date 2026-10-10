@@ -58,14 +58,18 @@ pnpm test
 
 ## Documentation
 
+- **[Docs index](./docs/README.md)** — start here
 - [Product](./docs/PRODUCT/PRODUCT.md)
 - [Architecture](./docs/ARCHITECTURE/ARCHITECTURE.md)
 - [Database](./docs/DATABASE/DATABASE.md)
 - [Development](./docs/DEVELOPMENT/DEVELOPMENT.md)
+- [Packaging](./docs/PACKAGING/PACKAGING.md)
+- [Testing](./docs/TESTING/TESTING.md)
 - [Git workflow](./docs/GIT_WORKFLOW/GIT_WORKFLOW.md)
 - [Roadmap](./docs/ROADMAP/ROADMAP.md)
 - [ADR 014 — Advanced card editor](./docs/ADR/014-advanced-card-editor/014-advanced-card-editor.md)
 - [Contributing](./CONTRIBUTING.md)
+- [Code of Conduct](./CODE_OF_CONDUCT.md)
 - [Security](./SECURITY.md)
 - [Changelog](./CHANGELOG.md)
 

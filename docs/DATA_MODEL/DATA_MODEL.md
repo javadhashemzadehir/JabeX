@@ -20,6 +20,8 @@ Local-first entities for JabeX study data. All IDs are UUIDv7. Soft delete uses 
 | Attachment | Metadata only; binary under `media/attachments/{id}/`; soft-delete |
 | InkDocumentRef | Reference only; strokes under `media/ink/{id}.json`; soft-delete |
 | TrashItem | Unified view of soft-deleted study entities (not a table) |
+| SearchIndexDocument | Denormalized FTS row for cards/decks/tags/commands/… (ADR 015) |
+| RecentSearch / SearchHistoryEntry | Local query + selection history (never uploaded) |
 
 ## Card content layers
 
