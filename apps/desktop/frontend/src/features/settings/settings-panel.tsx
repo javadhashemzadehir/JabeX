@@ -6,6 +6,7 @@ import { BackupPanel } from "@/features/profiles/backup-panel";
 import { useTranslations } from "@/hooks/use-locale";
 import { LanguageAssistSettingsPanel } from "@/features/language-assist/language-assist-settings-panel";
 import { ApplicationSettingsPanel } from "./application-settings-panel";
+import { ShortcutsSettingsPanel } from "./shortcuts-settings-panel";
 
 export function SettingsPanel() {
   const t = useTranslations();
@@ -27,6 +28,8 @@ export function SettingsPanel() {
       </div>
 
       <ApplicationSettingsPanel />
+
+      <ShortcutsSettingsPanel />
 
       <LanguageAssistSettingsPanel />
 

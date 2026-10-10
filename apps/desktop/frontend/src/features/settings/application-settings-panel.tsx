@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import type { AppPreferences } from "@jabex/types";
 import { SettingsSkeleton } from "@/components/feedback/settings-skeleton";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -11,7 +10,11 @@ import { useIsTauri } from "@/hooks/use-is-tauri";
 import { useTranslations } from "@/hooks/use-locale";
 import { useAppPreferencesStore } from "./app-preferences-store";
 
-type BoolKey = keyof AppPreferences;
+type BoolKey =
+  | "enableMinimizeToTray"
+  | "closeButtonHidesToTray"
+  | "startMinimized"
+  | "launchOnStartup";
 
 const toggles: {
   key: BoolKey;

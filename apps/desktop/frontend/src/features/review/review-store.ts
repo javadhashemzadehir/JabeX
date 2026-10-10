@@ -4,6 +4,9 @@ import { create } from "zustand";
 import type { Card, DeckId, Grade, ReviewOutcome } from "@jabex/types";
 import { api, isTauri } from "@/lib/tauri";
 
+const DUE_WINDOW = 40;
+const REFETCH_THRESHOLD = 8;
+
 interface ReviewState {
   deckId: DeckId | null;
   queue: Card[];
@@ -18,6 +21,10 @@ interface ReviewState {
   reveal: () => void;
   submit: (grade: Grade) => Promise<ReviewOutcome | null>;
   reset: () => void;
+}
+
+async function fetchDueWindow(deckId: DeckId | null): Promise<Card[]> {
+  return api.listDueCards(deckId, DUE_WINDOW);
 }
 
 export const useReviewStore = create<ReviewState>((set, get) => ({
@@ -53,7 +60,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       reviewedCount: 0,
     });
     try {
-      const queue = await api.listDueCards(deckId);
+      const queue = await fetchDueWindow(deckId);
       set({
         queue,
         loading: false,
@@ -73,7 +80,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     set({ revealed: true });
   },
   submit: async (grade) => {
-    const { queue, revealed, submitting, cardShownAt } = get();
+    const { queue, revealed, submitting, cardShownAt, deckId } = get();
     const current = queue[0];
     if (!isTauri() || !current || !revealed || submitting) return null;
 
@@ -84,7 +91,24 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
           ? Math.max(0, Math.round(Date.now() - cardShownAt))
           : undefined;
       const outcome = await api.submitReview(current.id, grade, durationMs);
-      const nextQueue = queue.slice(1);
+      let nextQueue = queue.slice(1);
+
+      // Top up the window when the local buffer runs low.
+      if (nextQueue.length <= REFETCH_THRESHOLD) {
+        try {
+          const fresh = await fetchDueWindow(deckId);
+          const seen = new Set(nextQueue.map((c) => c.id));
+          for (const card of fresh) {
+            if (!seen.has(card.id)) {
+              nextQueue.push(card);
+              seen.add(card.id);
+            }
+          }
+        } catch {
+          // Keep remaining local queue if refetch fails.
+        }
+      }
+
       set({
         queue: nextQueue,
         revealed: false,

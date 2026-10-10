@@ -21,18 +21,16 @@ import {
 import { createPasteHandler, type JsonPasteChoice } from "@/lib/rich-text-paste";
 import {
   isRichTextBlank,
-  parseRichTextJson,
   toRichTextDocument,
   toTiptapContent,
 } from "@/lib/rich-text";
 import { cn } from "@/lib/utils";
 import { createCardEditorExtensions } from "./extensions";
 import { EditorToolbar } from "./editor-toolbar";
-import { RichTextViewer } from "./rich-text-viewer";
 import { bindSpoilerInteractions } from "./spoiler-interaction";
 
 export type EditorLayoutWidth = "medium" | "large";
-export type EditorViewMode = "edit" | "preview" | "json" | "markdown";
+export type EditorViewMode = "edit" | "markdown";
 
 type RichTextEditorProps = {
   value: RichTextDocument;
@@ -66,8 +64,6 @@ export function RichTextEditor({
   const t = useTranslations();
   const [mode, setMode] = useState<EditorViewMode>("edit");
   const [markdownDraft, setMarkdownDraft] = useState("");
-  const [jsonDraft, setJsonDraft] = useState("");
-  const [jsonError, setJsonError] = useState<string | null>(null);
   const [jsonPrompt, setJsonPrompt] = useState<JsonPromptState | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor | null>(null);
@@ -141,19 +137,11 @@ export function RichTextEditor({
     if (mode === "markdown") {
       setMarkdownDraft(documentToMarkdown(value));
     }
-    if (mode === "json") {
-      setJsonDraft(JSON.stringify(value, null, 2));
-      setJsonError(null);
-    }
   }, [mode, value]);
 
   function switchMode(next: EditorViewMode) {
     if (mode === "markdown" && next !== "markdown") {
       onChange(markdownToDocument(markdownDraft));
-    }
-    if (mode === "json" && next !== "json") {
-      const parsed = parseRichTextJson(jsonDraft);
-      if (parsed) onChange(parsed);
     }
     setMode(next);
   }
@@ -164,8 +152,6 @@ export function RichTextEditor({
 
   const modes: { id: EditorViewMode; label: string }[] = [
     { id: "edit", label: t.editor.modeEdit },
-    { id: "preview", label: t.editor.modePreview },
-    { id: "json", label: t.editor.modeJson },
     { id: "markdown", label: t.editor.modeMarkdown },
   ];
 
@@ -208,53 +194,6 @@ export function RichTextEditor({
 
       {mode === "edit" && (
         <EditorContent editor={editor} className="jabex-editor" />
-      )}
-
-      {mode === "preview" && (
-        <div className="p-3">
-          <RichTextViewer document={value} />
-        </div>
-      )}
-
-      {mode === "json" && (
-        <div className="space-y-2 p-2">
-          <div className="flex justify-end">
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 gap-1.5 text-xs"
-              onClick={() => copyText(jsonDraft)}
-            >
-              <Copy className="size-3.5" />
-              {t.editor.copy}
-            </Button>
-          </div>
-          <textarea
-            className="jabex-editor-raw min-h-40 w-full resize-y rounded-md border border-border/60 bg-muted/30 p-2 font-mono text-xs leading-relaxed"
-            dir="ltr"
-            spellCheck={false}
-            value={jsonDraft}
-            aria-label={t.editor.modeJson}
-            disabled={disabled}
-            onChange={(e) => {
-              const next = e.target.value;
-              setJsonDraft(next);
-              const parsed = parseRichTextJson(next);
-              if (!parsed) {
-                setJsonError(t.editor.jsonInvalid);
-                return;
-              }
-              setJsonError(null);
-              onChange(parsed);
-            }}
-          />
-          {jsonError ? (
-            <p className="text-xs text-destructive" role="alert">
-              {jsonError}
-            </p>
-          ) : null}
-        </div>
       )}
 
       {mode === "markdown" && (

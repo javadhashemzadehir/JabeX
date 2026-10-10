@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ import { useProfileStore } from "./profile-store";
 
 export function InitialProfileSetupDialog() {
   const t = useTranslations();
+  const router = useRouter();
   const { desktop, initialSetupPending, loading, completeInitialSetup } =
     useProfileStore();
   const [name, setName] = useState("");
@@ -34,6 +36,7 @@ export function InitialProfileSetupDialog() {
       await completeInitialSetup(trimmed);
       toast.success(t.profiles.setupSaved);
       setName("");
+      router.push("/decks");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t.profiles.error);
     } finally {

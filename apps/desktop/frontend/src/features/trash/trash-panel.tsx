@@ -105,7 +105,7 @@ export function TrashPanel() {
         </div>
       ) : null}
 
-      {!loading && desktop && items.length === 0 ? (
+      {!loading && !error && desktop && items.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border px-6 py-12 text-center">
           <Trash2 className="mx-auto mb-3 size-8 text-muted-foreground" aria-hidden />
           <p className="text-sm font-medium">{t.trash.emptyTitle}</p>

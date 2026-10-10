@@ -402,14 +402,14 @@ export function MediaLibraryPanel() {
         <div className="flex justify-center py-8">
           <Spinner className="size-5" />
         </div>
-      ) : items.length === 0 ? (
+      ) : !error && items.length === 0 ? (
         <div className="rounded-md border border-border bg-muted/20 px-3 py-8 text-center">
           <p className="text-sm font-medium">{t.mediaLibrary.emptyTitle}</p>
           <p className="mt-1 text-xs text-muted-foreground text-pretty">
             {t.mediaLibrary.emptyHint}
           </p>
         </div>
-      ) : (
+      ) : items.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {items.map((item) => {
             const inTrash = Boolean(item.deletedAt);
@@ -476,7 +476,7 @@ export function MediaLibraryPanel() {
             );
           })}
         </ul>
-      )}
+      ) : null}
 
       <MediaViewer
         open={!!viewer}

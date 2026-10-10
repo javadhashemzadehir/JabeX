@@ -1,6 +1,6 @@
 "use client";
 
-import type { Card } from "@jabex/types";
+import type { LanguageAssistStatus, TransliterationMetadata } from "@jabex/types";
 import { useTranslations } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
@@ -19,8 +19,15 @@ const LANGUAGE_LABELS: Record<string, string> = {
   und: "?",
 };
 
+/** Minimal card shape for list rows (`Card` or `CardSummary`). */
+type LanguageBadgeCard = {
+  detectedLanguage?: string | null;
+  languageAssistStatus?: LanguageAssistStatus;
+  transliteration?: TransliterationMetadata | null;
+};
+
 type LanguageBadgeProps = {
-  card: Card;
+  card: LanguageBadgeCard;
   className?: string;
 };
 

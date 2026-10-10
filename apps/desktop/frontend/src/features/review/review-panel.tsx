@@ -11,30 +11,19 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { RichTextViewer } from "@/features/editor/rich-text-viewer";
 import { LanguageBadge } from "@/features/language-assist/language-badge";
+import { formatChordLabel, matchesChord } from "@/features/shortcuts/chord";
+import { DEFAULT_KEYBOARD_SHORTCUTS } from "@/features/shortcuts/defaults";
+import {
+  isTypingTarget,
+  useShortcutChord,
+} from "@/features/shortcuts/use-shortcut";
 import { useIsTauri } from "@/hooks/use-is-tauri";
 import { useTranslations } from "@/hooks/use-locale";
 import { useProfileStore } from "@/features/profiles/profile-store";
+import { useAppPreferencesStore } from "@/features/settings/app-preferences-store";
 import { useReviewStore } from "./review-store";
 
 const GRADES: Grade[] = ["again", "hard", "good", "easy"];
-
-const GRADE_KEYS: Record<string, Grade> = {
-  "1": "again",
-  "2": "hard",
-  "3": "good",
-  "4": "easy",
-};
-
-function isTypingTarget(target: EventTarget | null) {
-  if (!(target instanceof HTMLElement)) return false;
-  const tag = target.tagName;
-  return (
-    tag === "INPUT" ||
-    tag === "TEXTAREA" ||
-    tag === "SELECT" ||
-    target.isContentEditable
-  );
-}
 
 export function ReviewPanel({ deckId }: { deckId?: string | null }) {
   const t = useTranslations();
@@ -57,6 +46,20 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
   const current = queue[0] ?? null;
   const remaining = queue.length;
   const totalInSession = remaining + reviewedCount;
+  const shortcuts =
+    useAppPreferencesStore((s) => s.preferences.keyboardShortcuts) ??
+    DEFAULT_KEYBOARD_SHORTCUTS;
+  const flipChord = useShortcutChord("reviewFlipOrGood");
+  const gradeAgainChord = useShortcutChord("reviewGradeAgain");
+  const gradeHardChord = useShortcutChord("reviewGradeHard");
+  const gradeGoodChord = useShortcutChord("reviewGradeGood");
+  const gradeEasyChord = useShortcutChord("reviewGradeEasy");
+  const gradeChords = {
+    again: gradeAgainChord,
+    hard: gradeHardChord,
+    good: gradeGoodChord,
+    easy: gradeEasyChord,
+  };
 
   useEffect(() => {
     void hydrate(deckId ?? null);
@@ -83,10 +86,12 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
 
   const onReviewKeyDown = useEffectEvent((event: KeyboardEvent) => {
     if (!current || submitting || loading) return;
-    if (event.metaKey || event.ctrlKey || event.altKey) return;
     if (isTypingTarget(event.target)) return;
 
-    if (event.key === " " || event.key === "Enter") {
+    if (
+      matchesChord(event, shortcuts.reviewFlipOrGood) ||
+      matchesChord(event, shortcuts.reviewFlipOrGoodAlt)
+    ) {
       event.preventDefault();
       if (!revealed) {
         reveal();
@@ -98,10 +103,18 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
 
     if (!revealed) return;
 
-    const grade = GRADE_KEYS[event.key];
-    if (!grade) return;
-    event.preventDefault();
-    void handleGrade(grade);
+    const gradeEntries: [Grade, string][] = [
+      ["again", shortcuts.reviewGradeAgain],
+      ["hard", shortcuts.reviewGradeHard],
+      ["good", shortcuts.reviewGradeGood],
+      ["easy", shortcuts.reviewGradeEasy],
+    ];
+    for (const [grade, chord] of gradeEntries) {
+      if (!matchesChord(event, chord)) continue;
+      event.preventDefault();
+      void handleGrade(grade);
+      return;
+    }
   });
 
   useEffect(() => {
@@ -175,7 +188,9 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
                     "{count}",
                     String(reviewedCount),
                   )
-                : t.review.emptyHint}
+                : deckId
+                  ? t.review.emptyHintDeck
+                  : t.review.emptyHint}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -186,6 +201,14 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
                 onClick={() => void hydrate(deckId ?? null)}
               >
                 {t.review.refresh}
+              </Button>
+            ) : deckId ? (
+              <Button asChild>
+                <Link
+                  href={`/decks/view?id=${encodeURIComponent(deckId)}&create=1`}
+                >
+                  {t.review.addCards}
+                </Link>
               </Button>
             ) : (
               <Button asChild>
@@ -256,13 +279,13 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
               <Eye className="size-4" aria-hidden />
               {t.review.reveal}
               <kbd className="ms-1 rounded border border-border/80 bg-muted px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">
-                {t.review.shortcuts.space}
+                {formatChordLabel(flipChord)}
               </kbd>
             </Button>
           ) : (
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {GRADES.map((grade, index) => (
+                {GRADES.map((grade) => (
                   <Button
                     key={grade}
                     type="button"
@@ -277,7 +300,7 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
                       <>
                         <span>{t.review.grades[grade]}</span>
                         <kbd className="rounded border border-border/60 bg-muted/80 px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">
-                          {index + 1}
+                          {formatChordLabel(gradeChords[grade])}
                         </kbd>
                       </>
                     )}

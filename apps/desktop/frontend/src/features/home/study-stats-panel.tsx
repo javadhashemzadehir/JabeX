@@ -67,31 +67,33 @@ export function StudyStatsPanel() {
       </div>
 
       {stats.cardCount > 0 ? (
-        <div className="space-y-2">
+        <div className="space-y-3 rounded-lg border border-border/60 bg-muted/30 px-3 py-3.5 sm:px-4">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
             {t.stats.boxes}
           </p>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 items-end gap-2 sm:gap-3">
             {stats.cardsByBox.map((count, index) => {
               const box = index + 1;
-              const height = Math.max(8, Math.round((count / maxBox) * 48));
+              const height = Math.max(8, Math.round((count / maxBox) * 56));
               return (
                 <div
                   key={box}
-                  className="flex flex-col items-center gap-1.5"
+                  className="flex min-w-0 flex-col items-center gap-1.5 text-center"
                   title={t.stats.boxCount
                     .replace("{box}", String(box))
                     .replace("{count}", formatCount(count, locale))}
                 >
-                  <div className="flex h-12 w-full items-end justify-center">
+                  <div className="flex h-14 w-full items-end justify-center">
                     <div
-                      className="w-full max-w-6 rounded-sm bg-foreground/70"
+                      className="w-full max-w-8 rounded-md bg-foreground/70"
                       style={{ height }}
                       aria-hidden
                     />
                   </div>
-                  <span className="text-[11px] text-muted-foreground">{box}</span>
-                  <span className="text-xs font-medium tabular-nums">
+                  <span className="text-[11px] text-muted-foreground tabular-nums">
+                    {box}
+                  </span>
+                  <span className="text-xs font-semibold tabular-nums tracking-tight">
                     {formatCount(count, locale)}
                   </span>
                 </div>
@@ -120,8 +122,10 @@ function StatMetric({
   emphasize?: boolean;
 }) {
   return (
-    <div className="space-y-1">
-      <p className="text-xs text-muted-foreground">{label}</p>
+    <div className="flex min-h-18 flex-col justify-between gap-2 rounded-lg border border-border/60 bg-background px-3 py-3">
+      <p className="text-xs leading-4 text-muted-foreground text-pretty">
+        {label}
+      </p>
       <p
         className={
           emphasize

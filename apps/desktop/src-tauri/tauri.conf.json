@@ -34,6 +34,10 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "category": "Education",
+    "shortDescription": "Private, offline-first digital Leitner Box",
+    "longDescription": "JabeX is a privacy-first flashcard app for Leitner Box study. All decks, cards, and progress stay on your device—no accounts, analytics, or cloud sync required.",
+    "copyright": "Copyright © JabeX contributors",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
