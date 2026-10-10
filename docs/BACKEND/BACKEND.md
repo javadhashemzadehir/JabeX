@@ -83,7 +83,7 @@ JabeX/
 
 Profiles: `list_profiles`, `get_active_profile`, `create_profile`, `update_profile`, `delete_profile`, `switch_profile`  
 Decks: `create_deck`, `list_decks`, `get_deck`, `rename_deck`, `delete_deck`  
-Cards: `create_card`, `get_card`, `list_cards`, `update_card`, `delete_card` (faces are versioned TipTap JSON documents; see ADR 009)  
+Cards: `create_card`, `get_card`, `list_cards`, `update_card`, `delete_card` (faces are versioned TipTap JSON `document_v2`; see ADR 009 / ADR 014)  
 Language assist: `get_language_assist_settings`, `set_language_assist_settings`, `regenerate_language_assist`, `read_pronunciation_audio` (ADR 011; create/update enqueue background detection)  
 Reviews: `list_due_cards`, `submit_review` (also projects into `study_activity` via `ReviewCompletedEvent`)  
 Stats: `get_study_stats` (local aggregates: decks, cards, due, reviews today, box distribution)  

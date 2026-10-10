@@ -19,6 +19,7 @@ Flashcards only. No notes. No cloud account. Persian-first.
 | Desktop | Tauri 2 + Rust |
 | i18n | `fa` (default, RTL) · `en` (LTR) |
 | Themes | Light · Dark · System |
+| Card faces | TipTap JSON (`document_v2`) — spoilers, math, tables, Markdown modes |
 
 ## Monorepo
 
@@ -63,6 +64,7 @@ pnpm test
 - [Development](./docs/DEVELOPMENT/DEVELOPMENT.md)
 - [Git workflow](./docs/GIT_WORKFLOW/GIT_WORKFLOW.md)
 - [Roadmap](./docs/ROADMAP/ROADMAP.md)
+- [ADR 014 — Advanced card editor](./docs/ADR/014-advanced-card-editor/014-advanced-card-editor.md)
 - [Contributing](./CONTRIBUTING.md)
 - [Security](./SECURITY.md)
 - [Changelog](./CHANGELOG.md)

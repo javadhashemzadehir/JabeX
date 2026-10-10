@@ -48,6 +48,13 @@
 - [x] Media attachments inside documents (local files + metadata; ADR 010)
 - [x] Ink / handwriting layers (vector JSON + canvas renderer; ADR 010)
 
+## Phase 2.5b — Advanced card editor
+
+- [x] `document_v2`: spoilers, KaTeX math, tables, highlighted code (ADR 014)
+- [x] Edit / Preview / JSON / Markdown modes
+- [x] Markdown ↔ JSON converters + ChatGPT-aware paste pipeline
+- [x] Telegram-style spoiler reveal in review; RTL text with LTR math/code
+
 ## Phase 2.6 — Smart Language Assist
 
 - [x] Offline language / script detection + Persian transliteration heuristics

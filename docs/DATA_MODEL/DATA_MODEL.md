@@ -14,7 +14,7 @@ Local-first entities for JabeX study data. All IDs are UUIDv7. Soft delete uses 
 | Entity | Notes |
 |--------|-------|
 | Deck | Soft-delete (`deleted_at` / `deleted_by`); optional algorithm override in `settings` JSON |
-| Card | Soft-delete; faces are versioned TipTap JSON (`document_v1`) |
+| Card | Soft-delete; faces are versioned TipTap JSON (`document_v1`/`document_v2`; writers emit v2) |
 | Review | Append-only grade history |
 | Setting | Per-profile key/value JSON; soft-delete capable |
 | Attachment | Metadata only; binary under `media/attachments/{id}/`; soft-delete |

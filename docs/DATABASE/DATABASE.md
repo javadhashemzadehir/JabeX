@@ -124,11 +124,12 @@ Versioned ZIP of normalized JSON documents + optional media. See [ADR 008](../AD
 `front_content` / `back_content` store JSON (not free HTML):
 
 ```json
-{ "version": 1, "type": "doc", "content": [/* TipTap nodes */] }
+{ "version": 2, "type": "doc", "content": [/* TipTap nodes */] }
 ```
 
-- Current schema version: **1** (`RICH_TEXT_DOCUMENT_VERSION`)
-- Legacy plain-text cells are accepted on read and rewritten as documents on the next update
+- Current write schema version: **2** (`RICH_TEXT_DOCUMENT_VERSION`) — spoilers, math, tables, highlighted code ([ADR 014](../ADR/014-advanced-card-editor/014-advanced-card-editor.md))
+- Readers accept `version` 1–2; legacy plain-text cells are accepted on read and rewritten as v2 on the next update
+- No separate SQL `content_version` columns (version lives inside the JSON)
 - See [ADR 009](../ADR/009-tiptap-rich-text-documents/009-tiptap-rich-text-documents.md)
 
 ## Migration Policy

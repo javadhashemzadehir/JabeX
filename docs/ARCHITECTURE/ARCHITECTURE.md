@@ -100,10 +100,15 @@ See [DEVELOPMENT.md](../DEVELOPMENT/DEVELOPMENT.md#system-tray-windows) for user
 - [011 — Smart Language Assist](../ADR/011-smart-language-assist/011-smart-language-assist.md)
 - [012 — Soft delete & Trash](../ADR/012-soft-delete-and-trash/012-soft-delete-and-trash.md)
 - [013 — Study activity & learning consistency](../ADR/013-study-activity-consistency/013-study-activity-consistency.md)
+- [014 — Advanced card editor](../ADR/014-advanced-card-editor/014-advanced-card-editor.md)
 
 ## Soft delete & Trash
 
 Normal study actions never hard-delete. Soft-deleted decks, cards, attachments, and ink appear in `features/trash` (`/trash`). Restore cascades to children; permanent delete is explicit (hold-to-confirm) and removes SQLite rows plus media files. See [ADR 012](../ADR/012-soft-delete-and-trash/012-soft-delete-and-trash.md).
+
+## Card editor (rich text)
+
+Card faces are TipTap JSON (`document_v2` writes; v1 readable). UI lives in `features/editor` (Edit / Preview / JSON / Markdown modes). Spoilers, KaTeX math, tables, and highlighted code are schema nodes — never stored as free HTML. See [ADR 014](../ADR/014-advanced-card-editor/014-advanced-card-editor.md).
 
 ## Rich content (media + ink)
 
@@ -116,6 +121,7 @@ Card faces remain TipTap JSON. Attachments and ink are **separate layers**:
 
 Frontend feature modules:
 
+- `features/editor` — TipTap card faces, modes, paste/Markdown helpers
 - `features/attachments` — picker, list, preview, viewer (per-card)
 - `features/media-library` — profile media browser, trash/purge, integrity (`/media`)
 - `features/trash` — unified soft-delete Trash (restore / delete forever)

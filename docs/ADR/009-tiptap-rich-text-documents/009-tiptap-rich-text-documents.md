@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted (extended by [ADR 014](../014-advanced-card-editor/014-advanced-card-editor.md) for `document_v2` nodes and editor modes)
 
 ## Context
 
@@ -22,12 +22,14 @@ Card front/back were plain strings. Product direction requires layered card cont
 - Display during review via TipTap in read-only mode (no `dangerouslySetInnerHTML` of arbitrary HTML).
 - Legacy plain-text rows and older `.jbx` string faces are accepted on read/import and normalized.
 
+Current write version is **`2`** (spoilers, math, tables, highlighted code). See ADR 014. Readers still accept `version: 1`.
+
 ## Consequences
 
 ### Positive
 
 - Aligns with future media/ink layers and document sync (`revision` already present)
-- Schema-versioned documents (`document_v1` → later migrations)
+- Schema-versioned documents (`document_v1` → `document_v2` → later migrations)
 - XSS surface stays bounded to a fixed extension set
 
 ### Negative
