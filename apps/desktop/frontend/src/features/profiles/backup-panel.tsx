@@ -6,18 +6,20 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useIsTauri } from "@/hooks/use-is-tauri";
 import { useTranslations } from "@/hooks/use-locale";
-import { api, isTauri } from "@/lib/tauri";
+import { api } from "@/lib/tauri";
 import { useProfileStore } from "./profile-store";
 
 export function BackupPanel() {
   const t = useTranslations();
   const desktop = useProfileStore((s) => s.desktop);
   const hydrate = useProfileStore((s) => s.hydrate);
+  const tauri = useIsTauri();
   const [importPath, setImportPath] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (!desktop && !isTauri()) {
+  if (!desktop && !tauri) {
     return (
       <p className="text-sm text-muted-foreground">{t.backup.desktopOnly}</p>
     );
