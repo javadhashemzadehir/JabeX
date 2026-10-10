@@ -88,11 +88,11 @@ cd apps/desktop/src-tauri && cargo check && cd ../../..
 pnpm tauri:build
 ```
 
-Outputs (version from `tauri.conf.json`, currently `0.1.0`):
+Outputs (version from `tauri.conf.json`, currently `0.1.1`):
 
 ```
-apps/desktop/src-tauri/target/release/bundle/nsis/JabeX_0.1.0_x64-setup.exe
-apps/desktop/src-tauri/target/release/bundle/msi/JabeX_0.1.0_x64_en-US.msi
+apps/desktop/src-tauri/target/release/bundle/nsis/JabeX_0.1.1_x64-setup.exe
+apps/desktop/src-tauri/target/release/bundle/msi/JabeX_0.1.1_x64_en-US.msi
 ```
 
 Portable (no installer) folder: `pnpm portable:build` → `dist/JabeX-<version>-portable/` (see [PACKAGING.md](../PACKAGING/PACKAGING.md#portable-windows-zip-no-installer)).

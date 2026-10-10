@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-10
+
 ### Changed
 
 - First-run experience uses a React Joyride product tour (deck → card → review → settings); release builds no longer offer an in-app sample deck. Mock study data remains `pnpm db:seed` in development only.
@@ -40,5 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Least-privilege Tauri capabilities; user data stays on device
 - No auto-updater in this release (user-downloaded builds only)
 
-[Unreleased]: https://github.com/jabex/jabex/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/jabex/jabex/releases/tag/v0.1.0
+[Unreleased]: https://github.com/javadhashemzadehir/JabeX/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.1
+[0.1.0]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.0
