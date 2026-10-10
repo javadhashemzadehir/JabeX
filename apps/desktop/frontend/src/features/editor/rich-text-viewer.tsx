@@ -29,6 +29,8 @@ export function RichTextViewer({
     content: toTiptapContent(document),
     editorProps: {
       attributes: {
+        // Auto direction so LTR English (and trailing ?) stays correct inside RTL chrome.
+        dir: "auto",
         class: cn("jabex-editor-content", contentClassName),
       },
     },

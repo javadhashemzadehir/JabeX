@@ -52,6 +52,138 @@ import { useCardStore } from "./card-store";
 type DialogMode = "create" | "edit" | "delete" | null;
 const ROW_ESTIMATE = 96;
 
+type CardsVirtualListProps = {
+  cards: CardSummary[];
+  total: number;
+  hasMore: boolean;
+  loadingMore: boolean;
+  boxLabel: string;
+  openLabel: string;
+  deleteLabel: string;
+  loadingLabel: string;
+  onOpen: (card: CardSummary) => void;
+  onDelete: (card: CardSummary) => void;
+  onLoadMore: () => void;
+};
+
+// Opt out of React Compiler: useVirtualizer returns a mutable instance.
+function CardsVirtualList({
+  cards,
+  total,
+  hasMore,
+  loadingMore,
+  boxLabel,
+  openLabel,
+  deleteLabel,
+  loadingLabel,
+  onOpen,
+  onDelete,
+  onLoadMore,
+}: CardsVirtualListProps) {
+  "use no memo";
+
+  const listParentRef = useRef<HTMLDivElement>(null);
+
+  // eslint-disable-next-line react-hooks/incompatible-library -- mutable virtualizer; opted out via "use no memo"
+  const virtualizer = useVirtualizer({
+    count: cards.length,
+    getScrollElement: () => listParentRef.current,
+    estimateSize: () => ROW_ESTIMATE,
+    overscan: 8,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const lastVirtualIndex = virtualItems[virtualItems.length - 1]?.index ?? -1;
+
+  useEffect(() => {
+    if (lastVirtualIndex < 0 || !hasMore || loadingMore) return;
+    if (lastVirtualIndex >= cards.length - 8) {
+      onLoadMore();
+    }
+  }, [lastVirtualIndex, hasMore, loadingMore, cards.length, onLoadMore]);
+
+  return (
+    <div className="space-y-2">
+      {total > 0 ? (
+        <p className="text-xs text-muted-foreground tabular-nums">
+          {cards.length}
+          {total > cards.length ? ` / ${total}` : ""}
+        </p>
+      ) : null}
+      <div
+        ref={listParentRef}
+        className="max-h-[min(70vh,40rem)] overflow-auto rounded-lg border border-border/60"
+      >
+        <ul
+          className="relative w-full"
+          style={{ height: `${virtualizer.getTotalSize()}px` }}
+        >
+          {virtualItems.map((virtualRow) => {
+            const card = cards[virtualRow.index];
+            if (!card) return null;
+            return (
+              <li
+                key={card.id}
+                data-index={virtualRow.index}
+                ref={virtualizer.measureElement}
+                className="absolute inset-s-0 top-0 flex w-full flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3"
+                style={{
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => onOpen(card)}
+                  className="min-w-0 flex-1 space-y-1 rounded-md text-start outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="line-clamp-2 font-medium" dir="auto">
+                      {card.frontPreview}
+                    </p>
+                    <LanguageBadge card={card} />
+                  </div>
+                  <p
+                    className="line-clamp-2 text-sm text-muted-foreground"
+                    dir="auto"
+                  >
+                    {card.backPreview}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {boxLabel.replace("{box}", String(card.boxPosition))}
+                  </p>
+                </button>
+                <div className="flex shrink-0 flex-wrap items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onOpen(card)}
+                  >
+                    <SquareStack className="size-4" />
+                    {openLabel}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={deleteLabel}
+                    onClick={() => onDelete(card)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      {loadingMore ? (
+        <p className="text-xs text-muted-foreground">{loadingLabel}</p>
+      ) : null}
+    </div>
+  );
+}
+
 export function CardsPanel({
   deckId,
   openCreate: openCreateOnMount = false,
@@ -90,14 +222,6 @@ export function CardsPanel({
   const [editorLayout, setEditorLayout] =
     useState<EditorLayoutWidth>("medium");
   const openedCreateFromQuery = useRef(false);
-  const listParentRef = useRef<HTMLDivElement>(null);
-
-  const virtualizer = useVirtualizer({
-    count: cards.length,
-    getScrollElement: () => listParentRef.current,
-    estimateSize: () => ROW_ESTIMATE,
-    overscan: 8,
-  });
 
   const canSave = !isRichTextBlank(front) && !isRichTextBlank(back);
 
@@ -115,16 +239,6 @@ export function CardsPanel({
     setBack(emptyRichTextDocument());
     setDialog("create");
   }, [openCreateOnMount, loading, deckId]);
-
-  const virtualItems = virtualizer.getVirtualItems();
-  const lastVirtualIndex = virtualItems[virtualItems.length - 1]?.index ?? -1;
-
-  useEffect(() => {
-    if (lastVirtualIndex < 0 || !hasMore || loadingMore) return;
-    if (lastVirtualIndex >= cards.length - 8) {
-      void loadMore();
-    }
-  }, [lastVirtualIndex, hasMore, loadingMore, cards.length, loadMore]);
 
   function openCreate() {
     setTarget(null);
@@ -298,84 +412,19 @@ export function CardsPanel({
           </Button>
         </div>
       ) : cards.length > 0 ? (
-        <div className="space-y-2">
-          {total > 0 ? (
-            <p className="text-xs text-muted-foreground tabular-nums">
-              {cards.length}
-              {total > cards.length ? ` / ${total}` : ""}
-            </p>
-          ) : null}
-          <div
-            ref={listParentRef}
-            className="max-h-[min(70vh,40rem)] overflow-auto rounded-lg border border-border/60"
-          >
-            <ul
-              className="relative w-full"
-              style={{ height: `${virtualizer.getTotalSize()}px` }}
-            >
-              {virtualizer.getVirtualItems().map((virtualRow) => {
-                const card = cards[virtualRow.index];
-                if (!card) return null;
-                return (
-                  <li
-                    key={card.id}
-                    data-index={virtualRow.index}
-                    ref={virtualizer.measureElement}
-                    className="absolute start-0 top-0 flex w-full flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3"
-                    style={{
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => void openEdit(card)}
-                      className="min-w-0 flex-1 space-y-1 rounded-md text-start outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="line-clamp-2 font-medium">
-                          {card.frontPreview}
-                        </p>
-                        <LanguageBadge card={card} />
-                      </div>
-                      <p className="line-clamp-2 text-sm text-muted-foreground">
-                        {card.backPreview}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {t.cards.boxLabel.replace(
-                          "{box}",
-                          String(card.boxPosition),
-                        )}
-                      </p>
-                    </button>
-                    <div className="flex shrink-0 flex-wrap items-center gap-1">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => void openEdit(card)}
-                      >
-                        <SquareStack className="size-4" />
-                        {t.cards.open}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label={t.cards.delete}
-                        onClick={() => openDelete(card)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-          {loadingMore ? (
-            <p className="text-xs text-muted-foreground">{t.cards.loading}</p>
-          ) : null}
-        </div>
+        <CardsVirtualList
+          cards={cards}
+          total={total}
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+          boxLabel={t.cards.boxLabel}
+          openLabel={t.cards.open}
+          deleteLabel={t.cards.delete}
+          loadingLabel={t.cards.loading}
+          onOpen={(card) => void openEdit(card)}
+          onDelete={openDelete}
+          onLoadMore={() => void loadMore()}
+        />
       ) : null}
 
       {deck ? (

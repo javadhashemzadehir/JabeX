@@ -89,6 +89,8 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         id: id ?? "",
+        // Isolate card-face bidi from app chrome (fa RTL vs en LTR faces).
+        dir: "auto",
         class: "jabex-editor-content",
         ...(ariaLabel ? { "aria-label": ariaLabel } : {}),
       },

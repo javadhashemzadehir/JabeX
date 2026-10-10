@@ -222,6 +222,8 @@ html.dark .brand-logo-on-dark {
   font-size: 0.875rem;
   line-height: 1.6;
   color: var(--foreground);
+  /* Paragraph-level auto bidi: English "?" stays at the end in RTL chrome. */
+  unicode-bidi: plaintext;
 }
 
 .jabex-editor--large .jabex-editor .tiptap {
