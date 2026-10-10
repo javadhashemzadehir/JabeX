@@ -11,7 +11,9 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "tauri:dev": "pnpm --filter @jabex/desktop tauri:dev",
-    "tauri:build": "pnpm --filter @jabex/desktop tauri:build"
+    "tauri:build": "pnpm --filter @jabex/desktop tauri:build",
+    "db:seed": "node scripts/dev/seed.mjs",
+    "db:unseed": "node scripts/dev/unseed.mjs"
   },
   "engines": {
     "node": ">=22"

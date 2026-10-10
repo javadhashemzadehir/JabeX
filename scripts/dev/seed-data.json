@@ -1,0 +1,248 @@
+{
+  "version": 1,
+  "marker": "jabex.dev.seed",
+  "decks": [
+    {
+      "id": "11111111-1111-4111-8111-111111111101",
+      "name": "واژگان انگلیسی پایه",
+      "description": "کلمات روزمره انگلیسی ↔ فارسی (دادهٔ آزمایشی)",
+      "settings": {}
+    },
+    {
+      "id": "11111111-1111-4111-8111-111111111102",
+      "name": "دستور زبان فارسی",
+      "description": "نکات کوتاه دستور زبان (دادهٔ آزمایشی)",
+      "settings": {}
+    },
+    {
+      "id": "11111111-1111-4111-8111-111111111103",
+      "name": "Programming Basics",
+      "description": "Short English tech flashcards (seed data)",
+      "settings": {
+        "newCardsPerDay": 15,
+        "reviewsPerDay": 80
+      }
+    }
+  ],
+  "cards": [
+    {
+      "id": "22222222-2222-4222-8222-222222222201",
+      "deckId": "11111111-1111-4111-8111-111111111101",
+      "frontContent": "apple",
+      "backContent": "سیب",
+      "boxPosition": 1,
+      "state": "new",
+      "reviewCount": 0,
+      "lapseCount": 0,
+      "dueOffsetDays": 0
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222202",
+      "deckId": "11111111-1111-4111-8111-111111111101",
+      "frontContent": "book",
+      "backContent": "کتاب",
+      "boxPosition": 2,
+      "state": "learning",
+      "reviewCount": 2,
+      "lapseCount": 0,
+      "dueOffsetDays": 0
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222203",
+      "deckId": "11111111-1111-4111-8111-111111111101",
+      "frontContent": "water",
+      "backContent": "آب",
+      "boxPosition": 3,
+      "state": "review",
+      "reviewCount": 5,
+      "lapseCount": 1,
+      "dueOffsetDays": -1
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222204",
+      "deckId": "11111111-1111-4111-8111-111111111101",
+      "frontContent": "friend",
+      "backContent": "دوست",
+      "boxPosition": 4,
+      "state": "review",
+      "reviewCount": 8,
+      "lapseCount": 0,
+      "dueOffsetDays": 3
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222205",
+      "deckId": "11111111-1111-4111-8111-111111111101",
+      "frontContent": "beautiful",
+      "backContent": "زیبا",
+      "boxPosition": 5,
+      "state": "review",
+      "reviewCount": 12,
+      "lapseCount": 0,
+      "dueOffsetDays": 14
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222206",
+      "deckId": "11111111-1111-4111-8111-111111111101",
+      "frontContent": "today",
+      "backContent": "امروز",
+      "boxPosition": 1,
+      "state": "learning",
+      "reviewCount": 1,
+      "lapseCount": 1,
+      "dueOffsetDays": 0
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222211",
+      "deckId": "11111111-1111-4111-8111-111111111102",
+      "frontContent": "فاعل چیست؟",
+      "backContent": "کننده‌ی کار در جمله",
+      "boxPosition": 1,
+      "state": "new",
+      "reviewCount": 0,
+      "lapseCount": 0,
+      "dueOffsetDays": 0
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222212",
+      "deckId": "11111111-1111-4111-8111-111111111102",
+      "frontContent": "مفعول چیست؟",
+      "backContent": "پذیرنده‌ی کار در جمله",
+      "boxPosition": 2,
+      "state": "learning",
+      "reviewCount": 3,
+      "lapseCount": 0,
+      "dueOffsetDays": 0
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222213",
+      "deckId": "11111111-1111-4111-8111-111111111102",
+      "frontContent": "صفت چه نقشی دارد؟",
+      "backContent": "ویژگی اسم را بیان می‌کند",
+      "boxPosition": 3,
+      "state": "review",
+      "reviewCount": 6,
+      "lapseCount": 0,
+      "dueOffsetDays": 2
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222214",
+      "deckId": "11111111-1111-4111-8111-111111111102",
+      "frontContent": "قید زمان نمونه؟",
+      "backContent": "امروز، دیروز، فردا",
+      "boxPosition": 1,
+      "state": "new",
+      "reviewCount": 0,
+      "lapseCount": 0,
+      "dueOffsetDays": 0
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222221",
+      "deckId": "11111111-1111-4111-8111-111111111103",
+      "frontContent": "What is a variable?",
+      "backContent": "A named place to store a value",
+      "boxPosition": 1,
+      "state": "new",
+      "reviewCount": 0,
+      "lapseCount": 0,
+      "dueOffsetDays": 0
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "deckId": "11111111-1111-4111-8111-111111111103",
+      "frontContent": "What does API stand for?",
+      "backContent": "Application Programming Interface",
+      "boxPosition": 2,
+      "state": "learning",
+      "reviewCount": 2,
+      "lapseCount": 0,
+      "dueOffsetDays": 0
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222223",
+      "deckId": "11111111-1111-4111-8111-111111111103",
+      "frontContent": "What is SQLite?",
+      "backContent": "An embedded relational database engine",
+      "boxPosition": 3,
+      "state": "review",
+      "reviewCount": 4,
+      "lapseCount": 0,
+      "dueOffsetDays": -2
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222224",
+      "deckId": "11111111-1111-4111-8111-111111111103",
+      "frontContent": "What is Git?",
+      "backContent": "A distributed version control system",
+      "boxPosition": 4,
+      "state": "review",
+      "reviewCount": 7,
+      "lapseCount": 1,
+      "dueOffsetDays": 5
+    }
+  ],
+  "reviews": [
+    {
+      "id": "33333333-3333-4333-8333-333333333301",
+      "cardId": "22222222-2222-4222-8222-222222222202",
+      "grade": "good",
+      "boxBefore": 1,
+      "boxAfter": 2,
+      "durationMs": 4200,
+      "reviewedOffsetDays": -2
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333302",
+      "cardId": "22222222-2222-4222-8222-222222222203",
+      "grade": "again",
+      "boxBefore": 3,
+      "boxAfter": 1,
+      "durationMs": 6100,
+      "reviewedOffsetDays": -5
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333303",
+      "cardId": "22222222-2222-4222-8222-222222222203",
+      "grade": "easy",
+      "boxBefore": 1,
+      "boxAfter": 2,
+      "durationMs": 2800,
+      "reviewedOffsetDays": -4
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333304",
+      "cardId": "22222222-2222-4222-8222-222222222203",
+      "grade": "good",
+      "boxBefore": 2,
+      "boxAfter": 3,
+      "durationMs": 3500,
+      "reviewedOffsetDays": -1
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333305",
+      "cardId": "22222222-2222-4222-8222-222222222205",
+      "grade": "good",
+      "boxBefore": 4,
+      "boxAfter": 5,
+      "durationMs": 5100,
+      "reviewedOffsetDays": -10
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333306",
+      "cardId": "22222222-2222-4222-8222-222222222212",
+      "grade": "hard",
+      "boxBefore": 1,
+      "boxAfter": 2,
+      "durationMs": 7300,
+      "reviewedOffsetDays": 0
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333307",
+      "cardId": "22222222-2222-4222-8222-222222222223",
+      "grade": "good",
+      "boxBefore": 2,
+      "boxAfter": 3,
+      "durationMs": 3900,
+      "reviewedOffsetDays": 0
+    }
+  ]
+}
