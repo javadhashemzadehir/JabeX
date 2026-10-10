@@ -14,7 +14,7 @@ Flashcards only. No notes. No cloud account. Persian-first.
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | Next.js (App Router) + TypeScript + Tailwind |
+| Frontend | Next.js (App Router) + TypeScript + Tailwind CSS v4 |
 | UI system | [shadcn/ui](https://ui.shadcn.com/docs/components) |
 | Desktop | Tauri 2 + Rust |
 | i18n | `fa` (default, RTL) · `en` (LTR) |
@@ -25,10 +25,8 @@ Flashcards only. No notes. No cloud account. Persian-first.
 ```
 apps/desktop/frontend   # Next.js UI
 apps/desktop/src-tauri  # Tauri / Rust host
-packages/ui             # Shared UI (placeholder)
-packages/types          # Shared types
-packages/config         # Shared tooling config
-docs/                   # Product & architecture docs
+packages/types          # Shared TypeScript contracts
+docs/                   # Product & architecture docs (one topic per folder)
 .cursor/rules/          # Cursor AI agent rules
 ```
 
@@ -59,12 +57,12 @@ pnpm test
 
 ## Documentation
 
-- [Product](./docs/PRODUCT.md)
-- [Architecture](./docs/ARCHITECTURE.md)
-- [Database](./docs/DATABASE.md)
-- [Development](./docs/DEVELOPMENT.md)
-- [Git workflow](./docs/GIT_WORKFLOW.md)
-- [Roadmap](./docs/ROADMAP.md)
+- [Product](./docs/PRODUCT/PRODUCT.md)
+- [Architecture](./docs/ARCHITECTURE/ARCHITECTURE.md)
+- [Database](./docs/DATABASE/DATABASE.md)
+- [Development](./docs/DEVELOPMENT/DEVELOPMENT.md)
+- [Git workflow](./docs/GIT_WORKFLOW/GIT_WORKFLOW.md)
+- [Roadmap](./docs/ROADMAP/ROADMAP.md)
 - [Contributing](./CONTRIBUTING.md)
 - [Security](./SECURITY.md)
 - [Changelog](./CHANGELOG.md)

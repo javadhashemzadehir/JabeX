@@ -4,9 +4,9 @@ JabeX uses an improved **Git Flow** model suitable for a solo maintainer today a
 
 Related files:
 
-- [CONTRIBUTING.md](../CONTRIBUTING.md) — how to contribute
-- [CHANGELOG.md](../CHANGELOG.md) — Keep a Changelog
-- [SECURITY.md](../SECURITY.md) — vulnerability reporting
+- [CONTRIBUTING.md](../../CONTRIBUTING.md) — how to contribute
+- [CHANGELOG.md](../../CHANGELOG.md) — Keep a Changelog
+- [SECURITY.md](../../SECURITY.md) — vulnerability reporting
 - `.github/workflows/` — CI, release, security, stale automation
 
 ---

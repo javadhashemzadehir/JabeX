@@ -19,6 +19,11 @@ JabeX (جعبه ایکس) is a **private, offline-first digital Leitner Box**. I
 2. Add flashcards (front / back)
 3. Review due cards with Leitner box progression
 4. Study fully offline, with data staying local
+5. See learning consistency (streaks / calendar) from real review activity
+
+## Learning consistency (not habits)
+
+JabeX shows how steadily you review flashcards — current streak, best streak, and a year-long heatmap. This is **not** a habit tracker: there are no user-defined habits, goals, or “mark complete” buttons. Every signal comes from completed Leitner reviews on this device (see [ADR 013](../ADR/013-study-activity-consistency/013-study-activity-consistency.md)).
 
 ## Success Metrics (Product)
 
@@ -37,6 +42,7 @@ JabeX (جعبه ایکس) is a **private, offline-first digital Leitner Box**. I
 - Note-taking systems
 - Knowledge graphs / backlinks
 - Page builders / canvases
+- Generic habit trackers / user-defined habits or goals
 - AI tutoring or generation (unless user later opts into a clearly scoped, offline-friendly feature via ADR)
 - Analytics / telemetry
 - Mandatory authentication

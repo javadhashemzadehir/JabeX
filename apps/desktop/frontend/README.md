@@ -10,4 +10,4 @@ pnpm test
 pnpm tauri:dev   # requires Rust toolchain
 ```
 
-See the repository root `README.md` and `docs/DEVELOPMENT.md`.
+See the repository root `README.md` and `docs/DEVELOPMENT/DEVELOPMENT.md`.

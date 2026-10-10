@@ -2,7 +2,7 @@
 
 Thanks for helping build a private, offline-first Leitner Box.
 
-Full Git / branch / release details: **[docs/GIT_WORKFLOW.md](./docs/GIT_WORKFLOW.md)**
+Full Git / branch / release details: **[docs/GIT_WORKFLOW/GIT_WORKFLOW.md](./docs/GIT_WORKFLOW/GIT_WORKFLOW.md)**
 
 ## Principles
 
@@ -13,9 +13,9 @@ Full Git / branch / release details: **[docs/GIT_WORKFLOW.md](./docs/GIT_WORKFLO
 
 ## Getting started
 
-1. Read `docs/PRODUCT.md`, `docs/ARCHITECTURE.md`, and ADRs
-2. Follow `docs/DEVELOPMENT.md` for local setup
-3. Read `docs/GIT_WORKFLOW.md` for branching and commits
+1. Read `docs/PRODUCT/PRODUCT.md`, `docs/ARCHITECTURE/ARCHITECTURE.md`, and ADRs
+2. Follow `docs/DEVELOPMENT/DEVELOPMENT.md` for local setup
+3. Read `docs/GIT_WORKFLOW/GIT_WORKFLOW.md` for branching and commits
 4. Prefer small pull requests with a clear purpose
 
 ## Contributor workflow

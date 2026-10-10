@@ -35,7 +35,7 @@ A **profile** is a local identity on the device (display name + optional avatar)
 
 ### Sync-ready entity fields
 
-Study entities keep UUIDv7 IDs and gain a monotonic `revision` integer bumped on every write. Soft-delete via `deleted_at` remains (reviews stay append-only without `deleted_at`).
+Study entities keep UUIDv7 IDs and gain a monotonic `revision` integer bumped on every write. Soft-delete via `deleted_at` / `deleted_by` remains (reviews stay append-only without those fields). From `.jbx` v3, soft-deleted study entities are included in exports so Trash and tombstones survive backup roundtrips ([ADR 012](../012-soft-delete-and-trash/012-soft-delete-and-trash.md)).
 
 Future Git sync will export normalized JSON documents from SQLite, merge in a repo, then import — never sync `database.sqlite` binaries.
 

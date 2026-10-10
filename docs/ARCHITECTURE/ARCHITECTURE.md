@@ -24,7 +24,7 @@ JabeX desktop is a **Tauri** application embedding a **Next.js** frontend. All s
 └─────────────────────────────────────────┘
 ```
 
-Local **profiles** isolate study data per person on the device (no online identity). See [ADR 008](./ADR/008-local-profiles-and-jbx-backup.md).
+Local **profiles** isolate study data per person on the device (no online identity). See [ADR 008](../ADR/008-local-profiles-and-jbx-backup/008-local-profiles-and-jbx-backup.md).
 
 ## Repository Structure
 
@@ -32,10 +32,8 @@ Local **profiles** isolate study data per person on the device (no online identi
 |------|------|
 | `apps/desktop/frontend` | Next.js App Router UI |
 | `apps/desktop/src-tauri` | Tauri + Rust backend |
-| `packages/ui` | Shared UI package (shadcn-oriented) |
 | `packages/types` | Shared TypeScript contracts |
-| `packages/config` | Shared tooling config |
-| `docs/` | Product, architecture, ADRs |
+| `docs/` | Product, architecture, ADRs (each doc in its own folder) |
 | `.cursor/rules/` | AI agent rules |
 
 ## Frontend Layers
@@ -53,18 +51,20 @@ Local **profiles** isolate study data per person on the device (no online identi
 | IPC | `commands/` | Thin Tauri adapters |
 | Application | `application/` | Use-cases / services |
 | Domain | `domain/` | Models, scheduler, repository ports, errors |
-| Infrastructure | `infrastructure/` | SQLite, media FS, repository adapters |
+| Infrastructure | `infrastructure/` | SQLite, media FS, repository adapters, optional provider adapters |
 | Shared | `shared/` | UUIDv7 IDs, time helpers |
 
-See [BACKEND.md](./BACKEND.md) for data flow, scheduler rules, and IPC command list.
+See [BACKEND.md](../BACKEND/BACKEND.md) for data flow, scheduler rules, and IPC command list.
+Optional Smart Language Assist (detection / translation / TTS ports) is documented in [ADR 011](../ADR/011-smart-language-assist/011-smart-language-assist.md).
 
 ## Cross-Cutting Concerns
 
 - **i18n**: default `fa` + RTL; `en` + LTR
-- **Theming**: `next-themes` with CSS variables
+- **Theming**: `next-themes` with CSS variables; Tailwind CSS v4 logical utilities for direction-aware layout
+
 - **Validation**: Zod (TS) + Rust validation at IPC boundary
 - **Security**: least-privilege Tauri capabilities; no telemetry
-- **Storage**: SQLite (WAL) + content-addressed media files
+- **Storage**: SQLite (WAL) + profile media tree (`media/attachments/`, `media/ink/`) — binaries never as SQLite BLOBs ([ADR 010](../ADR/010-rich-content-storage/010-rich-content-storage.md))
 - **Desktop shell**: system tray / window visibility live in `src-tauri/src/desktop/` (not in domain services)
 
 ## System tray (Windows)
@@ -83,15 +83,42 @@ Tray mode is a **desktop-shell** concern managed in Rust:
 
 Preferences are **device-level** (not per profile) so close-to-tray behaviour does not change when switching local profiles. Switch Profile is available from the system tray.
 
-See [DEVELOPMENT.md](./DEVELOPMENT.md#system-tray-windows) for user-facing restore/exit behaviour.
+See [DEVELOPMENT.md](../DEVELOPMENT/DEVELOPMENT.md#system-tray-windows) for user-facing restore/exit behaviour.
 
 ## Related ADRs
 
-- [001 — Next.js + Tauri stack](./ADR/001-next-tauri-stack.md)
-- [002 — UI framework choice](./ADR/002-ui-framework-choice.md)
-- [003 — Local-first storage](./ADR/003-local-first-storage.md)
-- [004 — Internationalization](./ADR/004-internationalization.md)
-- [005 — Rust backend](./ADR/005-rust-backend.md)
-- [006 — SQLite storage](./ADR/006-sqlite-storage.md)
-- [007 — Clean architecture](./ADR/007-clean-architecture.md)
-- [008 — Local profiles & `.jbx` backup](./ADR/008-local-profiles-and-jbx-backup.md)
+- [001 — Next.js + Tauri stack](../ADR/001-next-tauri-stack/001-next-tauri-stack.md)
+- [002 — UI framework choice](../ADR/002-ui-framework-choice/002-ui-framework-choice.md)
+- [003 — Local-first storage](../ADR/003-local-first-storage/003-local-first-storage.md)
+- [004 — Internationalization](../ADR/004-internationalization/004-internationalization.md)
+- [005 — Rust backend](../ADR/005-rust-backend/005-rust-backend.md)
+- [006 — SQLite storage](../ADR/006-sqlite-storage/006-sqlite-storage.md)
+- [007 — Clean architecture](../ADR/007-clean-architecture/007-clean-architecture.md)
+- [008 — Local profiles & `.jbx` backup](../ADR/008-local-profiles-and-jbx-backup/008-local-profiles-and-jbx-backup.md)
+- [009 — TipTap rich-text documents](../ADR/009-tiptap-rich-text-documents/009-tiptap-rich-text-documents.md)
+- [010 — Rich content storage (media + ink)](../ADR/010-rich-content-storage/010-rich-content-storage.md)
+- [011 — Smart Language Assist](../ADR/011-smart-language-assist/011-smart-language-assist.md)
+- [012 — Soft delete & Trash](../ADR/012-soft-delete-and-trash/012-soft-delete-and-trash.md)
+- [013 — Study activity & learning consistency](../ADR/013-study-activity-consistency/013-study-activity-consistency.md)
+
+## Soft delete & Trash
+
+Normal study actions never hard-delete. Soft-deleted decks, cards, attachments, and ink appear in `features/trash` (`/trash`). Restore cascades to children; permanent delete is explicit (hold-to-confirm) and removes SQLite rows plus media files. See [ADR 012](../ADR/012-soft-delete-and-trash/012-soft-delete-and-trash.md).
+
+## Rich content (media + ink)
+
+Card faces remain TipTap JSON. Attachments and ink are **separate layers**:
+
+| Concern | SQLite | Disk |
+|---------|--------|------|
+| Attachment metadata | `attachments` | `media/attachments/{uuid}/` |
+| Ink reference | `ink_documents` | `media/ink/{uuid}.json` |
+
+Frontend feature modules:
+
+- `features/attachments` — picker, list, preview, viewer (per-card)
+- `features/media-library` — profile media browser, trash/purge, integrity (`/media`)
+- `features/trash` — unified soft-delete Trash (restore / delete forever)
+- `features/ink` — `InkRenderer` abstraction + canvas implementation, undo/redo, debounced save
+
+Domain ports: `AttachmentStorage`, `InkStorage`, `AttachmentRepository`, `InkDocumentRepository`. Application: `MediaLibraryService` for library stats/GC. Infrastructure implements local FS + SQLite only.

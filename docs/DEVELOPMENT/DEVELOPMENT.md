@@ -30,7 +30,14 @@ pnpm tauri:dev
 pnpm tauri:build
 # equivalent:
 pnpm --filter @jabex/desktop tauri:dev
+
+# Local mock study data (active profile SQLite)
+pnpm db:seed                 # insert fixtures from scripts/dev/seed-data.json
+pnpm db:unseed               # remove only those seed rows
+pnpm db:unseed -- --purge    # wipe ALL decks/cards/reviews in the profile
 ```
+
+Seed scripts target the local app-data directory (`directories` ProjectDirs). Quit the running app if you hit `SQLITE_BUSY`. Override the path with `JABEX_DATA_DIR` when needed.
 
 ## Workspace Layout
 
@@ -51,21 +58,22 @@ pnpm --filter @jabex/desktop tauri:dev
   - Do not introduce non-shadcn UI kits (FarsiUI, MUI, Chakra, …)
 - Fonts: local only (no Google Fonts). Persian (`fa`) uses Iran Yekan Bakh FaNum; English (`en`) uses Comfortaa. Files live in `apps/desktop/frontend/src/fonts`.
 - RTL: `dir` on `<html>` + Radix `DirectionProvider`
+- Tailwind CSS v4: use canonical logical utilities (`inset-s-*` / `inset-e-*`, `ms-*` / `me-*`, `ps-*` / `pe-*`, `border-s-*` / `border-e-*`, `text-start` / `text-end`, `bg-linear-to-*`). Do not use deprecated inset aliases (`start-*` / `end-*`) or physical left/right spacing when a logical equivalent exists. See `.cursor/rules/frontend-guidelines.mdc`.
 
 ## Tauri Notes
 
 - Run CLI from `apps/desktop` (workspace package `@jabex/desktop`) so `src-tauri/tauri.conf.json` is discoverable; do not invoke `tauri` from `frontend/` alone
 - Dev: Next.js dev server URL in `tauri.conf.json`
 - Prod: Next static export consumed by Tauri
-- Keep capabilities minimal
-- Backend docs: `docs/BACKEND.md`
+- Keep capabilities minimal (`dialog:allow-open` / `dialog:allow-save` for `.jbx` pickers only)
+- Backend docs: `docs/BACKEND/BACKEND.md`
 - Run Rust tests: `cd apps/desktop/src-tauri && cargo test`
 - Windows requires MSVC Build Tools (`link.exe`) for `cargo` / Tauri builds
 
 ## Git & contributions
 
-- Branching, commits, and releases: [GIT_WORKFLOW.md](./GIT_WORKFLOW.md)
-- Contribution steps: [CONTRIBUTING.md](../CONTRIBUTING.md)
+- Branching, commits, and releases: [GIT_WORKFLOW.md](../GIT_WORKFLOW/GIT_WORKFLOW.md)
+- Contribution steps: [CONTRIBUTING.md](../../CONTRIBUTING.md)
 
 ## Coding Standards
 

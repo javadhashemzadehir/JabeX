@@ -12,9 +12,7 @@
 
 # Shared packages
 /packages/                      @OWNER
-/packages/ui/                   @OWNER
 /packages/types/                @OWNER
-/packages/config/               @OWNER
 
 # Rust / Tauri host (alias path for clarity)
 /apps/desktop/src-tauri/        @OWNER

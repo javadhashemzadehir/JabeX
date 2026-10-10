@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/jabex/jabex/security/advisories/new
     about: Report security issues privately — do not open a public issue.
   - name: Git workflow guide
-    url: https://github.com/jabex/jabex/blob/develop/docs/GIT_WORKFLOW.md
+    url: https://github.com/jabex/jabex/blob/develop/docs/GIT_WORKFLOW/GIT_WORKFLOW.md
     about: Branch strategy, commits, and release process.

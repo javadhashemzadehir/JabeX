@@ -29,7 +29,8 @@ Use these for variants/blocks **only** when they install as owned source compati
 
 Supporting stack:
 
-- Tailwind CSS + CSS variables + `tw-animate-css`
+- Tailwind CSS v4 + CSS variables + `tw-animate-css`
+- Prefer Tailwind v4 canonical / logical utilities for RTL/LTR (`inset-s-*` / `inset-e-*`, `ms-*` / `me-*`, `border-s-*` / `border-e-*`, `text-start` / `text-end`, `bg-linear-to-*`); avoid deprecated `start-*` / `end-*` inset aliases
 - `lucide-react` for icons
 - `framer-motion` for purposeful motion
 - `sonner` for toasts
