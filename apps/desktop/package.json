@@ -1,0 +1,14 @@
+{
+  "name": "@jabex/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JabeX desktop host — Tauri entry for frontend + Rust",
+  "scripts": {
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.9.1"
+  }
+}

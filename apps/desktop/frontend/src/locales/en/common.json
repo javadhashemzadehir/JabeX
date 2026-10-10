@@ -1,0 +1,67 @@
+{
+  "app": {
+    "name": "JabeX",
+    "tagline": "Private, offline-first Leitner Box",
+    "privacyNote": "All data stays on your device."
+  },
+  "nav": {
+    "home": "Home",
+    "decks": "Decks",
+    "review": "Review",
+    "settings": "Settings"
+  },
+  "header": {
+    "title": "JabeX",
+    "foundation": "Local profiles · offline study"
+  },
+  "home": {
+    "welcome": "Welcome to JabeX",
+    "description": "Study with a private Leitner box. Switch local profiles on this device, and back up with a portable .jbx file — no account required.",
+    "cta": "Create a deck in under 30 seconds when Phase 1 UI lands",
+    "dueToday": "Cards due",
+    "profiles": "Local profiles"
+  },
+  "profiles": {
+    "label": "Profile",
+    "create": "New profile",
+    "createTitle": "Create local profile",
+    "createHint": "Each profile keeps its own decks and progress on this device.",
+    "displayName": "Display name",
+    "displayNamePlaceholder": "e.g. Alex",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "created": "Profile created",
+    "switched": "Profile switched",
+    "deleted": "Profile removed",
+    "error": "Could not update profiles"
+  },
+  "backup": {
+    "title": "Backup",
+    "export": "Export .jbx",
+    "import": "Import",
+    "importPath": "Path to .jbx file",
+    "importPlaceholder": "C:\\path\\to\\backup.jbx",
+    "importHint": "Import creates a new local profile and loads the backup into it.",
+    "exported": "Backup saved to {path}",
+    "imported": "Imported {decks} decks and {cards} cards",
+    "desktopOnly": "Backup is available in the desktop app.",
+    "error": "Backup operation failed"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "label": "Language",
+    "fa": "فارسی",
+    "en": "English"
+  },
+  "sidebar": {
+    "brand": "JabeX",
+    "section": "Workspace",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
+  }
+}
