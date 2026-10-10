@@ -113,11 +113,8 @@ impl<C: CardRepository, D: DeckRepository> CardService<C, D> {
 }
 
 fn validate_faces(front: &RichTextDocument, back: &RichTextDocument) -> JabeXResult<()> {
-    front
-        .validate()
-        .map_err(|e| JabeXError::Validation(e))?;
-    back.validate()
-        .map_err(|e| JabeXError::Validation(e))?;
+    front.validate().map_err(JabeXError::Validation)?;
+    back.validate().map_err(JabeXError::Validation)?;
     if front.is_blank() || back.is_blank() {
         return Err(JabeXError::Validation(
             "front and back content are required".into(),

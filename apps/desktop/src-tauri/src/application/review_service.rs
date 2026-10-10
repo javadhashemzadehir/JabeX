@@ -68,8 +68,8 @@ impl<C: CardRepository, R: ReviewRepository, D: DeckRepository> ReviewService<C,
     ) -> JabeXResult<ProfileLeitnerSettings> {
         // Validate by resolving before persist.
         let _ = settings.resolve()?;
-        let value = serde_json::to_value(&settings)
-            .map_err(|e| JabeXError::Internal(e.to_string()))?;
+        let value =
+            serde_json::to_value(&settings).map_err(|e| JabeXError::Internal(e.to_string()))?;
         self.settings
             .set(PROFILE_ALGORITHM_SETTING_KEY.to_string(), value)?;
         Ok(settings)

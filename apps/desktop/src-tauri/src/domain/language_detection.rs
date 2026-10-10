@@ -2,7 +2,9 @@
 //!
 //! Network providers may refine results later; this service never calls the network.
 
-use super::language_assist::{LanguageDetectionResult, LanguageDetectionService, TransliterationMetadata};
+use super::language_assist::{
+    LanguageDetectionResult, LanguageDetectionService, TransliterationMetadata,
+};
 
 /// Built-in Persian-script loanword → (foreign lemma, language) map.
 /// Intentionally small; Google (when enabled) can refine unknowns.
@@ -308,15 +310,48 @@ fn is_likely_persian_loanword(normalized: &str) -> bool {
         return false;
     }
     const NATIVE_STOPWORDS: &[&str] = &[
-        "و", "در", "به", "از", "که", "این", "آن", "را", "با", "برای", "تا", "هم", "یا", "اما",
-        "اگر", "چون", "چه", "کی", "کجا", "چرا", "من", "تو", "او", "ما", "شما", "ایشان", "است",
-        "بود", "شد", "می", "نمی", "یک", "دو", "سه",
+        "و",
+        "در",
+        "به",
+        "از",
+        "که",
+        "این",
+        "آن",
+        "را",
+        "با",
+        "برای",
+        "تا",
+        "هم",
+        "یا",
+        "اما",
+        "اگر",
+        "چون",
+        "چه",
+        "کی",
+        "کجا",
+        "چرا",
+        "من",
+        "تو",
+        "او",
+        "ما",
+        "شما",
+        "ایشان",
+        "است",
+        "بود",
+        "شد",
+        "می",
+        "نمی",
+        "یک",
+        "دو",
+        "سه",
     ];
-    if NATIVE_STOPWORDS.iter().any(|w| *w == normalized) {
+    if NATIVE_STOPWORDS.contains(&normalized) {
         return false;
     }
     // Presence of گ چ پ ژ strongly suggests Persian orthography (not Arabic).
-    let has_persian_letters = normalized.chars().any(|c| matches!(c, 'گ' | 'چ' | 'پ' | 'ژ'));
+    let has_persian_letters = normalized
+        .chars()
+        .any(|c| matches!(c, 'گ' | 'چ' | 'پ' | 'ژ'));
     has_persian_letters || len >= 5
 }
 

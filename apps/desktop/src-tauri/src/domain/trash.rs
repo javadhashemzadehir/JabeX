@@ -48,8 +48,7 @@ pub trait TrashRepository: Send + Sync {
     fn list_deleted_items(&self) -> JabeXResult<Vec<TrashItem>>;
 
     /// Restore the entity and cascade-restore soft-deleted children.
-    fn restore_item(&self, kind: TrashEntityKind, id: Uuid, at: DateTime<Utc>)
-        -> JabeXResult<()>;
+    fn restore_item(&self, kind: TrashEntityKind, id: Uuid, at: DateTime<Utc>) -> JabeXResult<()>;
 
     /// Irreversibly remove the entity (and children) from SQLite.
     /// Callers must remove media files after this returns.

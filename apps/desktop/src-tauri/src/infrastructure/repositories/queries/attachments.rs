@@ -11,26 +11,31 @@ pub const ATTACHMENT_UPDATE: &str = "UPDATE attachments SET
 
 pub const ATTACHMENT_HARD_DELETE: &str = "DELETE FROM attachments WHERE id = ?1";
 
-pub const ATTACHMENT_FIND: &str = "SELECT id, owner_type, owner_id, file_name, mime_type, size_bytes, hash,
+pub const ATTACHMENT_FIND: &str =
+    "SELECT id, owner_type, owner_id, file_name, mime_type, size_bytes, hash,
         relative_path, revision, created_at, updated_at, deleted_at, deleted_by
  FROM attachments WHERE id = ?1";
 
-pub const ATTACHMENT_LIST_BY_OWNER_ACTIVE: &str = "SELECT id, owner_type, owner_id, file_name, mime_type, size_bytes, hash,
+pub const ATTACHMENT_LIST_BY_OWNER_ACTIVE: &str =
+    "SELECT id, owner_type, owner_id, file_name, mime_type, size_bytes, hash,
         relative_path, revision, created_at, updated_at, deleted_at, deleted_by
  FROM attachments
  WHERE owner_type = ?1 AND owner_id = ?2 AND deleted_at IS NULL
  ORDER BY created_at ASC";
 
-pub const ATTACHMENT_LIST_BY_OWNER_ALL: &str = "SELECT id, owner_type, owner_id, file_name, mime_type, size_bytes, hash,
+pub const ATTACHMENT_LIST_BY_OWNER_ALL: &str =
+    "SELECT id, owner_type, owner_id, file_name, mime_type, size_bytes, hash,
         relative_path, revision, created_at, updated_at, deleted_at, deleted_by
  FROM attachments
  WHERE owner_type = ?1 AND owner_id = ?2
  ORDER BY created_at ASC";
 
-pub const ATTACHMENT_LIST_ACTIVE: &str = "SELECT id, owner_type, owner_id, file_name, mime_type, size_bytes, hash,
+pub const ATTACHMENT_LIST_ACTIVE: &str =
+    "SELECT id, owner_type, owner_id, file_name, mime_type, size_bytes, hash,
         relative_path, revision, created_at, updated_at, deleted_at, deleted_by
  FROM attachments WHERE deleted_at IS NULL ORDER BY created_at ASC";
 
-pub const ATTACHMENT_LIST_ALL: &str = "SELECT id, owner_type, owner_id, file_name, mime_type, size_bytes, hash,
+pub const ATTACHMENT_LIST_ALL: &str =
+    "SELECT id, owner_type, owner_id, file_name, mime_type, size_bytes, hash,
         relative_path, revision, created_at, updated_at, deleted_at, deleted_by
  FROM attachments ORDER BY created_at ASC";

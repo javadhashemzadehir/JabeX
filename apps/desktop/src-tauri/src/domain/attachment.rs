@@ -202,12 +202,7 @@ pub fn is_allowed_mime(mime: &str) -> bool {
     AttachmentType::from_mime(mime).is_some_and(|kind| match kind {
         AttachmentType::Image => matches!(
             mime.to_ascii_lowercase().as_str(),
-            "image/png"
-                | "image/jpeg"
-                | "image/jpg"
-                | "image/webp"
-                | "image/gif"
-                | "image/svg+xml"
+            "image/png" | "image/jpeg" | "image/jpg" | "image/webp" | "image/gif" | "image/svg+xml"
         ),
         AttachmentType::Audio => matches!(
             mime.to_ascii_lowercase().as_str(),

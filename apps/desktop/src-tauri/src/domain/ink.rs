@@ -120,7 +120,10 @@ impl InkDocument {
 
     pub fn validate(&self) -> Result<(), String> {
         if self.version == 0 || self.version > INK_DOCUMENT_VERSION {
-            return Err(format!("unsupported ink document version: {}", self.version));
+            return Err(format!(
+                "unsupported ink document version: {}",
+                self.version
+            ));
         }
         if self.width == 0 || self.height == 0 {
             return Err("ink document width and height must be > 0".into());

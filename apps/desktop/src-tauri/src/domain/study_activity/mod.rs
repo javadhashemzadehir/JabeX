@@ -4,10 +4,10 @@
 //! heatmap). Streaks and aggregates are calculated in memory; they are never
 //! persisted as separate counters.
 
-mod study_activity;
+mod activity;
 mod study_statistics;
 mod study_streak;
 
-pub use study_activity::*;
+pub use activity::*;
 pub use study_statistics::*;
 pub use study_streak::*;

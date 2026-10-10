@@ -82,9 +82,8 @@ impl AttachmentStorage for LocalMediaStorage {
     ) -> JabeXResult<StoredAttachmentFiles> {
         let dir = self.attachment_dir(attachment_id);
         let thumbnails = dir.join("thumbnails");
-        fs::create_dir_all(&thumbnails).map_err(|e| {
-            JabeXError::Filesystem(format!("failed to create attachment dir: {e}"))
-        })?;
+        fs::create_dir_all(&thumbnails)
+            .map_err(|e| JabeXError::Filesystem(format!("failed to create attachment dir: {e}")))?;
 
         let ext = Self::extension_from_name(file_name);
         let original_name = format!("original.{ext}");
@@ -97,10 +96,7 @@ impl AttachmentStorage for LocalMediaStorage {
         file.write_all(bytes)
             .map_err(|e| JabeXError::Filesystem(format!("failed to write media file: {e}")))?;
 
-        let relative_path = format!(
-            "media/attachments/{}/{original_name}",
-            attachment_id
-        );
+        let relative_path = format!("media/attachments/{}/{original_name}", attachment_id);
         let metadata_relative = format!("media/attachments/{}/metadata.json", attachment_id);
 
         let mut meta = metadata.clone();
@@ -142,7 +138,10 @@ impl AttachmentStorage for LocalMediaStorage {
         let absolute = self.absolute_path(relative_path);
         self.ensure_under_media(&absolute)?;
         fs::read(&absolute).map_err(|e| {
-            JabeXError::Filesystem(format!("failed to read media file {}: {e}", absolute.display()))
+            JabeXError::Filesystem(format!(
+                "failed to read media file {}: {e}",
+                absolute.display()
+            ))
         })
     }
 
@@ -156,18 +155,13 @@ impl AttachmentStorage for LocalMediaStorage {
             return Ok(Vec::new());
         }
         let mut ids = Vec::new();
-        let entries = fs::read_dir(root).map_err(|e| {
-            JabeXError::Filesystem(format!("failed to list attachment dirs: {e}"))
-        })?;
+        let entries = fs::read_dir(root)
+            .map_err(|e| JabeXError::Filesystem(format!("failed to list attachment dirs: {e}")))?;
         for entry in entries {
             let entry = entry.map_err(|e| {
                 JabeXError::Filesystem(format!("failed to read attachment dir entry: {e}"))
             })?;
-            if !entry
-                .file_type()
-                .map(|t| t.is_dir())
-                .unwrap_or(false)
-            {
+            if !entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
                 continue;
             }
             let name = entry.file_name();
@@ -190,12 +184,8 @@ impl PronunciationAudioStorage for LocalMediaStorage {
         bytes: &[u8],
         extension: &str,
     ) -> JabeXResult<String> {
-        let ext = extension
-            .trim_start_matches('.')
-            .to_ascii_lowercase();
-        let ext = if ext.is_empty()
-            || !ext.chars().all(|c| c.is_ascii_alphanumeric())
-        {
+        let ext = extension.trim_start_matches('.').to_ascii_lowercase();
+        let ext = if ext.is_empty() || !ext.chars().all(|c| c.is_ascii_alphanumeric()) {
             "mp3".into()
         } else {
             ext
@@ -339,9 +329,7 @@ mod tests {
             .expect("store");
         assert!(relative.starts_with("media/audio/pronunciation/"));
         assert!(storage.pronunciation_exists(&relative));
-        storage
-            .remove_pronunciation(&relative)
-            .expect("remove");
+        storage.remove_pronunciation(&relative).expect("remove");
         assert!(!storage.pronunciation_exists(&relative));
     }
 }

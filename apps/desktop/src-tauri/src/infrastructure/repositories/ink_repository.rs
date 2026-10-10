@@ -69,7 +69,10 @@ impl InkDocumentRepository for SqliteInkDocumentRepository {
             };
             let mut stmt = conn.prepare(sql)?;
             let rows = stmt
-                .query_map(params![owner_type.as_str(), owner_id.to_string()], map_ink_ref)?
+                .query_map(
+                    params![owner_type.as_str(), owner_id.to_string()],
+                    map_ink_ref,
+                )?
                 .collect::<Result<Vec<_>, _>>()?;
             Ok(rows)
         })

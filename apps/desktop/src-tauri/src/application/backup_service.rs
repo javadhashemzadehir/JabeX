@@ -626,13 +626,13 @@ fn sanitize_filename(name: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::application::AttachmentService;
     use crate::domain::attachment::AttachmentOwner;
     use crate::domain::deck::Deck;
     use crate::domain::media_ports::AttachmentStorage;
     use crate::infrastructure::database::{open_database_at, open_profile_database, AppPaths};
     use crate::infrastructure::filesystem::LocalMediaStorage;
     use crate::infrastructure::registry::ProfileRegistry;
-    use crate::application::AttachmentService;
     use tempfile::tempdir;
 
     #[test]
@@ -738,10 +738,8 @@ mod tests {
             .expect("profile");
         let db = open_profile_database(&app_paths, profile.id).expect("db");
         let storage = LocalMediaStorage::new(db.paths().clone());
-        let attachments = AttachmentService::new(
-            SqliteAttachmentRepository::new(db.clone()),
-            storage,
-        );
+        let attachments =
+            AttachmentService::new(SqliteAttachmentRepository::new(db.clone()), storage);
         let owner = Uuid::now_v7();
         let created = attachments
             .create_from_bytes(
@@ -845,10 +843,7 @@ mod tests {
     fn validate_jbx_rejects_missing_manifest() {
         let dir = tempdir().expect("tempdir");
         let path = dir.path().join("missing-manifest.jbx");
-        write_test_jbx(
-            &path,
-            &[("profile.json", "{}"), ("data/decks.json", "[]")],
-        );
+        write_test_jbx(&path, &[("profile.json", "{}"), ("data/decks.json", "[]")]);
         assert!(BackupService::validate_jbx(&path).is_err());
     }
 

@@ -89,9 +89,9 @@ impl<
         let entity_types = filter.entity_types();
         let normalized = normalize_search_text(query);
         let fts_query = build_fts_query(&normalized);
-        let mut candidates = self
-            .index
-            .search_candidates(&fts_query, entity_types, limit.saturating_mul(3))?;
+        let mut candidates =
+            self.index
+                .search_candidates(&fts_query, entity_types, limit.saturating_mul(3))?;
 
         if candidates.len() < limit {
             for token in normalized.split_whitespace() {
@@ -164,17 +164,12 @@ impl<
 
         let cards = self.cards.list_all(false)?;
         for card in &cards {
-            let deck_name = deck_names
-                .get(&card.deck_id)
-                .cloned()
-                .unwrap_or_default();
-            let attachments = self
-                .attachments
-                .list_by_owner(
-                    crate::domain::attachment::AttachmentOwner::Card,
-                    card.id,
-                    false,
-                )?;
+            let deck_name = deck_names.get(&card.deck_id).cloned().unwrap_or_default();
+            let attachments = self.attachments.list_by_owner(
+                crate::domain::attachment::AttachmentOwner::Card,
+                card.id,
+                false,
+            )?;
             self.index_card(card, &deck_name, &attachments)?;
         }
 
@@ -194,17 +189,12 @@ impl<
     ) -> JabeXResult<()> {
         let front = extract_search_text(&card.front_content.to_storage_string());
         let back = extract_search_text(&card.back_content.to_storage_string());
-        let mut content_parts = vec![
-            front.combined_content(),
-            back.combined_content(),
-        ];
+        let mut content_parts = vec![front.combined_content(), back.combined_content()];
         if let Some(translation) = &card.translation {
             content_parts.push(translation.clone());
         }
-        let attachment_names: Vec<String> = attachments
-            .iter()
-            .map(|a| a.file_name.clone())
-            .collect();
+        let attachment_names: Vec<String> =
+            attachments.iter().map(|a| a.file_name.clone()).collect();
         if !attachment_names.is_empty() {
             content_parts.push(attachment_names.join(" "));
         }
@@ -365,13 +355,9 @@ impl<
             .recent
             .push(self.profile_id, query, filters, RECENT_SEARCHES_MAX)?;
         // Feed local popularity aggregation (never uploaded).
-        let _ = self.history.record(
-            self.profile_id,
-            query,
-            None,
-            None,
-            SEARCH_HISTORY_MAX,
-        );
+        let _ = self
+            .history
+            .record(self.profile_id, query, None, None, SEARCH_HISTORY_MAX);
         Ok(recent)
     }
 
@@ -398,7 +384,10 @@ impl<
         )
     }
 
-    pub fn list_search_history(&self, limit: Option<usize>) -> JabeXResult<Vec<SearchHistoryEntry>> {
+    pub fn list_search_history(
+        &self,
+        limit: Option<usize>,
+    ) -> JabeXResult<Vec<SearchHistoryEntry>> {
         self.history.list(self.profile_id, limit.unwrap_or(50))
     }
 
@@ -417,8 +406,18 @@ impl<
             ("cmd:decks", "Decks", "Browse and manage decks", "/decks"),
             ("cmd:review", "Start review", "Review due cards", "/review"),
             ("cmd:media", "Media library", "Browse attachments", "/media"),
-            ("cmd:trash", "Trash", "Restore or permanently delete items", "/trash"),
-            ("cmd:settings", "Settings", "Application and study settings", "/settings"),
+            (
+                "cmd:trash",
+                "Trash",
+                "Restore or permanently delete items",
+                "/trash",
+            ),
+            (
+                "cmd:settings",
+                "Settings",
+                "Application and study settings",
+                "/settings",
+            ),
         ];
         for (id, title, content, href) in commands {
             let text = format!("{title} {content}");
@@ -438,10 +437,30 @@ impl<
         }
 
         let settings = [
-            ("setting:language-assist", "Language assist", "Translation and pronunciation settings", "/settings"),
-            ("setting:leitner", "Leitner algorithm", "Interval presets and custom schedules", "/settings"),
-            ("setting:tray", "Tray and startup", "System tray preferences", "/settings"),
-            ("setting:backup", "Backup and restore", "Export or import .jbx backups", "/settings#backup"),
+            (
+                "setting:language-assist",
+                "Language assist",
+                "Translation and pronunciation settings",
+                "/settings",
+            ),
+            (
+                "setting:leitner",
+                "Leitner algorithm",
+                "Interval presets and custom schedules",
+                "/settings",
+            ),
+            (
+                "setting:tray",
+                "Tray and startup",
+                "System tray preferences",
+                "/settings",
+            ),
+            (
+                "setting:backup",
+                "Backup and restore",
+                "Export or import .jbx backups",
+                "/settings#backup",
+            ),
         ];
         for (id, title, content, href) in settings {
             let text = format!("{title} {content}");
@@ -480,17 +499,8 @@ impl<
             }
         }
 
-        let front = doc
-            .metadata
-            .get("front")
-            .and_then(|v| v.as_str());
-        let ranked = rank_match(
-            query,
-            &doc.title,
-            &doc.content,
-            doc.entity_type,
-            front,
-        );
+        let front = doc.metadata.get("front").and_then(|v| v.as_str());
+        let ranked = rank_match(query, &doc.title, &doc.content, doc.entity_type, front);
         if ranked.score < 40.0
             && !doc.normalized_content.contains(normalized_query)
             && best_token_similarity(normalized_query, &doc.normalized_content) < 0.55
@@ -559,10 +569,7 @@ fn resolve_href(doc: &SearchIndexDocument) -> Option<String> {
         SearchEntityType::Deck => Some(format!("/decks/view?id={}", doc.entity_id)),
         SearchEntityType::Card => {
             let deck_id = doc.metadata.get("deckId").and_then(|v| v.as_str())?;
-            Some(format!(
-                "/decks/view?id={deck_id}&cardId={}",
-                doc.entity_id
-            ))
+            Some(format!("/decks/view?id={deck_id}&cardId={}", doc.entity_id))
         }
         SearchEntityType::Review => {
             let deck_id = doc.metadata.get("deckId").and_then(|v| v.as_str());
@@ -591,7 +598,10 @@ fn resolve_href(doc: &SearchIndexDocument) -> Option<String> {
 }
 
 fn build_fts_query(normalized: &str) -> String {
-    let tokens: Vec<&str> = normalized.split_whitespace().filter(|t| !t.is_empty()).collect();
+    let tokens: Vec<&str> = normalized
+        .split_whitespace()
+        .filter(|t| !t.is_empty())
+        .collect();
     if tokens.is_empty() {
         return String::new();
     }
@@ -626,9 +636,13 @@ fn merge_docs(into: &mut Vec<SearchIndexDocument>, extra: Vec<SearchIndexDocumen
 fn extract_hashtags(text: &str) -> Vec<String> {
     let mut tags = Vec::new();
     for raw in text.split_whitespace() {
-        let t = raw.trim_matches(|c: char| matches!(c, ',' | '.' | ';' | ':' | '!' | '?' | ')' | '('));
+        let t =
+            raw.trim_matches(|c: char| matches!(c, ',' | '.' | ';' | ':' | '!' | '?' | ')' | '('));
         if let Some(tag) = t.strip_prefix('#') {
-            if !tag.is_empty() && tag.chars().all(|c| c.is_alphanumeric() || c == '_' || c > '\u{007F}')
+            if !tag.is_empty()
+                && tag
+                    .chars()
+                    .all(|c| c.is_alphanumeric() || c == '_' || c > '\u{007F}')
             {
                 tags.push(tag.to_string());
             }

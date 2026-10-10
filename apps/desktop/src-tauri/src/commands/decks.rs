@@ -97,9 +97,10 @@ pub async fn delete_deck(state: State<'_, AppState>, id: Uuid) -> Result<(), Jab
             id,
             Some(deleted_by),
         )?;
-        session
-            .search
-            .remove_entity(crate::domain::search::SearchEntityType::Deck, &id.to_string())?;
+        session.search.remove_entity(
+            crate::domain::search::SearchEntityType::Deck,
+            &id.to_string(),
+        )?;
         for card_id in card_ids {
             let _ = session.search.remove_entity(
                 crate::domain::search::SearchEntityType::Card,

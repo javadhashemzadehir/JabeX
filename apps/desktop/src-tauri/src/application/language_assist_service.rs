@@ -84,13 +84,10 @@ where
         card_id: Uuid,
         overrides: LanguageAssistOverrides,
     ) -> JabeXResult<Card> {
-        let mut card = self
-            .cards
-            .find(card_id)?
-            .ok_or(JabeXError::NotFound {
-                entity: "card",
-                id: card_id,
-            })?;
+        let mut card = self.cards.find(card_id)?.ok_or(JabeXError::NotFound {
+            entity: "card",
+            id: card_id,
+        })?;
         card.language_assist_overrides = overrides;
         card.updated_at = now_utc();
         card.bump_revision();
@@ -100,13 +97,10 @@ where
 
     /// Mark pending then run detection / optional providers. Errors are stored as `Failed`.
     pub fn process_card(&self, card_id: Uuid, force: bool) -> JabeXResult<Card> {
-        let mut card = self
-            .cards
-            .find(card_id)?
-            .ok_or(JabeXError::NotFound {
-                entity: "card",
-                id: card_id,
-            })?;
+        let mut card = self.cards.find(card_id)?.ok_or(JabeXError::NotFound {
+            entity: "card",
+            id: card_id,
+        })?;
 
         let profile = self.load_settings()?;
         let deck_overrides = self
@@ -315,7 +309,10 @@ mod tests {
         assert_eq!(processed.detected_language.as_deref(), Some("fa"));
         let meta = processed.transliteration.expect("transliteration");
         assert_eq!(meta.resolved_word.as_deref(), Some("computer"));
-        assert_eq!(processed.language_assist_status, LanguageAssistStatus::Ready);
+        assert_eq!(
+            processed.language_assist_status,
+            LanguageAssistStatus::Ready
+        );
         assert!(processed.translation.is_none());
         assert!(processed.pronunciation_audio_path.is_none());
     }
@@ -327,10 +324,12 @@ mod tests {
         let media = LocalMediaStorage::new(db.paths().clone());
         let service = LanguageAssistService::from_session(db, media);
 
-        let mut settings = LanguageAssistSettings::default();
-        settings.auto_translation = true;
-        settings.provider = LanguageAssistProviderKind::Google;
-        settings.target_language = "fa".into();
+        let settings = LanguageAssistSettings {
+            auto_translation: true,
+            provider: LanguageAssistProviderKind::Google,
+            target_language: "fa".into(),
+            ..Default::default()
+        };
         let saved = service.save_settings(settings.clone()).expect("save");
         assert!(saved.auto_translation);
         let loaded = service.load_settings().expect("load");

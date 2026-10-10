@@ -34,9 +34,8 @@ impl<R: AttachmentRepository, S: AttachmentStorage> AttachmentService<R, S> {
         self.validate_payload(&mime_type, bytes.len() as u64)?;
         let id = create_id();
         let hash = hex::encode(Sha256::digest(bytes));
-        let attachment_type = AttachmentType::from_mime(&mime_type).ok_or_else(|| {
-            JabeXError::Validation(format!("unsupported mime type: {mime_type}"))
-        })?;
+        let attachment_type = AttachmentType::from_mime(&mime_type)
+            .ok_or_else(|| JabeXError::Validation(format!("unsupported mime type: {mime_type}")))?;
 
         let mut attachment = Attachment {
             id,
@@ -114,12 +113,10 @@ impl<R: AttachmentRepository, S: AttachmentStorage> AttachmentService<R, S> {
     }
 
     pub fn get_attachment(&self, id: Uuid) -> JabeXResult<Attachment> {
-        self.repo
-            .find(id)?
-            .ok_or(JabeXError::NotFound {
-                entity: "attachment",
-                id,
-            })
+        self.repo.find(id)?.ok_or(JabeXError::NotFound {
+            entity: "attachment",
+            id,
+        })
     }
 
     pub fn list_attachments(
@@ -185,9 +182,8 @@ impl<R: AttachmentRepository, S: AttachmentStorage> AttachmentService<R, S> {
                 "unsupported mime type: {mime_type}"
             )));
         }
-        let kind = AttachmentType::from_mime(mime_type).ok_or_else(|| {
-            JabeXError::Validation(format!("unsupported mime type: {mime_type}"))
-        })?;
+        let kind = AttachmentType::from_mime(mime_type)
+            .ok_or_else(|| JabeXError::Validation(format!("unsupported mime type: {mime_type}")))?;
         if size_bytes == 0 {
             return Err(JabeXError::Validation("attachment is empty".into()));
         }

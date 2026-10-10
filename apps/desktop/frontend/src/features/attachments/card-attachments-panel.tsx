@@ -59,8 +59,15 @@ export function CardAttachmentsPanel({ cardId }: CardAttachmentsPanelProps) {
   }, [cardId, revokeAll, t.attachments.error]);
 
   useEffect(() => {
-    void load();
+    let cancelled = false;
+    void (async () => {
+      // Yield so setState inside `load` is not synchronous in the effect body.
+      await Promise.resolve();
+      if (cancelled) return;
+      await load();
+    })();
     return () => {
+      cancelled = true;
       setObjectUrls((prev) => {
         revokeAll(prev);
         return {};

@@ -18,7 +18,10 @@ pub fn get_rfc3339(row: &Row<'_>, column: &str) -> rusqlite::Result<DateTime<Utc
     parse_time(&raw)
 }
 
-pub fn get_optional_rfc3339(row: &Row<'_>, column: &str) -> rusqlite::Result<Option<DateTime<Utc>>> {
+pub fn get_optional_rfc3339(
+    row: &Row<'_>,
+    column: &str,
+) -> rusqlite::Result<Option<DateTime<Utc>>> {
     let raw: Option<String> = row.get(column)?;
     raw.map(|s| parse_time(&s)).transpose()
 }

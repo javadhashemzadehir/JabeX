@@ -84,8 +84,9 @@ pub async fn delete_card(state: State<'_, AppState>, id: Uuid) -> Result<(), Jab
             id,
             Some(deleted_by),
         )?;
-        session
-            .search
-            .remove_entity(crate::domain::search::SearchEntityType::Card, &id.to_string())
+        session.search.remove_entity(
+            crate::domain::search::SearchEntityType::Card,
+            &id.to_string(),
+        )
     })
 }

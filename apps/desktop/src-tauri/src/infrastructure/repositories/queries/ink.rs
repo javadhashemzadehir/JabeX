@@ -11,26 +11,31 @@ pub const INK_UPDATE: &str = "UPDATE ink_documents SET
 
 pub const INK_HARD_DELETE: &str = "DELETE FROM ink_documents WHERE id = ?1";
 
-pub const INK_FIND: &str = "SELECT id, owner_type, owner_id, relative_path, width, height, content_hash,
+pub const INK_FIND: &str =
+    "SELECT id, owner_type, owner_id, relative_path, width, height, content_hash,
         revision, created_at, updated_at, deleted_at, deleted_by
  FROM ink_documents WHERE id = ?1";
 
-pub const INK_LIST_BY_OWNER_ACTIVE: &str = "SELECT id, owner_type, owner_id, relative_path, width, height, content_hash,
+pub const INK_LIST_BY_OWNER_ACTIVE: &str =
+    "SELECT id, owner_type, owner_id, relative_path, width, height, content_hash,
         revision, created_at, updated_at, deleted_at, deleted_by
  FROM ink_documents
  WHERE owner_type = ?1 AND owner_id = ?2 AND deleted_at IS NULL
  ORDER BY created_at ASC";
 
-pub const INK_LIST_BY_OWNER_ALL: &str = "SELECT id, owner_type, owner_id, relative_path, width, height, content_hash,
+pub const INK_LIST_BY_OWNER_ALL: &str =
+    "SELECT id, owner_type, owner_id, relative_path, width, height, content_hash,
         revision, created_at, updated_at, deleted_at, deleted_by
  FROM ink_documents
  WHERE owner_type = ?1 AND owner_id = ?2
  ORDER BY created_at ASC";
 
-pub const INK_LIST_ACTIVE: &str = "SELECT id, owner_type, owner_id, relative_path, width, height, content_hash,
+pub const INK_LIST_ACTIVE: &str =
+    "SELECT id, owner_type, owner_id, relative_path, width, height, content_hash,
         revision, created_at, updated_at, deleted_at, deleted_by
  FROM ink_documents WHERE deleted_at IS NULL ORDER BY created_at ASC";
 
-pub const INK_LIST_ALL: &str = "SELECT id, owner_type, owner_id, relative_path, width, height, content_hash,
+pub const INK_LIST_ALL: &str =
+    "SELECT id, owner_type, owner_id, relative_path, width, height, content_hash,
         revision, created_at, updated_at, deleted_at, deleted_by
  FROM ink_documents ORDER BY created_at ASC";

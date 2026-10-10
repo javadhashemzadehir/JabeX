@@ -68,7 +68,10 @@ pub async fn switch_profile(state: State<'_, AppState>, id: Uuid) -> Result<Prof
 pub async fn is_initial_profile_setup_pending(
     state: State<'_, AppState>,
 ) -> Result<bool, JabeXError> {
-    tracing::debug!(command = "is_initial_profile_setup_pending", "command invoked");
+    tracing::debug!(
+        command = "is_initial_profile_setup_pending",
+        "command invoked"
+    );
     state.profiles.is_initial_profile_setup_pending()
 }
 
@@ -83,7 +86,10 @@ pub async fn complete_initial_profile_setup(
     state: State<'_, AppState>,
     input: CompleteInitialProfileSetupInput,
 ) -> Result<Profile, JabeXError> {
-    tracing::debug!(command = "complete_initial_profile_setup", "command invoked");
+    tracing::debug!(
+        command = "complete_initial_profile_setup",
+        "command invoked"
+    );
     state
         .profiles
         .complete_initial_profile_setup(input.display_name)

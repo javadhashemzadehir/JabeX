@@ -38,12 +38,7 @@ pub trait CardRepository: Send + Sync {
     fn find_any(&self, id: Uuid) -> JabeXResult<Option<Card>>;
     fn list_by_deck(&self, deck_id: Uuid) -> JabeXResult<Vec<Card>>;
     /// Active cards in a deck with SQL pagination (ordered by `created_at` ASC).
-    fn list_by_deck_page(
-        &self,
-        deck_id: Uuid,
-        limit: u32,
-        offset: u32,
-    ) -> JabeXResult<Vec<Card>>;
+    fn list_by_deck_page(&self, deck_id: Uuid, limit: u32, offset: u32) -> JabeXResult<Vec<Card>>;
     fn count_by_deck(&self, deck_id: Uuid) -> JabeXResult<u32>;
     /// Cards in a deck, optionally including soft-deleted.
     fn list_by_deck_all(&self, deck_id: Uuid, include_deleted: bool) -> JabeXResult<Vec<Card>>;

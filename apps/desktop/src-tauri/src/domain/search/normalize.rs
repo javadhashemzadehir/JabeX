@@ -25,18 +25,7 @@ pub fn normalize_search_text(input: &str) -> String {
 
 /// Detect primary text direction for UI (mixed → rtl if any strong RTL char).
 pub fn detect_text_direction(input: &str) -> &'static str {
-    let mut has_rtl = false;
-    let mut has_ltr = false;
-    for ch in input.chars() {
-        if is_rtl_char(ch) {
-            has_rtl = true;
-        } else if ch.is_ascii_alphabetic() {
-            has_ltr = true;
-        }
-    }
-    if has_rtl && !has_ltr {
-        "rtl"
-    } else if has_rtl {
+    if input.chars().any(is_rtl_char) {
         "rtl"
     } else {
         "ltr"

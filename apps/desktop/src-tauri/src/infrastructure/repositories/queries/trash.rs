@@ -1,13 +1,16 @@
 pub const LIST_DELETED_DECKS: &str = "SELECT id, name, deleted_at, deleted_by FROM decks
  WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC";
 
-pub const LIST_DELETED_CARDS: &str = "SELECT id, deck_id, front_content, deleted_at, deleted_by FROM cards
+pub const LIST_DELETED_CARDS: &str =
+    "SELECT id, deck_id, front_content, deleted_at, deleted_by FROM cards
  WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC";
 
-pub const LIST_DELETED_ATTACHMENTS: &str = "SELECT id, owner_id, file_name, deleted_at, deleted_by FROM attachments
+pub const LIST_DELETED_ATTACHMENTS: &str =
+    "SELECT id, owner_id, file_name, deleted_at, deleted_by FROM attachments
  WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC";
 
-pub const LIST_DELETED_INK: &str = "SELECT id, owner_id, relative_path, deleted_at, deleted_by FROM ink_documents
+pub const LIST_DELETED_INK: &str =
+    "SELECT id, owner_id, relative_path, deleted_at, deleted_by FROM ink_documents
  WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC";
 
 pub const RESTORE_DECK: &str = "UPDATE decks

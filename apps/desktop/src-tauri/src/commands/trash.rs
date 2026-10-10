@@ -13,9 +13,7 @@ pub struct TrashItemInput {
 }
 
 #[tauri::command]
-pub async fn list_deleted_items(
-    state: State<'_, AppState>,
-) -> Result<Vec<TrashItem>, JabeXError> {
+pub async fn list_deleted_items(state: State<'_, AppState>) -> Result<Vec<TrashItem>, JabeXError> {
     tracing::debug!(command = "list_deleted_items", "command invoked");
     state.with_session(|session| session.trash.list_deleted_items())
 }
@@ -32,9 +30,7 @@ pub async fn restore_item(
         "command invoked"
     );
     state.with_session(|session| {
-        session
-            .trash
-            .restore_item(input.entity_kind, input.id)?;
+        session.trash.restore_item(input.entity_kind, input.id)?;
         match input.entity_kind {
             TrashEntityKind::Card => {
                 let _ = session.reindex_card(input.id);

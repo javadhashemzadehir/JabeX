@@ -56,14 +56,14 @@ pub const RECENT_LIST: &str = "SELECT id, profile_id, query, filters, created_at
  ORDER BY created_at DESC
  LIMIT ?2";
 
-pub const RECENT_INSERT: &str = "INSERT INTO recent_searches (id, profile_id, query, filters, created_at)
+pub const RECENT_INSERT: &str =
+    "INSERT INTO recent_searches (id, profile_id, query, filters, created_at)
  VALUES (?1, ?2, ?3, ?4, ?5)";
 
 pub const RECENT_DELETE_QUERY: &str =
     "DELETE FROM recent_searches WHERE profile_id = ?1 AND query = ?2";
 
-pub const RECENT_DELETE_ID: &str =
-    "DELETE FROM recent_searches WHERE profile_id = ?1 AND id = ?2";
+pub const RECENT_DELETE_ID: &str = "DELETE FROM recent_searches WHERE profile_id = ?1 AND id = ?2";
 
 pub const RECENT_CLEAR: &str = "DELETE FROM recent_searches WHERE profile_id = ?1";
 
@@ -88,7 +88,8 @@ pub const HISTORY_LIST: &str = "SELECT id, profile_id, query, entity_type, entit
 
 pub const HISTORY_CLEAR: &str = "DELETE FROM search_history WHERE profile_id = ?1";
 
-pub const HISTORY_POPULAR: &str = "SELECT query, COUNT(*) AS hit_count, MAX(created_at) AS last_searched_at
+pub const HISTORY_POPULAR: &str =
+    "SELECT query, COUNT(*) AS hit_count, MAX(created_at) AS last_searched_at
  FROM search_history
  WHERE profile_id = ?1 AND TRIM(query) != ''
  GROUP BY query

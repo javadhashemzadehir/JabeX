@@ -1,5 +1,7 @@
 use crate::domain::errors::{JabeXError, JabeXResult};
-use crate::domain::language_assist::{SpeechAudio, SpeechProvider, TranslationProvider, TranslationResult};
+use crate::domain::language_assist::{
+    SpeechAudio, SpeechProvider, TranslationProvider, TranslationResult,
+};
 
 /// Used when language assist provider is `none` or features are disabled.
 #[derive(Debug, Default, Clone, Copy)]

@@ -3,7 +3,9 @@ name: Release
 # Builds installers and publishes a GitHub Release when a version tag is pushed.
 # Example: git tag -a v0.1.0 -m "Release v0.1.0" && git push origin v0.1.0
 #
-# Windows artifacts (unsigned — signing/notarization is future work):
+# Windows artifacts only for now (matches tauri.conf.json bundle.targets).
+# macOS / Linux bundling is deferred until those targets are configured.
+# Unsigned — signing/notarization is future work:
 #   - JabeX_<version>_x64-setup.exe  (NSIS)
 #   - JabeX_<version>_x64_en-US.msi  (MSI)
 
@@ -21,40 +23,13 @@ concurrency:
 
 jobs:
   release:
-    name: Build · ${{ matrix.name }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: windows
-            platform: windows-latest
-            # NSIS (.exe) + WiX MSI — matches tauri.conf.json bundle.targets
-            args: "--bundles nsis,msi"
-          - name: macos-dmg
-            platform: macos-latest
-            args: "--target universal-apple-darwin --bundles dmg"
-            rust_targets: aarch64-apple-darwin,x86_64-apple-darwin
-          - name: linux-appimage
-            platform: ubuntu-22.04
-            args: "--bundles appimage"
-
-    runs-on: ${{ matrix.platform }}
+    name: Build · windows
+    runs-on: windows-latest
     timeout-minutes: 90
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Install Linux dependencies
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            xdg-utils
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -67,8 +42,6 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.rust_targets || '' }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -103,8 +76,6 @@ jobs:
 
             - **Windows:** `JabeX_*_x64-setup.exe` (NSIS) and `JabeX_*_x64_en-US.msi` (MSI)
             - **Windows portable:** attach `JabeX-*-portable.zip` + `SHA256SUMS.txt` from `pnpm release:assemble` if not uploaded by CI
-            - **macOS:** `.dmg`
-            - **Linux:** `.AppImage`
 
             Installers are **unsigned** for now (Authenticode / notarization planned later).
             Windows SmartScreen may warn on first run — choose “More info” → “Run anyway” when you trust the build.
@@ -113,4 +84,4 @@ jobs:
           releaseDraft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
           generateReleaseNotes: true
-          args: ${{ matrix.args }}
+          args: "--bundles nsis,msi"

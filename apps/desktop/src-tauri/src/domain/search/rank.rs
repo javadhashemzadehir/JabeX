@@ -76,10 +76,7 @@ pub fn rank_match(
             score: 300.0 + best_token_similarity(&q, &content_n) * 50.0,
         };
     }
-    if is_fuzzy_match(&q, &content_n)
-        || content_n
-            .split_whitespace()
-            .any(|t| is_fuzzy_match(&q, t))
+    if is_fuzzy_match(&q, &content_n) || content_n.split_whitespace().any(|t| is_fuzzy_match(&q, t))
     {
         return RankedScore {
             kind: MatchKind::Fuzzy,
@@ -89,6 +86,7 @@ pub fn rank_match(
 
     RankedScore {
         kind: MatchKind::Content,
-        score: best_token_similarity(&q, &title_n).max(best_token_similarity(&q, &content_n)) * 100.0,
+        score: best_token_similarity(&q, &title_n).max(best_token_similarity(&q, &content_n))
+            * 100.0,
     }
 }

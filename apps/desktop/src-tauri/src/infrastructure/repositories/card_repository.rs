@@ -82,12 +82,7 @@ impl CardRepository for SqliteCardRepository {
         self.list_by_deck_all(deck_id, false)
     }
 
-    fn list_by_deck_page(
-        &self,
-        deck_id: Uuid,
-        limit: u32,
-        offset: u32,
-    ) -> JabeXResult<Vec<Card>> {
+    fn list_by_deck_page(&self, deck_id: Uuid, limit: u32, offset: u32) -> JabeXResult<Vec<Card>> {
         self.db.with_conn(|conn| {
             let mut stmt = conn.prepare(cards::CARD_LIST_BY_DECK_ACTIVE_PAGE)?;
             let rows = stmt
@@ -288,7 +283,7 @@ mod tests {
         assert!(updated
             .front_content
             .to_storage_string()
-            .contains("\"version\":1"));
+            .contains("\"version\":2"));
     }
 
     #[test]

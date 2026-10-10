@@ -46,7 +46,8 @@ pub fn decode_enum<T: serde::de::DeserializeOwned>(value: &str) -> rusqlite::Res
 pub fn encode_json<T: serde::Serialize>(
     value: &T,
 ) -> Result<String, crate::domain::errors::JabeXError> {
-    serde_json::to_string(value).map_err(|e| crate::domain::errors::JabeXError::Internal(e.to_string()))
+    serde_json::to_string(value)
+        .map_err(|e| crate::domain::errors::JabeXError::Internal(e.to_string()))
 }
 
 pub fn encode_optional_json<T: serde::Serialize>(

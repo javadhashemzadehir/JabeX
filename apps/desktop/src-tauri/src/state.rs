@@ -234,7 +234,11 @@ impl AppState {
     pub fn schedule_language_assist(&self, app: &AppHandle, card_id: Uuid, force: bool) {
         let (db, media, profile_id) = {
             let session = self.session.read();
-            (session.db.clone(), session.media.clone(), session.profile_id)
+            (
+                session.db.clone(),
+                session.media.clone(),
+                session.profile_id,
+            )
         };
         let app = app.clone();
         tauri::async_runtime::spawn(async move {
@@ -267,7 +271,11 @@ impl AppState {
         });
     }
 
-    pub fn run_language_assist(&self, card_id: Uuid, force: bool) -> JabeXResult<crate::domain::card::Card> {
+    pub fn run_language_assist(
+        &self,
+        card_id: Uuid,
+        force: bool,
+    ) -> JabeXResult<crate::domain::card::Card> {
         let (db, media) = {
             let session = self.session.read();
             (session.db.clone(), session.media.clone())
@@ -294,9 +302,11 @@ impl AppState {
             LanguageAssistService::from_session(db, media).process_card(card_id, force)
         })
         .await
-        .map_err(|err| crate::domain::errors::JabeXError::Internal(format!(
-            "language assist task failed: {err}"
-        )))?
+        .map_err(|err| {
+            crate::domain::errors::JabeXError::Internal(format!(
+                "language assist task failed: {err}"
+            ))
+        })?
     }
 
     /// Persist per-card overrides then re-run assist on a blocking thread.
@@ -315,9 +325,11 @@ impl AppState {
             service.process_card(card_id, true)
         })
         .await
-        .map_err(|err| crate::domain::errors::JabeXError::Internal(format!(
-            "language assist task failed: {err}"
-        )))?
+        .map_err(|err| {
+            crate::domain::errors::JabeXError::Internal(format!(
+                "language assist task failed: {err}"
+            ))
+        })?
     }
 
     pub fn language_assist_settings(

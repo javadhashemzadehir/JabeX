@@ -52,7 +52,9 @@ impl RichTextDocument {
             return Self::from_plain_text(trimmed);
         }
         match serde_json::from_str::<Value>(trimmed) {
-            Ok(value) => Self::from_json_value(value).unwrap_or_else(|_| Self::from_plain_text(trimmed)),
+            Ok(value) => {
+                Self::from_json_value(value).unwrap_or_else(|_| Self::from_plain_text(trimmed))
+            }
             Err(_) => Self::from_plain_text(trimmed),
         }
     }
@@ -62,10 +64,7 @@ impl RichTextDocument {
             .as_object()
             .ok_or_else(|| "rich text document must be an object".to_string())?;
 
-        let doc_type = obj
-            .get("type")
-            .and_then(|v| v.as_str())
-            .unwrap_or("doc");
+        let doc_type = obj.get("type").and_then(|v| v.as_str()).unwrap_or("doc");
         if doc_type != "doc" {
             return Err(format!("unsupported document type '{doc_type}'"));
         }
@@ -233,8 +232,7 @@ mod tests {
 
     #[test]
     fn deserialize_accepts_string_or_object() {
-        let from_string: RichTextDocument =
-            serde_json::from_str(r#""legacy""#).expect("string");
+        let from_string: RichTextDocument = serde_json::from_str(r#""legacy""#).expect("string");
         assert_eq!(from_string.plain_text(), "legacy");
 
         let from_object: RichTextDocument = serde_json::from_str(

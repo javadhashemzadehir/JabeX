@@ -22,7 +22,8 @@ pub fn map_search_document(row: &Row<'_>) -> rusqlite::Result<SearchIndexDocumen
         )
     })?;
     let metadata_json: String = row.get("metadata_json")?;
-    let metadata: Value = serde_json::from_str(&metadata_json).unwrap_or_else(|_| Value::Object(Default::default()));
+    let metadata: Value =
+        serde_json::from_str(&metadata_json).unwrap_or_else(|_| Value::Object(Default::default()));
     let created_at = parse_time(row.get::<_, String>("created_at")?)?;
     let updated_at = parse_time(row.get::<_, String>("updated_at")?)?;
     Ok(SearchIndexDocument {
@@ -54,9 +55,7 @@ pub fn map_recent_search(row: &Row<'_>) -> rusqlite::Result<RecentSearch> {
 
 pub fn map_search_history(row: &Row<'_>) -> rusqlite::Result<SearchHistoryEntry> {
     let entity_type_raw: Option<String> = row.get("entity_type")?;
-    let entity_type = entity_type_raw
-        .as_deref()
-        .and_then(SearchEntityType::parse);
+    let entity_type = entity_type_raw.as_deref().and_then(SearchEntityType::parse);
     Ok(SearchHistoryEntry {
         id: parse_uuid(row.get("id")?)?,
         profile_id: parse_uuid(row.get("profile_id")?)?,
@@ -77,11 +76,7 @@ pub fn map_popular_search(row: &Row<'_>) -> rusqlite::Result<PopularSearch> {
 
 fn parse_uuid(value: String) -> rusqlite::Result<Uuid> {
     Uuid::parse_str(&value).map_err(|e| {
-        rusqlite::Error::FromSqlConversionFailure(
-            0,
-            rusqlite::types::Type::Text,
-            Box::new(e),
-        )
+        rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(e))
     })
 }
 
@@ -89,11 +84,7 @@ fn parse_time(value: String) -> rusqlite::Result<DateTime<Utc>> {
     DateTime::parse_from_rfc3339(&value)
         .map(|dt| dt.with_timezone(&Utc))
         .map_err(|e| {
-            rusqlite::Error::FromSqlConversionFailure(
-                0,
-                rusqlite::types::Type::Text,
-                Box::new(e),
-            )
+            rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(e))
         })
 }
 

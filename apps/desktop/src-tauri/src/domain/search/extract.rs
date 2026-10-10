@@ -140,7 +140,9 @@ fn looks_like_markdown(input: &str) -> bool {
         || input.contains("__")
         || input.contains("```")
         || input.contains("[") && input.contains("](")
-        || input.lines().any(|l| l.trim_start().starts_with(|c| c == '-' || c == '*' || c == '>'))
+        || input
+            .lines()
+            .any(|l| l.trim_start().starts_with(['-', '*', '>']))
 }
 
 fn strip_html(input: &str) -> String {
@@ -192,7 +194,9 @@ fn decode_entity(name: &str) -> String {
         "nbsp" => " ".into(),
         other if other.starts_with('#') => {
             let digits = other.trim_start_matches('#');
-            let code = if let Some(hex) = digits.strip_prefix('x').or_else(|| digits.strip_prefix('X'))
+            let code = if let Some(hex) = digits
+                .strip_prefix('x')
+                .or_else(|| digits.strip_prefix('X'))
             {
                 u32::from_str_radix(hex, 16).ok()
             } else {
@@ -235,7 +239,10 @@ fn strip_markdown(input: &str) -> String {
             s = rest.to_string();
         }
         // Bold / italic markers
-        s = s.replace("**", " ").replace("__", " ").replace('*', " ").replace('_', " ");
+        s = s
+            .replace("**", " ")
+            .replace("__", " ")
+            .replace(['*', '_'], " ");
         // Images / links: ![alt](url) / [text](url)
         s = strip_md_links(&s);
         // Inline code
@@ -354,8 +361,8 @@ pub fn normalize_latex(input: &str) -> String {
         match ch {
             // Keep alphanumerics adjacent across ^ _ so `mc^2` → `mc2`.
             '^' | '_' | '\\' => {}
-            '{' | '}' | '[' | ']' | '(' | ')' | '=' | '+' | '-' | '*' | '/' | ',' | '.'
-            | ';' | ':' | '!' | '?' | '&' | '%' | '#' | '$' | '~' => out.push(' '),
+            '{' | '}' | '[' | ']' | '(' | ')' | '=' | '+' | '-' | '*' | '/' | ',' | '.' | ';'
+            | ':' | '!' | '?' | '&' | '%' | '#' | '$' | '~' => out.push(' '),
             c if c.is_whitespace() => out.push(' '),
             c => {
                 for lower in c.to_lowercase() {

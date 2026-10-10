@@ -7,9 +7,7 @@ use crate::domain::trash::{TrashEntityKind, TrashItem, TrashRepository};
 use crate::infrastructure::database::Database;
 
 use super::helpers::require_changed;
-use super::mappers::{
-    map_trash_attachment, map_trash_card, map_trash_deck, map_trash_ink,
-};
+use super::mappers::{map_trash_attachment, map_trash_card, map_trash_deck, map_trash_ink};
 use super::queries::trash;
 
 pub struct SqliteTrashRepository {
@@ -59,16 +57,11 @@ impl TrashRepository for SqliteTrashRepository {
             Ok(())
         })?;
 
-        items.sort_by(|a, b| b.deleted_at.cmp(&a.deleted_at));
+        items.sort_by_key(|a| std::cmp::Reverse(a.deleted_at));
         Ok(items)
     }
 
-    fn restore_item(
-        &self,
-        kind: TrashEntityKind,
-        id: Uuid,
-        at: DateTime<Utc>,
-    ) -> JabeXResult<()> {
+    fn restore_item(&self, kind: TrashEntityKind, id: Uuid, at: DateTime<Utc>) -> JabeXResult<()> {
         self.db.with_transaction(|tx| {
             let at_s = at.to_rfc3339();
             match kind {
@@ -99,11 +92,10 @@ impl TrashRepository for SqliteTrashRepository {
                         params![id.to_string(), at_s],
                     )?;
                     require_changed(changed, "card", id)?;
-                    let deck_id: String = tx.query_row(
-                        trash::CARD_DECK_ID,
-                        params![id.to_string()],
-                        |row| row.get(0),
-                    )?;
+                    let deck_id: String =
+                        tx.query_row(trash::CARD_DECK_ID, params![id.to_string()], |row| {
+                            row.get(0)
+                        })?;
                     tx.execute(
                         Self::restore_sql(TrashEntityKind::Deck),
                         params![deck_id, at_s],
@@ -165,10 +157,7 @@ impl TrashRepository for SqliteTrashRepository {
 }
 
 fn restore_card_children(conn: &Connection, card_id: &str, at_s: &str) -> Result<(), JabeXError> {
-    conn.execute(
-        trash::RESTORE_ATTACHMENTS_FOR_CARD,
-        params![card_id, at_s],
-    )?;
+    conn.execute(trash::RESTORE_ATTACHMENTS_FOR_CARD, params![card_id, at_s])?;
     conn.execute(trash::RESTORE_INK_FOR_CARD, params![card_id, at_s])?;
     Ok(())
 }
@@ -180,10 +169,7 @@ fn hard_delete_card_tree(conn: &Connection, card_id: &str) -> Result<(), JabeXEr
     let changed = conn.execute(trash::HARD_DELETE_CARD, params![card_id])?;
     if changed == 0 {
         let id = Uuid::parse_str(card_id).unwrap_or(Uuid::nil());
-        return Err(JabeXError::NotFound {
-            entity: "card",
-            id,
-        });
+        return Err(JabeXError::NotFound { entity: "card", id });
     }
     Ok(())
 }

@@ -74,10 +74,12 @@ export function RichTextEditor({
     }) => Promise<JsonPasteChoice>
   >(async () => "cancel");
 
-  askJsonRef.current = ({ text, asDocument }) =>
-    new Promise<JsonPasteChoice>((resolve) => {
-      setJsonPrompt({ text, asDocument, resolve });
-    });
+  useEffect(() => {
+    askJsonRef.current = ({ text, asDocument }) =>
+      new Promise<JsonPasteChoice>((resolve) => {
+        setJsonPrompt({ text, asDocument, resolve });
+      });
+  });
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -131,19 +133,12 @@ export function RichTextEditor({
     return bindSpoilerInteractions(root);
   }, []);
 
-  const prevModeRef = useRef<EditorViewMode>(mode);
-  useEffect(() => {
-    const entered = prevModeRef.current !== mode;
-    prevModeRef.current = mode;
-    if (!entered) return;
-    if (mode === "markdown") {
-      setMarkdownDraft(documentToMarkdown(value));
-    }
-  }, [mode, value]);
-
   function switchMode(next: EditorViewMode) {
     if (mode === "markdown" && next !== "markdown") {
       onChange(markdownToDocument(markdownDraft));
+    }
+    if (next === "markdown" && mode !== "markdown") {
+      setMarkdownDraft(documentToMarkdown(value));
     }
     setMode(next);
   }

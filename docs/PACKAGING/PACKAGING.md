@@ -194,15 +194,13 @@ $env:JABEX_DATA_DIR = $data
 
 ## CI release (tag-triggered)
 
-Pushing an annotated tag matching `v*` (for example `v0.1.0` or `v0.1.0-beta.1`) runs `release.yml`:
+Pushing an annotated tag matching `v*` (for example `v0.1.1` or `v0.1.1-beta.1`) runs `release.yml`:
 
-| Matrix job | Runner | Bundle args |
-| ---------- | ------ | ----------- |
+| Job | Runner | Bundle args |
+| --- | ------ | ----------- |
 | windows | `windows-latest` | `--bundles nsis,msi` → `.exe` + `.msi` |
-| macos-dmg | `macos-latest` | universal Darwin + `--bundles dmg` |
-| linux-appimage | `ubuntu-22.04` | `--bundles appimage` |
 
-The workflow publishes a GitHub Release with the installers attached. Tags containing `-` are marked prerelease.
+macOS / Linux packaging is deferred until `tauri.conf.json` bundle targets exist for those platforms. The workflow publishes a GitHub Release with the Windows installers attached. Tags containing `-` are marked prerelease.
 
 Version sync before tagging: root `package.json`, `apps/desktop/package.json`, `apps/desktop/frontend/package.json`, `apps/desktop/src-tauri/Cargo.toml`, `tauri.conf.json`, and `CHANGELOG.md` (see GIT_WORKFLOW and [RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md)).
 

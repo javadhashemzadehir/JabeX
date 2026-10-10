@@ -99,7 +99,7 @@ export function InkEditor({ cardId, className }: InkEditorProps) {
       setLoading(true);
       try {
         const existing = await api.listInkDocuments("card", cardId);
-        let bundle =
+        const bundle =
           existing.length > 0
             ? await api.getInkDocument(existing[0]!.id)
             : await api.createInkDocument({

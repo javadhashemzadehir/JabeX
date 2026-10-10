@@ -1,8 +1,6 @@
 use crate::domain::rich_text::RichTextDocument;
 use crate::domain::trash::{TrashEntityKind, TrashItem};
-use crate::infrastructure::repositories::helpers::{
-    get_optional_uuid, get_rfc3339, get_uuid,
-};
+use crate::infrastructure::repositories::helpers::{get_optional_uuid, get_rfc3339, get_uuid};
 
 pub fn map_trash_deck(row: &rusqlite::Row<'_>) -> rusqlite::Result<TrashItem> {
     Ok(TrashItem {
@@ -44,11 +42,7 @@ pub fn map_trash_attachment(row: &rusqlite::Row<'_>) -> rusqlite::Result<TrashIt
 
 pub fn map_trash_ink(row: &rusqlite::Row<'_>) -> rusqlite::Result<TrashItem> {
     let path: String = row.get("relative_path")?;
-    let title = path
-        .rsplit('/')
-        .next()
-        .unwrap_or("ink")
-        .to_string();
+    let title = path.rsplit('/').next().unwrap_or("ink").to_string();
     Ok(TrashItem {
         entity_kind: TrashEntityKind::InkDocument,
         id: get_uuid(row, "id")?,

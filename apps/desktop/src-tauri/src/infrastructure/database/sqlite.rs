@@ -212,7 +212,9 @@ impl Database {
             if applied > 0 && applied < latest {
                 let _ = conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);");
                 drop(conn);
-                Some(Self::create_pre_migration_backup(&self.paths.database_file)?)
+                Some(Self::create_pre_migration_backup(
+                    &self.paths.database_file,
+                )?)
             } else {
                 None
             }
@@ -393,7 +395,10 @@ mod tests {
                 assert!(table_exists(conn, table)?, "missing table {table}");
             }
             assert!(table_exists(conn, "search_index_fts")?);
-            assert!(!table_exists(conn, "drawings")?, "legacy drawings should be gone");
+            assert!(
+                !table_exists(conn, "drawings")?,
+                "legacy drawings should be gone"
+            );
 
             for column in [
                 "revision",

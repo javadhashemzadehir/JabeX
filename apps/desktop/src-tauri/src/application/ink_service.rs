@@ -43,12 +43,10 @@ impl<R: InkDocumentRepository, S: InkStorage> InkService<R, S> {
     }
 
     pub fn get_reference(&self, id: Uuid) -> JabeXResult<InkDocumentRef> {
-        self.repo
-            .find(id)?
-            .ok_or(JabeXError::NotFound {
-                entity: "ink_document",
-                id,
-            })
+        self.repo.find(id)?.ok_or(JabeXError::NotFound {
+            entity: "ink_document",
+            id,
+        })
     }
 
     pub fn get_document(&self, id: Uuid) -> JabeXResult<(InkDocumentRef, InkDocument)> {
@@ -77,7 +75,10 @@ impl<R: InkDocumentRepository, S: InkStorage> InkService<R, S> {
     }
 
     /// Persist a full document payload (debounced from the UI).
-    pub fn save_document(&self, document: InkDocument) -> JabeXResult<(InkDocumentRef, InkDocument)> {
+    pub fn save_document(
+        &self,
+        document: InkDocument,
+    ) -> JabeXResult<(InkDocumentRef, InkDocument)> {
         document.validate().map_err(JabeXError::Validation)?;
         let mut reference = self.get_reference(document.id)?;
         if reference.is_deleted() {
@@ -107,7 +108,6 @@ impl<R: InkDocumentRepository, S: InkStorage> InkService<R, S> {
         tracing::info!(ink_id = %id, "ink document soft-deleted");
         Ok(())
     }
-
 }
 
 fn hash_document(document: &InkDocument) -> JabeXResult<String> {

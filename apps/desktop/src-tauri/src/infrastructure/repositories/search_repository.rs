@@ -56,10 +56,7 @@ impl SearchIndexRepository for SqliteSearchIndexRepository {
 
     fn remove(&self, entity_type: SearchEntityType, entity_id: &str) -> JabeXResult<()> {
         self.db.with_conn(|conn| {
-            conn.execute(
-                q::SEARCH_REMOVE,
-                params![entity_type.as_str(), entity_id],
-            )?;
+            conn.execute(q::SEARCH_REMOVE, params![entity_type.as_str(), entity_id])?;
             Ok(())
         })
     }
@@ -74,18 +71,12 @@ impl SearchIndexRepository for SqliteSearchIndexRepository {
             .map(|(i, _)| format!("?{}", i + 1))
             .collect::<Vec<_>>()
             .join(", ");
-        let sql = format!(
-            "{}{})",
-            q::SEARCH_REMOVE_TYPES_PREFIX,
-            placeholders
-        );
+        let sql = format!("{}{})", q::SEARCH_REMOVE_TYPES_PREFIX, placeholders);
         self.db.with_conn(|conn| {
             let mut stmt = conn.prepare(&sql)?;
             let values: Vec<&str> = entity_types.iter().map(|t| t.as_str()).collect();
-            let params: Vec<&dyn rusqlite::ToSql> = values
-                .iter()
-                .map(|v| v as &dyn rusqlite::ToSql)
-                .collect();
+            let params: Vec<&dyn rusqlite::ToSql> =
+                values.iter().map(|v| v as &dyn rusqlite::ToSql).collect();
             stmt.execute(params.as_slice())?;
             Ok(())
         })
@@ -119,7 +110,8 @@ impl SearchIndexRepository for SqliteSearchIndexRepository {
             let result = if let Some(types) = entity_types {
                 let types_json = entity_types_json(types)?;
                 let mut stmt = conn.prepare(q::SEARCH_FTS_TYPED)?;
-                let rows = stmt.query_map(params![fts_query, types_json, limit], map_search_document)?;
+                let rows =
+                    stmt.query_map(params![fts_query, types_json, limit], map_search_document)?;
                 rows.collect::<Result<Vec<_>, _>>()
             } else {
                 let mut stmt = conn.prepare(q::SEARCH_FTS)?;
@@ -152,10 +144,8 @@ impl SearchIndexRepository for SqliteSearchIndexRepository {
             if let Some(types) = entity_types {
                 let types_json = entity_types_json(types)?;
                 let mut stmt = conn.prepare(q::SEARCH_FALLBACK_TYPED)?;
-                let rows = stmt.query_map(
-                    params![like, like, types_json, limit],
-                    map_search_document,
-                )?;
+                let rows =
+                    stmt.query_map(params![like, like, types_json, limit], map_search_document)?;
                 Ok(rows.collect::<Result<Vec<_>, _>>()?)
             } else {
                 let mut stmt = conn.prepare(q::SEARCH_FALLBACK)?;
@@ -180,7 +170,10 @@ impl RecentSearchRepository for SqliteRecentSearchRepository {
     fn list(&self, profile_id: Uuid, limit: usize) -> JabeXResult<Vec<RecentSearch>> {
         self.db.with_conn(|conn| {
             let mut stmt = conn.prepare(q::RECENT_LIST)?;
-            let rows = stmt.query_map(params![profile_id.to_string(), limit as i64], map_recent_search)?;
+            let rows = stmt.query_map(
+                params![profile_id.to_string(), limit as i64],
+                map_recent_search,
+            )?;
             Ok(rows.collect::<Result<Vec<_>, _>>()?)
         })
     }
@@ -297,8 +290,10 @@ impl SearchHistoryRepository for SqliteSearchHistoryRepository {
     fn list(&self, profile_id: Uuid, limit: usize) -> JabeXResult<Vec<SearchHistoryEntry>> {
         self.db.with_conn(|conn| {
             let mut stmt = conn.prepare(q::HISTORY_LIST)?;
-            let rows =
-                stmt.query_map(params![profile_id.to_string(), limit as i64], map_search_history)?;
+            let rows = stmt.query_map(
+                params![profile_id.to_string(), limit as i64],
+                map_search_history,
+            )?;
             Ok(rows.collect::<Result<Vec<_>, _>>()?)
         })
     }
@@ -325,13 +320,13 @@ impl SearchHistoryRepository for SqliteSearchHistoryRepository {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::application::SearchService;
     use crate::domain::card::Card;
     use crate::domain::deck::Deck;
+    use crate::domain::repositories::{CardRepository, DeckRepository};
     use crate::domain::rich_text::RichTextDocument;
     use crate::infrastructure::database::open_database_at;
     use crate::infrastructure::repositories::{SqliteCardRepository, SqliteDeckRepository};
-    use crate::application::SearchService;
-    use crate::domain::repositories::{CardRepository, DeckRepository};
     use tempfile::tempdir;
 
     fn setup() -> (
@@ -408,9 +403,14 @@ mod tests {
         let en = search
             .search("photosynthesis", SearchFilter::All, Some(10))
             .unwrap();
-        assert!(en.results.iter().any(|r| r.title.contains("Photosynthesis")));
+        assert!(en
+            .results
+            .iter()
+            .any(|r| r.title.contains("Photosynthesis")));
 
-        let fa_q = search.search("فلسف", SearchFilter::Cards, Some(10)).unwrap();
+        let fa_q = search
+            .search("فلسف", SearchFilter::Cards, Some(10))
+            .unwrap();
         assert!(fa_q.results.iter().any(|r| r.title.contains("فلسف")));
     }
 
@@ -485,19 +485,17 @@ mod tests {
     #[test]
     fn popular_searches_aggregate_history_counts() {
         let (_db, search) = setup();
-        search
-            .record_search_selection("rust", None, None)
-            .unwrap();
-        search
-            .record_search_selection("rust", None, None)
-            .unwrap();
+        search.record_search_selection("rust", None, None).unwrap();
+        search.record_search_selection("rust", None, None).unwrap();
         search
             .record_search_selection("python", None, None)
             .unwrap();
         let popular = search.list_popular_searches(Some(10)).unwrap();
         assert_eq!(popular[0].query, "rust");
         assert_eq!(popular[0].hit_count, 2);
-        assert!(popular.iter().any(|p| p.query == "python" && p.hit_count == 1));
+        assert!(popular
+            .iter()
+            .any(|p| p.query == "python" && p.hit_count == 1));
     }
 
     #[test]
@@ -519,7 +517,13 @@ mod tests {
         let hits = search
             .search("\"; DROP TABLE cards; --", SearchFilter::All, Some(10))
             .unwrap();
-        assert!(hits.results.is_empty() || hits.results.iter().all(|r| r.entity_type != SearchEntityType::Deck || true));
+        assert!(
+            hits.results.is_empty()
+                || hits
+                    .results
+                    .iter()
+                    .all(|r| r.entity_type != SearchEntityType::Deck || true)
+        );
         let still: i64 = db
             .with_conn(|conn| {
                 Ok(conn.query_row("SELECT COUNT(*) FROM cards", [], |row| row.get(0))?)

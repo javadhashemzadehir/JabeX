@@ -91,7 +91,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
           ? Math.max(0, Math.round(Date.now() - cardShownAt))
           : undefined;
       const outcome = await api.submitReview(current.id, grade, durationMs);
-      let nextQueue = queue.slice(1);
+      const nextQueue = queue.slice(1);
 
       // Top up the window when the local buffer runs low.
       if (nextQueue.length <= REFETCH_THRESHOLD) {

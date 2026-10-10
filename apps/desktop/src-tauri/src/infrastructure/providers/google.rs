@@ -4,7 +4,9 @@
 //! language assist in settings. Failures must never block card CRUD.
 
 use crate::domain::errors::{JabeXError, JabeXResult};
-use crate::domain::language_assist::{SpeechAudio, SpeechProvider, TranslationProvider, TranslationResult};
+use crate::domain::language_assist::{
+    SpeechAudio, SpeechProvider, TranslationProvider, TranslationResult,
+};
 
 const TRANSLATE_URL: &str = "https://translate.googleapis.com/translate_a/single";
 const TTS_URL: &str = "https://translate.google.com/translate_tts";
@@ -148,7 +150,9 @@ impl SpeechProvider for GoogleSpeechProvider {
             .to_vec();
 
         if bytes.is_empty() {
-            return Err(JabeXError::Network("google tts returned empty audio".into()));
+            return Err(JabeXError::Network(
+                "google tts returned empty audio".into(),
+            ));
         }
 
         Ok(SpeechAudio {
@@ -189,11 +193,7 @@ mod tests {
 
     #[test]
     fn parses_google_translate_payload() {
-        let body = serde_json::json!([
-            [["سلام", "hello", null, null, 10]],
-            null,
-            "en"
-        ]);
+        let body = serde_json::json!([[["سلام", "hello", null, null, 10]], null, "en"]);
         assert_eq!(extract_translated_text(&body).as_deref(), Some("سلام"));
         assert_eq!(extract_detected_language(&body).as_deref(), Some("en"));
     }

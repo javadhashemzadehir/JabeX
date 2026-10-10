@@ -1,7 +1,7 @@
 use chrono::{Duration, NaiveDate};
 use serde::{Deserialize, Serialize};
 
-use super::study_activity::StudyActivity;
+use super::activity::StudyActivity;
 
 /// Streak summary calculated from daily study activity (never persisted).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -67,7 +67,7 @@ fn current_run(sorted_unique_days: &[NaiveDate], today: NaiveDate) -> u32 {
     for day in sorted_unique_days.iter().rev().skip(1) {
         if *day == expected {
             streak = streak.saturating_add(1);
-            expected = expected - Duration::days(1);
+            expected -= Duration::days(1);
         } else if *day < expected {
             break;
         }
@@ -157,10 +157,7 @@ mod tests {
     #[test]
     fn yesterday_keeps_current_streak_alive() {
         let today = day(2026, 10, 10);
-        let activities = vec![
-            activity(day(2026, 10, 8), 1),
-            activity(day(2026, 10, 9), 1),
-        ];
+        let activities = vec![activity(day(2026, 10, 8), 1), activity(day(2026, 10, 9), 1)];
         let streak = calculate_streak(&activities, today);
         assert_eq!(streak.current_streak, 2);
     }

@@ -21,11 +21,7 @@ pub struct ReviewCompletedEvent {
 }
 
 impl ReviewCompletedEvent {
-    pub fn from_review(
-        profile_id: Uuid,
-        deck_id: Uuid,
-        duration_ms: Option<u32>,
-    ) -> Self {
+    pub fn from_review(profile_id: Uuid, deck_id: Uuid, duration_ms: Option<u32>) -> Self {
         Self {
             profile_id,
             deck_id,
@@ -51,7 +47,10 @@ impl<A: StudyActivityRepository, R: ReviewRepository> StudyActivityService<A, R>
         }
     }
 
-    pub fn record_study_activity(&self, event: &ReviewCompletedEvent) -> JabeXResult<StudyActivity> {
+    pub fn record_study_activity(
+        &self,
+        event: &ReviewCompletedEvent,
+    ) -> JabeXResult<StudyActivity> {
         let today = local_activity_date(now_utc());
         tracing::debug!(
             profile_id = %event.profile_id,
@@ -90,9 +89,7 @@ impl<A: StudyActivityRepository, R: ReviewRepository> StudyActivityService<A, R>
         let today = local_activity_date(now_utc());
         // Heatmap is 12 months — avoid loading the entire activity history.
         let from = today - Duration::days(366);
-        let activities = self
-            .activities
-            .list_range(self.profile_id, from, today)?;
+        let activities = self.activities.list_range(self.profile_id, from, today)?;
         Ok(calculate_statistics(&activities, today))
     }
 
@@ -123,7 +120,9 @@ impl<A: StudyActivityRepository, R: ReviewRepository> StudyActivityService<A, R>
             let day = local_activity_date(review.reviewed_at);
             let entry = by_day.entry(day).or_insert((0, 0));
             entry.0 = entry.0.saturating_add(1);
-            entry.1 = entry.1.saturating_add(review.duration_ms.unwrap_or(0) / 1000);
+            entry.1 = entry
+                .1
+                .saturating_add(review.duration_ms.unwrap_or(0) / 1000);
         }
 
         for (date, (cards, seconds)) in by_day {

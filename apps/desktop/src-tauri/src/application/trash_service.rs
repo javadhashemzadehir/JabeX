@@ -131,9 +131,9 @@ impl<
         at: chrono::DateTime<chrono::Utc>,
         deleted_by: Option<Uuid>,
     ) -> JabeXResult<()> {
-        let attachments =
-            self.attachments
-                .list_by_owner(AttachmentOwner::Card, card_id, false)?;
+        let attachments = self
+            .attachments
+            .list_by_owner(AttachmentOwner::Card, card_id, false)?;
         for attachment in attachments {
             self.attachments
                 .soft_delete(attachment.id, at, deleted_by)?;
@@ -174,8 +174,7 @@ impl<
             }
             TrashEntityKind::Attachment => {
                 if let Some(attachment) = self.attachments.find(id)? {
-                    plan.attachment_paths
-                        .push(attachment.relative_path.clone());
+                    plan.attachment_paths.push(attachment.relative_path.clone());
                     plan.attachment_snapshots.push(attachment);
                 }
             }
@@ -191,8 +190,7 @@ impl<
     fn append_card_media(&self, plan: &mut MediaPurgePlan, card_id: Uuid) -> JabeXResult<()> {
         for owner in [AttachmentOwner::Card, AttachmentOwner::Document] {
             for attachment in self.attachments.list_by_owner(owner, card_id, true)? {
-                plan.attachment_paths
-                    .push(attachment.relative_path.clone());
+                plan.attachment_paths.push(attachment.relative_path.clone());
                 plan.attachment_snapshots.push(attachment);
             }
         }
@@ -219,12 +217,12 @@ mod tests {
     use crate::domain::deck::Deck;
     use crate::domain::repositories::DeckRepository;
     use crate::infrastructure::database::open_database_at;
+    use crate::infrastructure::database::DatabasePaths;
     use crate::infrastructure::filesystem::LocalMediaStorage;
     use crate::infrastructure::repositories::{
         SqliteAttachmentRepository, SqliteCardRepository, SqliteDeckRepository,
         SqliteInkDocumentRepository, SqliteTrashRepository,
     };
-    use crate::infrastructure::database::DatabasePaths;
     use tempfile::tempdir;
 
     fn trash_service(
@@ -273,11 +271,7 @@ mod tests {
         assert!(listed.iter().any(|i| i.id == deck.id));
         assert!(listed.iter().any(|i| i.id == card.id));
         assert_eq!(
-            listed
-                .iter()
-                .find(|i| i.id == deck.id)
-                .unwrap()
-                .deleted_by,
+            listed.iter().find(|i| i.id == deck.id).unwrap().deleted_by,
             Some(profile)
         );
 

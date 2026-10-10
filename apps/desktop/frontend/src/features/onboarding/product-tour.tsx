@@ -24,7 +24,10 @@ export function ProductTour() {
   const router = useRouter();
   const pathname = usePathname();
   const pathnameRef = useRef(pathname);
-  pathnameRef.current = pathname;
+
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
 
   const desktop = useProfileStore((s) => s.desktop);
   const loading = useProfileStore((s) => s.loading);
@@ -33,7 +36,8 @@ export function ProductTour() {
   const startToken = useOnboardingTourStore((s) => s.startToken);
   const autoStartedForProfile = useRef<string | null>(null);
 
-  const theme = useMemo(() => readTourTheme(), [direction]);
+  // CSS variables; re-read each render so light/dark switches apply.
+  const theme = readTourTheme();
 
   const steps = useMemo<Step[]>(() => {
     const tour = t.onboarding.tour;

@@ -9,13 +9,15 @@ ON CONFLICT(profile_id, activity_date) DO UPDATE SET
     cards_reviewed = cards_reviewed + excluded.cards_reviewed,
     minutes_spent = minutes_spent + excluded.minutes_spent";
 
-pub const STUDY_ACTIVITY_FIND_BY_DATE: &str = "SELECT id, profile_id, activity_date, cards_reviewed,
+pub const STUDY_ACTIVITY_FIND_BY_DATE: &str =
+    "SELECT id, profile_id, activity_date, cards_reviewed,
         minutes_spent, created_at
  FROM study_activity
  WHERE profile_id = ?1 AND activity_date = ?2
  LIMIT 1";
 
-pub const STUDY_ACTIVITY_LIST_BY_PROFILE: &str = "SELECT id, profile_id, activity_date, cards_reviewed,
+pub const STUDY_ACTIVITY_LIST_BY_PROFILE: &str =
+    "SELECT id, profile_id, activity_date, cards_reviewed,
         minutes_spent, created_at
  FROM study_activity
  WHERE profile_id = ?1
@@ -29,5 +31,4 @@ pub const STUDY_ACTIVITY_LIST_RANGE: &str = "SELECT id, profile_id, activity_dat
    AND activity_date <= ?3
  ORDER BY activity_date ASC";
 
-pub const STUDY_ACTIVITY_COUNT: &str =
-    "SELECT COUNT(*) FROM study_activity WHERE profile_id = ?1";
+pub const STUDY_ACTIVITY_COUNT: &str = "SELECT COUNT(*) FROM study_activity WHERE profile_id = ?1";

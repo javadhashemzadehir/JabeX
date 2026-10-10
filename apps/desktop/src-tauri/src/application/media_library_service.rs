@@ -51,7 +51,7 @@ impl<R: AttachmentRepository, S: AttachmentStorage> MediaLibraryService<R, S> {
             .map(|attachment| self.to_item(attachment))
             .collect();
 
-        items.sort_by(|a, b| b.attachment.created_at.cmp(&a.attachment.created_at));
+        items.sort_by_key(|a| std::cmp::Reverse(a.attachment.created_at));
         Ok(items)
     }
 
@@ -90,10 +90,8 @@ impl<R: AttachmentRepository, S: AttachmentStorage> MediaLibraryService<R, S> {
         }
 
         let on_disk = self.storage.list_stored_attachment_ids()?;
-        stats.orphan_dir_count = on_disk
-            .into_iter()
-            .filter(|id| !known.contains(id))
-            .count() as u32;
+        stats.orphan_dir_count =
+            on_disk.into_iter().filter(|id| !known.contains(id)).count() as u32;
 
         Ok(stats)
     }
@@ -182,10 +180,7 @@ impl<R: AttachmentRepository, S: AttachmentStorage> MediaLibraryService<R, S> {
                 missing_files.push(row.id);
                 continue;
             }
-            match self
-                .storage
-                .verify_checksum(&row.relative_path, &row.hash)
-            {
+            match self.storage.verify_checksum(&row.relative_path, &row.hash) {
                 Ok(true) => {}
                 Ok(false) => checksum_mismatches.push(row.id),
                 Err(err) => {
@@ -224,11 +219,11 @@ impl<R: AttachmentRepository, S: AttachmentStorage> MediaLibraryService<R, S> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::application::AttachmentService;
     use crate::domain::attachment::AttachmentOwner;
     use crate::infrastructure::database::{open_database_at, DatabasePaths};
     use crate::infrastructure::filesystem::LocalMediaStorage;
     use crate::infrastructure::repositories::SqliteAttachmentRepository;
-    use crate::application::AttachmentService;
     use tempfile::tempdir;
 
     fn services() -> (
@@ -240,14 +235,9 @@ mod tests {
         let db = open_database_at(dir.path()).expect("db");
         let paths = DatabasePaths::from_root(dir.path().to_path_buf()).expect("paths");
         let storage = LocalMediaStorage::new(paths);
-        let attachments = AttachmentService::new(
-            SqliteAttachmentRepository::new(db.clone()),
-            storage.clone(),
-        );
-        let library = MediaLibraryService::new(
-            SqliteAttachmentRepository::new(db),
-            storage,
-        );
+        let attachments =
+            AttachmentService::new(SqliteAttachmentRepository::new(db.clone()), storage.clone());
+        let library = MediaLibraryService::new(SqliteAttachmentRepository::new(db), storage);
         (dir, attachments, library)
     }
 
@@ -277,7 +267,9 @@ mod tests {
         assert_eq!(stats.audio_count, 1);
         assert_eq!(stats.deleted_count, 0);
 
-        attachments.delete_attachment(created.id).expect("soft delete");
+        attachments
+            .delete_attachment(created.id)
+            .expect("soft delete");
         let with_trash = library
             .list_library(&MediaLibraryFilter {
                 include_deleted: true,

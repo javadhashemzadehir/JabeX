@@ -4,8 +4,7 @@ use crate::domain::errors::JabeXError;
 use uuid::Uuid;
 
 use crate::domain::search::{
-    PopularSearch, RecentSearch, SearchEntityType, SearchFilter, SearchHistoryEntry,
-    SearchResponse,
+    PopularSearch, RecentSearch, SearchEntityType, SearchFilter, SearchHistoryEntry, SearchResponse,
 };
 use crate::state::AppState;
 
@@ -34,19 +33,17 @@ pub async fn search_global(
     state: State<'_, AppState>,
     input: SearchGlobalInput,
 ) -> Result<SearchResponse, JabeXError> {
-    tracing::debug!(command = "search_global", query_len = input.query.len(), "command invoked");
+    tracing::debug!(
+        command = "search_global",
+        query_len = input.query.len(),
+        "command invoked"
+    );
     let filter = input.filter;
-    let response = state.with_session(|session| {
-        session
-            .search
-            .search(&input.query, filter, input.limit)
-    })?;
+    let response =
+        state.with_session(|session| session.search.search(&input.query, filter, input.limit))?;
     if input.record_recent && !input.query.trim().is_empty() {
-        let _ = state.with_session(|session| {
-            session
-                .search
-                .record_recent_search(&input.query, &[filter])
-        });
+        let _ = state
+            .with_session(|session| session.search.record_recent_search(&input.query, &[filter]));
     }
     Ok(response)
 }

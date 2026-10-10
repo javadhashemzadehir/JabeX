@@ -21,14 +21,12 @@ export function LanguageAssistSettingsPanel() {
   const t = useTranslations();
   const tauri = useIsTauri();
   const [settings, setSettings] = useState<LanguageAssistSettings>(DEFAULT_SETTINGS);
-  const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const loading = tauri && !loaded;
 
   useEffect(() => {
-    if (!tauri) {
-      setLoading(false);
-      return;
-    }
+    if (!tauri) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -41,7 +39,7 @@ export function LanguageAssistSettingsPanel() {
           );
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoaded(true);
       }
     })();
     return () => {

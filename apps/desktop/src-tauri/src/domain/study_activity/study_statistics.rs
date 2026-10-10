@@ -1,7 +1,7 @@
 use chrono::{Datelike, Duration, NaiveDate};
 use serde::{Deserialize, Serialize};
 
-use super::study_activity::{ActivityIntensity, StudyActivity};
+use super::activity::{ActivityIntensity, StudyActivity};
 use super::study_streak::{calculate_streak, StudyStreak};
 
 /// Consistency statistics for the Learning Progress UI (local profile only).
@@ -147,10 +147,10 @@ mod tests {
         // Friday 2026-10-09; week starts Monday 2026-10-05
         let today = day(2026, 10, 9);
         let activities = vec![
-            activity(day(2026, 9, 30), 10),  // previous month
-            activity(day(2026, 10, 1), 20),  // month
-            activity(day(2026, 10, 6), 30),  // week
-            activity(day(2026, 10, 9), 40),  // today + week + month
+            activity(day(2026, 9, 30), 10), // previous month
+            activity(day(2026, 10, 1), 20), // month
+            activity(day(2026, 10, 6), 30), // week
+            activity(day(2026, 10, 9), 40), // today + week + month
         ];
         let stats = calculate_statistics(&activities, today);
         assert_eq!(stats.cards_reviewed_today, 40);
@@ -168,7 +168,10 @@ mod tests {
         let heat = build_heatmap(&activities, today);
         assert_eq!(heat.len(), 365);
         assert_eq!(heat.last().map(|d| d.cards_reviewed), Some(12));
-        assert_eq!(heat.last().map(|d| d.intensity), Some(ActivityIntensity::Low));
+        assert_eq!(
+            heat.last().map(|d| d.intensity),
+            Some(ActivityIntensity::Low)
+        );
         assert_eq!(heat[0].intensity, ActivityIntensity::None);
     }
 }
