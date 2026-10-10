@@ -1,0 +1,27 @@
+# CODEOWNERS — review routing for JabeX
+# Replace @OWNER with the GitHub username or team that owns each area.
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+*                               @OWNER
+
+# Applications
+/apps/                          @OWNER
+/apps/desktop/frontend/         @OWNER
+/apps/desktop/src-tauri/        @OWNER
+
+# Shared packages
+/packages/                      @OWNER
+/packages/ui/                   @OWNER
+/packages/types/                @OWNER
+/packages/config/               @OWNER
+
+# Rust / Tauri host (alias path for clarity)
+/apps/desktop/src-tauri/        @OWNER
+
+# Repository & docs
+/.github/                       @OWNER
+/docs/                          @OWNER
+/CONTRIBUTING.md                @OWNER
+/SECURITY.md                    @OWNER
+/CHANGELOG.md                   @OWNER

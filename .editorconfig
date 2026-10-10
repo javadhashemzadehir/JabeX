@@ -1,0 +1,31 @@
+# EditorConfig — https://editorconfig.org
+# Keep editors and IDEs aligned across the monorepo.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Rust
+[*.{rs,toml}]
+indent_size = 4
+
+# Cargo / Tauri Rust crate
+[apps/desktop/src-tauri/**.{rs,toml}]
+indent_size = 4
+
+# Markdown — keep trailing spaces for hard line breaks when intentional
+[*.md]
+trim_trailing_whitespace = false
+
+# Makefile / shell that may require tabs
+[Makefile]
+indent_style = tab
+
+[*.{bat,cmd}]
+end_of_line = crlf

@@ -1,0 +1,49 @@
+# GitHub automatically generated release notes
+# https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+      - dependencies
+    authors:
+      - dependabot
+      - dependabot[bot]
+  categories:
+    - title: Breaking Changes
+      labels:
+        - breaking-change
+    - title: Features
+      labels:
+        - feat
+        - enhancement
+        - feature
+    - title: Bug Fixes
+      labels:
+        - fix
+        - bug
+        - bugfix
+    - title: Performance
+      labels:
+        - perf
+    - title: Documentation
+      labels:
+        - docs
+        - documentation
+    - title: Refactors
+      labels:
+        - refactor
+    - title: Tests
+      labels:
+        - test
+    - title: Build & CI
+      labels:
+        - build
+        - ci
+    - title: Maintenance
+      labels:
+        - chore
+        - maintenance
+    - title: Other Changes
+      labels:
+        - "*"

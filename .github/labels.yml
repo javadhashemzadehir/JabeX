@@ -1,0 +1,94 @@
+# Label definitions — apply with a labels sync action or manually in GitHub Settings.
+# Colors are hex without '#'.
+
+- name: bug
+  color: D73A4A
+  description: Something isn't working
+
+- name: bugfix
+  color: B60205
+  description: Pull request that fixes a bug
+
+- name: enhancement
+  color: A2EEEF
+  description: New feature or request
+
+- name: feat
+  color: 0E8A16
+  description: Feature work
+
+- name: fix
+  color: D93F0B
+  description: Bug fix work
+
+- name: docs
+  color: 0075CA
+  description: Documentation
+
+- name: documentation
+  color: 0075CA
+  description: Improvements or additions to documentation
+
+- name: refactor
+  color: FBCA04
+  description: Code change without behavior change
+
+- name: test
+  color: BFDADC
+  description: Tests
+
+- name: perf
+  color: F9D0C4
+  description: Performance
+
+- name: build
+  color: 1D76DB
+  description: Build system
+
+- name: ci
+  color: 5319E7
+  description: Continuous integration
+
+- name: chore
+  color: FEF2C0
+  description: Maintenance
+
+- name: dependencies
+  color: 0366D6
+  description: Dependency updates
+
+- name: rust
+  color: DEA584
+  description: Rust / Tauri backend
+
+- name: frontend
+  color: 61DAFB
+  description: Next.js / TypeScript UI
+
+- name: breaking-change
+  color: B60205
+  description: Introduces a breaking change
+
+- name: skip-changelog
+  color: EDEDED
+  description: Exclude from release notes
+
+- name: needs-triage
+  color: E4E669
+  description: Needs maintainer triage
+
+- name: good first issue
+  color: 7057FF
+  description: Good for newcomers
+
+- name: help wanted
+  color: 008672
+  description: Extra attention is needed
+
+- name: stale
+  color: FFFFFF
+  description: Inactive issue or PR
+
+- name: security
+  color: EE0701
+  description: Security-related

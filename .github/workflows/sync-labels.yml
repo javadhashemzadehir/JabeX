@@ -1,0 +1,32 @@
+name: Sync labels
+
+# Optional: keeps GitHub labels aligned with .github/labels.yml
+# Enable by running manually, or after editing labels.yml
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop, main]
+    paths:
+      - ".github/labels.yml"
+      - ".github/workflows/sync-labels.yml"
+
+permissions:
+  issues: write
+
+jobs:
+  sync:
+    name: Sync repository labels
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync labels
+        uses: EndBug/label-sync@v2
+        with:
+          config-file: .github/labels.yml
+          delete-other-labels: false
+          token: ${{ secrets.GITHUB_TOKEN }}
