@@ -53,7 +53,30 @@ pnpm --filter @jabex/desktop tauri:dev
 pnpm db:seed                 # insert fixtures from scripts/dev/seed-data.json
 pnpm db:unseed               # remove only those seed rows
 pnpm db:unseed -- --purge    # wipe ALL decks/cards/reviews in the profile
+
+# Docs screenshots (isolated data only — see below)
+pnpm docs:screenshots
 ```
+
+### Documentation screenshots
+
+`pnpm docs:screenshots` captures the README image set into `docs/screenshots/` from a live `tauri:dev` session.
+
+| Concern | Behavior |
+| -------- | -------- |
+| Data isolation | Always sets `JABEX_DATA_DIR` to `<repo>/.tmp/docs-capture-data` and **refuses** paths under `%APPDATA%` |
+| Demo content | Bootstraps profiles `Learner` + `Study`, then `pnpm db:seed -- --profile Learner` from `scripts/dev/seed-data.json` |
+| Window | Targets **1440×900** via CDP `Browser.setWindowBounds` + device metrics |
+| Defaults | Most shots: `fa` + RTL + light; `12` = dark; `13` = `en` LTR; `15` = empty `Study` profile |
+| Personal DB | Never opened — quit any everyday JabeX window first so the debug port / process tree stay clean |
+
+```bash
+# From repo root (Rust + Node + pnpm required)
+pnpm docs:screenshots
+```
+
+Outputs: `docs/screenshots/01-app-shell.png` … `15-empty-states.png` plus `manifest.json`.  
+Safe to delete `.tmp/docs-capture-data` afterward; it is gitignored.
 
 ### Windows production installers
 
@@ -69,6 +92,8 @@ Outputs (version from `tauri.conf.json`, currently `0.1.0`):
 apps/desktop/src-tauri/target/release/bundle/nsis/JabeX_0.1.0_x64-setup.exe
 apps/desktop/src-tauri/target/release/bundle/msi/JabeX_0.1.0_x64_en-US.msi
 ```
+
+Portable (no installer) folder: `pnpm portable:build` → `dist/JabeX-<version>-portable/` (see [PACKAGING.md](../PACKAGING/PACKAGING.md#portable-windows-zip-no-installer)).
 
 Full steps, CI tagging, and signing status: [PACKAGING.md](../PACKAGING/PACKAGING.md) · [RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md).
 

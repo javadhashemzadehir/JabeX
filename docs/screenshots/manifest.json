@@ -1,0 +1,51 @@
+{
+  "capturedAt": "2026-10-10T19:16:35.362Z",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "dataDir": ".tmp/docs-capture-data",
+  "isolated": true,
+  "captured": [
+    "01-app-shell.png",
+    "02-dashboard.png",
+    "03-decks.png",
+    "04-card-editor.png",
+    "05-review-session.png",
+    "06-review-result.png",
+    "07-search.png",
+    "08-profiles.png",
+    "09-backup-export.png",
+    "10-backup-import.png",
+    "11-settings.png",
+    "12-theme-switch.png",
+    "13-language-switch.png",
+    "14-tray.png",
+    "15-empty-states.png"
+  ],
+  "defaults": {
+    "locale": "fa",
+    "direction": "rtl",
+    "theme": "light"
+  },
+  "variants": {
+    "12-theme-switch.png": {
+      "theme": "dark",
+      "locale": "fa"
+    },
+    "13-language-switch.png": {
+      "theme": "light",
+      "locale": "en",
+      "direction": "ltr"
+    },
+    "15-empty-states.png": {
+      "profile": "Study",
+      "locale": "fa"
+    }
+  },
+  "notes": [
+    "Never writes to the real user APPDATA database",
+    "09/10 = Settings backup panel (native file dialogs not captured)",
+    "14 = in-app tray preferences (OS tray chrome varies)"
+  ]
+}
