@@ -38,6 +38,7 @@ Thumbs.db
 
 # Build
 dist/
+release/
 build/
 *.tsbuildinfo
 
@@ -49,3 +50,4 @@ build/
 # Misc
 .turbo/
 .cache/
+.tmp/

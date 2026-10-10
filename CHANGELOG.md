@@ -7,10 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Phase 3 polish: packaging docs + bundle metadata, first-run onboarding (sample deck), large-deck card list pagination/virtualization, contributor docs index
-
 ## [0.1.0] - 2026-10-10
 
 ### Added
@@ -29,11 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Offline language assist (detection, optional translate/TTS behind ports)
 - Global search command palette (FTS5 + fuzzy ranking; local history only)
 - Accessibility pass (RTL/LTR), hold-to-confirm deletes, theme system
+- Phase 3 polish: packaging docs + bundle metadata, first-run onboarding (sample deck), large-deck card list pagination/virtualization, contributor docs index
+- Windows distributions: NSIS installer, MSI installer, and portable ZIP (`pnpm release:assemble` → `release/` + `SHA256SUMS.txt`)
+- Portable Windows pack (`pnpm portable:pack` / `portable:build`) with WebView2 requirements docs
+- Pre-migration SQLite file backup on profile DB upgrade (`database.sqlite.pre-migrate-*.bak`)
 
 ### Security
 
 - No accounts, analytics, or required network for core study flows
 - Least-privilege Tauri capabilities; user data stays on device
+- No auto-updater in this release (user-downloaded builds only)
 
 [Unreleased]: https://github.com/jabex/jabex/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/jabex/jabex/releases/tag/v0.1.0

@@ -1,0 +1,4 @@
+This resources folder is reserved for optional sidecar files.
+
+The JabeX UI (Next.js static export) and icons are embedded inside JabeX.exe
+by the Tauri build. No extra files are required here for a normal portable run.

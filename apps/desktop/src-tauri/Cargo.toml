@@ -5,6 +5,12 @@ description = "JabeX — private, offline-first Leitner Box"
 authors = ["JabeX Contributors"]
 edition = "2021"
 rust-version = "1.77.2"
+# Produce `JabeX.exe` (not `jabex.exe`) for portable / release naming.
+autobins = false
+
+[[bin]]
+name = "JabeX"
+path = "src/main.rs"
 
 [lib]
 name = "jabex_lib"

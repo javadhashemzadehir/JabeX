@@ -1,0 +1,25 @@
+Microsoft Edge WebView2 Runtime (required)
+==========================================
+
+JabeX is a Tauri desktop app for Windows 10 / 11 64-bit (x64).
+It needs the Microsoft Edge WebView2 Runtime.
+
+Windows 10 / 11 (x64)
+---------------------
+WebView2 is usually already installed (ships with modern Windows / Edge).
+If the app window fails to open, install the Evergreen Runtime:
+
+  https://developer.microsoft.com/microsoft-edge/webview2/
+
+Choose "Evergreen Bootstrapper" or "Evergreen Standalone Installer" (x64).
+
+No administrator rights are required to run JabeX itself once WebView2 is present.
+Installing WebView2 system-wide may prompt for elevation depending on the installer
+you choose; the Evergreen bootstrapper typically installs per-machine.
+
+Offline / locked-down PCs
+-------------------------
+Ask your IT admin to deploy the WebView2 Evergreen Runtime (x64), or use a machine
+image that already includes Microsoft Edge.
+
+JabeX does not bundle a fixed WebView2 version inside this portable zip.

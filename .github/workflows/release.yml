@@ -94,16 +94,22 @@ jobs:
 
             See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
 
+            ### Windows requirements
+
+            - Windows 10 or 11, 64-bit (x64)
+            - Microsoft Edge WebView2 Runtime (usually preinstalled)
+
             ### Downloads
 
             - **Windows:** `JabeX_*_x64-setup.exe` (NSIS) and `JabeX_*_x64_en-US.msi` (MSI)
+            - **Windows portable:** attach `JabeX-*-portable.zip` + `SHA256SUMS.txt` from `pnpm release:assemble` if not uploaded by CI
             - **macOS:** `.dmg`
             - **Linux:** `.AppImage`
 
             Installers are **unsigned** for now (Authenticode / notarization planned later).
             Windows SmartScreen may warn on first run — choose “More info” → “Run anyway” when you trust the build.
 
-            Privacy-first · offline-first · flashcards only · no accounts.
+            Privacy-first · offline-first · flashcards only · no accounts · no telemetry · no auto-updater.
           releaseDraft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
           generateReleaseNotes: true

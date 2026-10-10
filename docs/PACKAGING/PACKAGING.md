@@ -9,6 +9,17 @@ Related:
 - [GIT_WORKFLOW.md](../GIT_WORKFLOW/GIT_WORKFLOW.md) — tagging and release process
 - [`.github/workflows/release.yml`](../../.github/workflows/release.yml) — multi-OS release job
 
+## End-user Windows requirements
+
+| Requirement | Notes |
+| ----------- | ----- |
+| OS | **Windows 10 or Windows 11**, **64-bit (x64)** |
+| Runtime | **Microsoft Edge WebView2 Runtime** (Evergreen). Usually preinstalled with Windows / Edge; [download](https://developer.microsoft.com/microsoft-edge/webview2/) if the window fails to open |
+| Privileges | NSIS uses `currentUser` install mode — **no admin** for a typical install. Portable ZIP also runs without elevation |
+| Network | Not required for study. Installers may download WebView2 bootstrapper if missing (`webviewInstallMode: downloadBootstrapper`) |
+
+JabeX remains local-first: **no telemetry**, **no accounts**, **no cloud dependency**, **no auto-updater**.
+
 ## Bundle configuration
 
 Source of truth: [`apps/desktop/src-tauri/tauri.conf.json`](../../apps/desktop/src-tauri/tauri.conf.json).
@@ -82,7 +93,104 @@ nsis/
 | NSIS setup EXE | `nsis/JabeX_<version>_x64-setup.exe` |
 | MSI | `msi/JabeX_<version>_x64_en-US.msi` |
 
+### Public release folder
+
+After a successful `pnpm tauri:build`, assemble checksummed distribution files:
+
+```bash
+pnpm release:assemble
+```
+
+```
+release/                          # gitignored
+├── JabeX_0.1.0_x64-setup.exe
+├── JabeX_0.1.0_x64_en-US.msi
+├── JabeX-0.1.0-portable.zip
+└── SHA256SUMS.txt
+```
+
+`SHA256SUMS.txt` uses the common `hash  filename` layout (two spaces). Verify on Windows:
+
+```powershell
+Get-FileHash .\release\JabeX_0.1.0_x64-setup.exe -Algorithm SHA256
+Get-Content .\release\SHA256SUMS.txt
+```
+
 Smoke-check on a clean Windows user/profile when possible. **Unsigned** builds may trigger SmartScreen (“Windows protected your PC”) — expected until Authenticode signing is added.
+
+## Portable Windows zip (no installer)
+
+Use this when you want a standalone folder — not NSIS/MSI. No administrator privileges are required to run the app.
+
+### Data location (important)
+
+Portable mode **does not write SQLite, profiles, media, or backups into the portable folder**.
+
+Writable data always goes to the OS app-data root (same as the installed app):
+
+| OS | Default path |
+| -- | ------------ |
+| Windows | `%APPDATA%\JabeX\JabeX\data\` |
+
+Optional override for tests/tooling: set `JABEX_DATA_DIR` to an absolute directory before launch. Do not point it at the portable folder unless you intentionally want data there.
+
+### Build commands
+
+From the **repo root** (frontend must be built so Tauri can embed `frontend/out`):
+
+```bash
+pnpm build
+cd apps/desktop/src-tauri
+cargo build --release
+```
+
+Release binary:
+
+```
+apps/desktop/src-tauri/target/release/JabeX.exe
+```
+
+Assemble the portable folder (copies the exe + docs; **does not** create installers):
+
+```bash
+pnpm portable:pack
+```
+
+Or build frontend + release binary + pack in one step:
+
+```bash
+pnpm portable:build
+```
+
+### Output layout
+
+```
+dist/JabeX-0.1.0-portable/
+├── JabeX.exe
+├── resources/
+├── WebView2 requirements.txt
+└── README.txt
+```
+
+Prefer `pnpm release:assemble` to produce `release/JabeX-0.1.0-portable.zip` with checksums. `dist/` and `release/` are gitignored.
+
+### Portable smoke checks
+
+- [ ] `JabeX.exe` launches without elevation
+- [ ] First run creates/migrates SQLite under `%APPDATA%\JabeX\JabeX\data\` (or `JABEX_DATA_DIR`)
+- [ ] Profiles load; create deck / card works
+- [ ] Backup export/import (`.jbx`) works
+- [ ] After a short session, the portable folder has **no** new `*.sqlite` / `profiles/` / `backups/` writes (only the shipped files)
+
+Isolated data check:
+
+```powershell
+$data = Join-Path $env:TEMP "jabex-portable-smoke"
+New-Item -ItemType Directory -Force -Path $data | Out-Null
+$env:JABEX_DATA_DIR = $data
+# Start dist\JabeX-0.1.0-portable\JabeX.exe, use the app briefly, then quit.
+# Expect: $data\app.sqlite exists; portable folder unchanged aside from OS junk.
+```
 
 ## CI release (tag-triggered)
 
@@ -110,6 +218,13 @@ Not yet configured:
 
 When added, secrets belong in GitHub Actions (never in the repo). Prefer documenting the exact secret names and notarization steps in this file when signing lands.
 
+## Database / upgrade safety
+
+- Migrations run automatically when a profile database opens
+- On upgrade (pending migrations + existing schema history), JabeX writes `database.sqlite.pre-migrate-<UTC>.bak` beside the live DB before applying SQL
+- A failed migration surfaces an error that includes the backup path; restore the `.bak` manually if needed (see [DATABASE.md](../DATABASE/DATABASE.md))
+- Existing profiles stay isolated under `%APPDATA%\JabeX\JabeX\data\profiles\`
+
 ## Privacy / architecture (do not break)
 
 Release packaging must keep JabeX:
@@ -117,6 +232,7 @@ Release packaging must keep JabeX:
 - Local-first (SQLite + media on device)
 - No required accounts or cloud sync
 - No telemetry
+- No auto-updater in v0.1.0
 - Profile isolation and `.jbx` backup/import unchanged
 
 ## Troubleshooting
