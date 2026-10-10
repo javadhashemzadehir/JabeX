@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
   Card,
+  CardId,
   Deck,
   DeckId,
   Grade,
@@ -45,6 +46,7 @@ export const api = {
   switchProfile: (id: ProfileId) => call<Profile>("switch_profile", { id }),
 
   listDecks: () => call<Deck[]>("list_decks"),
+  getDeck: (id: DeckId) => call<Deck>("get_deck", { id }),
   createDeck: (name: string, description?: string | null) =>
     call<Deck>("create_deck", {
       input: { name, description: description ?? null },
@@ -58,9 +60,9 @@ export const api = {
     call<Card>("create_card", {
       input: { deckId, frontContent, backContent },
     }),
-  updateCard: (id: string, frontContent: string, backContent: string) =>
+  updateCard: (id: CardId, frontContent: string, backContent: string) =>
     call<Card>("update_card", { input: { id, frontContent, backContent } }),
-  deleteCard: (id: string) => call<void>("delete_card", { id }),
+  deleteCard: (id: CardId) => call<void>("delete_card", { id }),
 
   listDueCards: (deckId?: DeckId | null) =>
     call<Card[]>("list_due_cards", { deckId: deckId ?? null }),

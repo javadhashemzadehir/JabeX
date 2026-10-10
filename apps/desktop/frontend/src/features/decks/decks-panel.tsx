@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Layers, Pencil, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -25,6 +27,7 @@ type DialogMode = "create" | "rename" | "delete" | null;
 
 export function DecksPanel() {
   const t = useTranslations();
+  const router = useRouter();
   const tauri = useIsTauri();
   const activeProfileId = useProfileStore((s) => s.active?.id);
   const { decks, loading, desktop, hydrate, create, rename, remove } =
@@ -76,6 +79,7 @@ export function DecksPanel() {
         setDialog(null);
         setName("");
         setDescription("");
+        router.push(`/decks/view?id=${encodeURIComponent(deck.id)}`);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t.decks.error);
@@ -172,14 +176,17 @@ export function DecksPanel() {
               transition={{ delay: 0.03 * index, duration: 0.25 }}
               className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
             >
-              <div className="min-w-0 space-y-0.5">
+              <Link
+                href={`/decks/view?id=${encodeURIComponent(deck.id)}`}
+                className="min-w-0 flex-1 space-y-0.5 rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
                 <p className="truncate font-medium">{deck.name}</p>
                 {deck.description ? (
                   <p className="truncate text-sm text-muted-foreground">
                     {deck.description}
                   </p>
                 ) : null}
-              </div>
+              </Link>
               <div className="flex shrink-0 gap-1">
                 <Button
                   type="button"

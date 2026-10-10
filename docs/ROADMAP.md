@@ -16,7 +16,7 @@
 ## Phase 1 — Core Leitner MVP
 
 - [x] Deck create / rename / delete
-- [ ] Card CRUD (front / back)
+- [x] Card CRUD (front / back)
 - [x] Local persistence (SQLite or chosen engine)
 - [ ] Review session with box promotion/demotion
 - [ ] Due-card queue
