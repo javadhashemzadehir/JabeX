@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- First-run experience uses a React Joyride product tour (deck → card → review → settings); release builds no longer offer an in-app sample deck. Mock study data remains `pnpm db:seed` in development only.
+
 ## [0.1.0] - 2026-10-10
 
 ### Added

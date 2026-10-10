@@ -385,7 +385,11 @@ export function CardsPanel({
                 </Link>
               </Button>
             ) : null}
-            <Button onClick={openCreate} disabled={!deck}>
+            <Button
+              data-tour="create-card"
+              onClick={openCreate}
+              disabled={!deck}
+            >
               <Plus className="size-4" />
               {t.cards.create}
             </Button>

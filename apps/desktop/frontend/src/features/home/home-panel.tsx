@@ -15,11 +15,13 @@ import {
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { createSampleDeck } from "@/features/onboarding/create-sample-deck";
+import { useOnboardingTourStore } from "@/features/onboarding/tour-store";
 import { BackupPanel } from "@/features/profiles/backup-panel";
 import { useProfileStore } from "@/features/profiles/profile-store";
 import { StudyProgressPanel } from "@/features/study-progress/study-progress-panel";
 import { useIsTauri } from "@/hooks/use-is-tauri";
 import { useTranslations } from "@/hooks/use-locale";
+import { isDevMode } from "@/lib/is-dev";
 import { useDeckStore } from "@/features/decks/deck-store";
 import { useStatsStore } from "./stats-store";
 import { StudyStatsPanel } from "./study-stats-panel";
@@ -35,7 +37,9 @@ export function HomePanel() {
   const stats = useStatsStore((s) => s.stats);
   const hydrateStats = useStatsStore((s) => s.hydrate);
   const hydrateDecks = useDeckStore((s) => s.hydrate);
+  const requestTour = useOnboardingTourStore((s) => s.requestStart);
   const [sampleBusy, setSampleBusy] = useState(false);
+  const showDevSample = isDevMode() && desktop;
 
   useEffect(() => {
     void hydrateStats();
@@ -49,16 +53,16 @@ export function HomePanel() {
   const ctaHint = isEmptyLibrary ? t.home.ctaHint : t.home.ctaNewHint;
 
   async function handleSampleDeck() {
-    if (!tauri || sampleBusy) return;
+    if (!tauri || !showDevSample || sampleBusy) return;
     setSampleBusy(true);
     try {
       const deck = await createSampleDeck({
-        name: t.onboarding.sampleDeckName,
-        description: t.onboarding.sampleDeckDescription,
-        cards: t.onboarding.sampleCards,
+        name: t.onboarding.devSample.deckName,
+        description: t.onboarding.devSample.deckDescription,
+        cards: t.onboarding.devSample.cards,
       });
       await Promise.all([hydrateStats(), hydrateDecks()]);
-      toast.success(t.home.sampleCreated);
+      toast.success(t.onboarding.devSample.created);
       router.push(`/decks/view?id=${encodeURIComponent(deck.id)}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t.decks.error);
@@ -74,7 +78,10 @@ export function HomePanel() {
       transition={{ duration: 0.35 }}
       className="flex w-full flex-col gap-4"
     >
-      <Card className="overflow-hidden border-border/60 bg-linear-to-br from-background via-muted/40 to-background shadow-none">
+      <Card
+        data-tour="home-welcome"
+        className="overflow-hidden border-border/60 bg-linear-to-br from-background via-muted/40 to-background shadow-none"
+      >
         <CardHeader>
           <CardDescription>{t.app.tagline}</CardDescription>
           <CardTitle className="text-3xl tracking-tight text-balance">
@@ -96,21 +103,35 @@ export function HomePanel() {
               <Button asChild>
                 <Link href="/decks">{ctaLabel}</Link>
               </Button>
-              {isEmptyLibrary && desktop ? (
+              {desktop ? (
                 <Button
                   type="button"
                   variant="outline"
+                  onClick={() => requestTour()}
+                >
+                  {t.home.tourCta}
+                </Button>
+              ) : null}
+              {showDevSample && isEmptyLibrary ? (
+                <Button
+                  type="button"
+                  variant="ghost"
                   disabled={sampleBusy}
                   onClick={() => void handleSampleDeck()}
                 >
                   {sampleBusy ? <Spinner /> : null}
-                  {t.home.sampleCta}
+                  {t.onboarding.devSample.cta}
                 </Button>
               ) : null}
             </div>
             <p className="text-xs text-muted-foreground">{ctaHint}</p>
-            {isEmptyLibrary && desktop ? (
-              <p className="text-xs text-muted-foreground">{t.home.sampleHint}</p>
+            {desktop ? (
+              <p className="text-xs text-muted-foreground">{t.home.tourHint}</p>
+            ) : null}
+            {showDevSample && isEmptyLibrary ? (
+              <p className="text-xs text-muted-foreground">
+                {t.onboarding.devSample.hint}
+              </p>
             ) : null}
           </div>
         </CardContent>

@@ -64,7 +64,10 @@ export function Header({
         <GlobalSearch />
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div
+        data-tour="header-appearance"
+        className="flex shrink-0 items-center gap-2"
+      >
         <ProfileSwitcher />
         <LanguageSwitcher />
         <ThemeToggle />

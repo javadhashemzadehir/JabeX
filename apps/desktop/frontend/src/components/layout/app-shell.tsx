@@ -5,6 +5,7 @@ import { AppPreloader } from "@/components/feedback/app-preloader";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { SkipToContent } from "@/components/layout/skip-to-content";
+import { ProductTour } from "@/features/onboarding/product-tour";
 import { InitialProfileSetupDialog } from "@/features/profiles/initial-profile-setup-dialog";
 import { useLocale, useTranslations } from "@/hooks/use-locale";
 import { useProfileStore } from "@/features/profiles/profile-store";
@@ -80,6 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <InitialProfileSetupDialog />
+      <ProductTour />
     </div>
   );
 }

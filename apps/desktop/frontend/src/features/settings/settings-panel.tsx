@@ -1,8 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import { ProfileAlgorithmPanel } from "@/features/algorithm/profile-algorithm-panel";
+import { useOnboardingTourStore } from "@/features/onboarding/tour-store";
 import { BackupPanel } from "@/features/profiles/backup-panel";
+import { useProfileStore } from "@/features/profiles/profile-store";
 import { useTranslations } from "@/hooks/use-locale";
 import { LanguageAssistSettingsPanel } from "@/features/language-assist/language-assist-settings-panel";
 import { ApplicationSettingsPanel } from "./application-settings-panel";
@@ -10,6 +13,8 @@ import { ShortcutsSettingsPanel } from "./shortcuts-settings-panel";
 
 export function SettingsPanel() {
   const t = useTranslations();
+  const desktop = useProfileStore((s) => s.desktop);
+  const requestTour = useOnboardingTourStore((s) => s.requestStart);
 
   return (
     <motion.div
@@ -18,13 +23,25 @@ export function SettingsPanel() {
       transition={{ duration: 0.35 }}
       className="flex w-full flex-col gap-10"
     >
-      <div className="space-y-1">
-        <h2 className="text-2xl font-semibold tracking-tight">
-          {t.settings.title}
-        </h2>
-        <p className="text-sm text-muted-foreground text-pretty">
-          {t.settings.description}
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-semibold tracking-tight">
+            {t.settings.title}
+          </h2>
+          <p className="text-sm text-muted-foreground text-pretty">
+            {t.settings.description}
+          </p>
+        </div>
+        {desktop ? (
+          <div className="space-y-1 text-end">
+            <Button type="button" variant="outline" onClick={() => requestTour()}>
+              {t.settings.restartTour}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              {t.settings.restartTourHint}
+            </p>
+          </div>
+        ) : null}
       </div>
 
       <ApplicationSettingsPanel />

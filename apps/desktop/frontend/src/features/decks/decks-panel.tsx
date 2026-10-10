@@ -144,7 +144,7 @@ export function DecksPanel() {
             {t.decks.description}
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button data-tour="create-deck" onClick={openCreate}>
           <Plus className="size-4" />
           {t.decks.create}
         </Button>
@@ -169,7 +169,7 @@ export function DecksPanel() {
               {t.decks.emptyHint}
             </p>
           </div>
-          <Button onClick={openCreate}>
+          <Button data-tour="create-deck-empty" onClick={openCreate}>
             <Plus className="size-4" />
             {t.decks.create}
           </Button>

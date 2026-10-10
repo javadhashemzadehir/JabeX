@@ -50,9 +50,11 @@ pnpm tauri:build
 pnpm --filter @jabex/desktop tauri:dev
 
 # Local mock study data (active profile SQLite)
-pnpm db:seed                 # insert fixtures from scripts/dev/seed-data.json
+pnpm db:seed                 # insert fixtures from scripts/dev/seed-data.json (dev only — never auto-runs in release)
 pnpm db:unseed               # remove only those seed rows
 pnpm db:unseed -- --purge    # wipe ALL decks/cards/reviews in the profile
+# Production / portable EXE starts with an empty profile library.
+# In `tauri:dev` only, Home may show a “sample deck (dev)” shortcut; release builds never do.
 
 # Docs screenshots (isolated data only — see below)
 pnpm docs:screenshots

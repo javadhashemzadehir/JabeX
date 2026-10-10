@@ -62,20 +62,50 @@
     "ctaHint": "Aim for under 30 seconds — name it and start adding cards next.",
     "ctaNew": "Create new deck",
     "ctaNewHint": "Open decks to add another, organize cards, or start a review.",
-    "sampleCta": "Try a sample deck",
-    "sampleHint": "Three practice cards — start a review in under two minutes. You can delete the sample anytime.",
-    "sampleCreated": "Sample deck ready — open Review when you want to study.",
+    "tourCta": "Take the guided tour",
+    "tourHint": "A short walkthrough: create a deck, add cards, review, and open settings.",
     "dueToday": "Cards due",
     "profiles": "Local profiles"
   },
   "onboarding": {
-    "sampleDeckName": "Sample — Getting started",
-    "sampleDeckDescription": "A few practice cards so you can try a review right away. Safe to delete.",
-    "sampleCards": [
-      { "front": "Hello", "back": "A greeting — say this when you meet someone." },
-      { "front": "Leitner box", "back": "A spaced-repetition system that moves cards up or down by how well you recall them." },
-      { "front": "Private by default", "back": "JabeX keeps decks and progress on this device — no account required." }
-    ]
+    "tour": {
+      "back": "Back",
+      "close": "Close",
+      "skip": "Skip tour",
+      "next": "Next",
+      "nextWithProgress": "Next ({current} of {total})",
+      "finish": "Got it",
+      "welcomeTitle": "Welcome to JabeX",
+      "welcomeBody": "Your Leitner box stays on this device — no account, no cloud. We’ll show the clicks to create your first deck and card.",
+      "decksTitle": "Decks",
+      "decksBody": "Open Decks from the sidebar. Each deck is a set of flashcards you review with spaced repetition.",
+      "createDeckTitle": "Create a deck",
+      "createDeckBody": "Click New deck, give it a short name, then save. Aim for under 30 seconds for your first deck.",
+      "createCardTitle": "Add cards",
+      "createCardBody": "After you open a deck, use New card to add a front and back. TipTap supports rich text — keep the first cards simple.",
+      "reviewTitle": "Review",
+      "reviewBody": "When cards are due, start a review here. Grade each recall (Again / Hard / Good / Easy) to move boxes.",
+      "settingsTitle": "Settings",
+      "settingsBody": "Tray, shortcuts, language assist, and Leitner intervals live under Settings.",
+      "appSettingsTitle": "App preferences",
+      "appSettingsBody": "Optional tray and startup toggles. Study data still stays in your local profile.",
+      "appearanceTitle": "Language & theme",
+      "appearanceBody": "Switch Persian/English and light/dark anytime from the header — nothing leaves the device.",
+      "doneTitle": "You’re ready",
+      "doneBody": "Create your first deck when you’re ready. Your library starts empty on purpose — mock data is only for developers (pnpm db:seed)."
+    },
+    "devSample": {
+      "cta": "Try a sample deck (dev)",
+      "hint": "Development only — inserts three practice cards into this profile. Never shown in release builds.",
+      "created": "Sample deck ready — open Review when you want to study.",
+      "deckName": "Sample — Getting started",
+      "deckDescription": "A few practice cards so you can try a review right away. Safe to delete.",
+      "cards": [
+        { "front": "Hello", "back": "A greeting — say this when you meet someone." },
+        { "front": "Leitner box", "back": "A spaced-repetition system that moves cards up or down by how well you recall them." },
+        { "front": "Private by default", "back": "JabeX keeps decks and progress on this device — no account required." }
+      ]
+    }
   },
   "stats": {
     "title": "Study progress",
@@ -497,6 +527,8 @@
     "saved": "Settings saved",
     "error": "Could not update settings",
     "desktopOnly": "Settings are available in the desktop app.",
+    "restartTour": "Replay guided tour",
+    "restartTourHint": "Walk through decks, cards, review, and settings again.",
     "application": {
       "title": "Application",
       "description": "System tray and startup options. These apply to the whole device, not a single profile.",

@@ -8,7 +8,10 @@ export interface SampleDeckCopy {
   cards: Array<{ front: string; back: string }>;
 }
 
-/** Creates one local sample deck with Leitner-ready cards (no network). */
+/**
+ * Dev-only helper for inserting a tiny sample deck into the active profile.
+ * Production UI never calls this — use `pnpm db:seed` for mock study data.
+ */
 export async function createSampleDeck(copy: SampleDeckCopy): Promise<Deck> {
   const deck = await api.createDeck(copy.name, copy.description);
   for (const card of copy.cards) {

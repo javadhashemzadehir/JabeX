@@ -109,6 +109,7 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
                 href={item.href}
                 className={className}
                 aria-current={active ? "page" : undefined}
+                data-tour={`nav-${item.key}`}
               >
                 {content}
               </Link>
