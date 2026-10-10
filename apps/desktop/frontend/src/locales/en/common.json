@@ -48,6 +48,40 @@
     "error": "Could not update decks",
     "desktopOnly": "Decks are available in the desktop app."
   },
+  "review": {
+    "title": "Review",
+    "description": "Study due cards. Correct answers move up a Leitner box; misses return to box 1.",
+    "loading": "Loading due cards…",
+    "emptyTitle": "Nothing due right now",
+    "emptyHint": "Add cards in a deck, or come back when reviews are due.",
+    "sessionDoneTitle": "Session complete",
+    "sessionDoneHint": "You reviewed {count} cards. Great work — data stayed on this device.",
+    "goToDecks": "Go to decks",
+    "refresh": "Check again",
+    "progress": "{done} of {total} reviewed",
+    "remaining": "{count} left",
+    "boxLabel": "Box {box}",
+    "frontSide": "Front",
+    "backSide": "Back",
+    "reveal": "Show answer",
+    "revealHint": "Space or Enter to show the answer",
+    "grades": {
+      "again": "Again",
+      "hard": "Hard",
+      "good": "Good",
+      "easy": "Easy"
+    },
+    "shortcuts": {
+      "space": "Space",
+      "hint": "Keys 1–4 grade the card. Space or Enter grades Good."
+    },
+    "promoted": "Moved to box {box}",
+    "demoted": "Back to box {box}",
+    "stayed": "Stays in box {box}",
+    "error": "Could not record review",
+    "desktopOnly": "Review is available in the desktop app.",
+    "start": "Start review"
+  },
   "cards": {
     "description": "Add front/back flashcards to this deck.",
     "create": "New card",

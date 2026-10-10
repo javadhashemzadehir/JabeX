@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Pencil, Plus, SquareStack, Trash2 } from "lucide-react";
+import { ArrowLeft, BookOpen, Pencil, Plus, SquareStack, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import type { Card } from "@jabex/types";
@@ -175,10 +175,22 @@ export function CardsPanel({ deckId }: { deckId: string }) {
               {t.cards.description}
             </p>
           </div>
-          <Button onClick={openCreate} disabled={!deck}>
-            <Plus className="size-4" />
-            {t.cards.create}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {cards.length > 0 ? (
+              <Button variant="outline" asChild>
+                <Link
+                  href={`/review?deckId=${encodeURIComponent(deckId)}`}
+                >
+                  <BookOpen className="size-4" />
+                  {t.review.start}
+                </Link>
+              </Button>
+            ) : null}
+            <Button onClick={openCreate} disabled={!deck}>
+              <Plus className="size-4" />
+              {t.cards.create}
+            </Button>
+          </div>
         </div>
       </div>
 

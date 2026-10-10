@@ -18,8 +18,8 @@
 - [x] Deck create / rename / delete
 - [x] Card CRUD (front / back)
 - [x] Local persistence (SQLite or chosen engine)
-- [ ] Review session with box promotion/demotion
-- [ ] Due-card queue
+- [x] Review session with box promotion/demotion
+- [x] Due-card queue
 - [x] Empty states optimized for ≤30s first deck / ≤2m first review (decks empty state)
 
 ## Phase 1.5 — Local profiles & backup
@@ -32,7 +32,7 @@
 
 ## Phase 2 — Study Quality
 
-- [ ] Keyboard shortcuts for review
+- [x] Keyboard shortcuts for review
 - [ ] Basic stats (local only)
 - [ ] Deck import/export (file-based) — superseded in part by `.jbx`
 - [ ] Accessibility pass (RTL + LTR)

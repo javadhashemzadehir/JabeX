@@ -15,12 +15,12 @@ import {
 const items = [
   { key: "home" as const, icon: Home, href: "/" },
   { key: "decks" as const, icon: Layers, href: "/decks" },
-  { key: "review" as const, icon: BookOpen, href: "#" },
+  { key: "review" as const, icon: BookOpen, href: "/review" },
   { key: "settings" as const, icon: Settings, href: "/settings" },
 ];
 
 function isActivePath(pathname: string | null, href: string) {
-  if (!pathname || href === "#") return false;
+  if (!pathname) return false;
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -89,36 +89,22 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
             </>
           );
 
-          const link =
-            item.href === "#" ? (
-              <motion.a
-                key={item.key}
-                href="#"
-                initial={{ opacity: 0, x: direction === "rtl" ? 8 : -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05 * index, duration: 0.25 }}
+          const link = (
+            <motion.div
+              key={item.key}
+              initial={{ opacity: 0, x: direction === "rtl" ? 8 : -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.05 * index, duration: 0.25 }}
+            >
+              <Link
+                href={item.href}
                 className={className}
-                aria-disabled="true"
-                onClick={(event) => event.preventDefault()}
+                aria-current={active ? "page" : undefined}
               >
                 {content}
-              </motion.a>
-            ) : (
-              <motion.div
-                key={item.key}
-                initial={{ opacity: 0, x: direction === "rtl" ? 8 : -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05 * index, duration: 0.25 }}
-              >
-                <Link
-                  href={item.href}
-                  className={className}
-                  aria-current={active ? "page" : undefined}
-                >
-                  {content}
-                </Link>
-              </motion.div>
-            );
+              </Link>
+            </motion.div>
+          );
 
           if (!collapsed) return link;
 
