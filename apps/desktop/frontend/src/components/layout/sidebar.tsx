@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Home, Layers, Settings } from "lucide-react";
+import {
+  BookOpen,
+  Home,
+  Images,
+  Layers,
+  Settings,
+  Trash2,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations, useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
@@ -16,6 +23,8 @@ const items = [
   { key: "home" as const, icon: Home, href: "/" },
   { key: "decks" as const, icon: Layers, href: "/decks" },
   { key: "review" as const, icon: BookOpen, href: "/review" },
+  { key: "mediaLibrary" as const, icon: Images, href: "/media" },
+  { key: "trash" as const, icon: Trash2, href: "/trash" },
   { key: "settings" as const, icon: Settings, href: "/settings" },
 ];
 
@@ -84,7 +93,7 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
 
           const content = (
             <>
-              <Icon className="size-4 shrink-0" />
+              <Icon className="size-4 shrink-0" aria-hidden />
               <span className={cn("truncate", collapsed && "sr-only")}>{label}</span>
             </>
           );

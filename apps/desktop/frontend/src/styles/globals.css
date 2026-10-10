@@ -27,6 +27,11 @@
   --sidebar-foreground: oklch(0.22 0.02 55);
   --sidebar-accent: oklch(0.93 0.02 160);
   --sidebar-accent-foreground: oklch(0.25 0.04 160);
+  --scrollbar-size: 0.625rem;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: oklch(0.78 0.015 95);
+  --scrollbar-thumb-hover: oklch(0.68 0.02 95);
+  --scrollbar-thumb-active: oklch(0.58 0.03 160);
 }
 
 .dark {
@@ -53,6 +58,10 @@
   --sidebar-foreground: oklch(0.95 0.01 95);
   --sidebar-accent: oklch(0.26 0.03 160);
   --sidebar-accent-foreground: oklch(0.95 0.01 95);
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: oklch(0.4 0.02 160);
+  --scrollbar-thumb-hover: oklch(0.5 0.025 160);
+  --scrollbar-thumb-active: oklch(0.62 0.06 160);
 }
 
 /*
@@ -114,12 +123,19 @@ body {
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-scrollbar-track: var(--scrollbar-track);
+  --color-scrollbar-thumb: var(--scrollbar-thumb);
+  --color-scrollbar-thumb-hover: var(--scrollbar-thumb-hover);
+  --color-scrollbar-thumb-active: var(--scrollbar-thumb-active);
+  --spacing-scrollbar: var(--scrollbar-size);
   --font-sans: var(--font-family);
 }
 
 @layer base {
   * {
     @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
 
   html {
@@ -130,6 +146,36 @@ body {
     @apply bg-background text-foreground font-sans antialiased;
   }
 
+  /* Design-system scrollbars (WebKit / Chromium / Tauri webview). */
+
+  *::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+  }
+
+  *::-webkit-scrollbar-thumb:active {
+    background-color: var(--scrollbar-thumb-active);
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
   /* Radix portals inherit from body; keep font explicit for consistency. */
   [data-radix-portal],
   [role="dialog"],
@@ -137,6 +183,21 @@ body {
   [role="listbox"],
   [data-slot="tooltip-content"] {
     font-family: var(--font-family);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
@@ -150,4 +211,129 @@ html.dark .brand-logo-on-dark {
 
 .brand-logo-on-dark {
   display: none;
+}
+
+/* TipTap card editor — uses design tokens (not a separate theme). */
+.jabex-editor .tiptap {
+  min-height: 5.5rem;
+  padding: 0.75rem 0.875rem;
+  outline: none;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+
+.jabex-editor--large .jabex-editor .tiptap {
+  min-height: 10rem;
+  font-size: 0.9375rem;
+}
+
+.jabex-editor--readonly .tiptap {
+  min-height: 0;
+  padding: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.jabex-editor .tiptap p {
+  margin: 0.25rem 0;
+}
+
+.jabex-editor .tiptap p:first-child {
+  margin-top: 0;
+}
+
+.jabex-editor .tiptap p:last-child {
+  margin-bottom: 0;
+}
+
+.jabex-editor .tiptap h1 {
+  margin: 0.55rem 0 0.3rem;
+  font-size: 1.35rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.jabex-editor .tiptap h2 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.jabex-editor .tiptap h3 {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.jabex-editor .tiptap ul,
+.jabex-editor .tiptap ol {
+  margin: 0.35rem 0;
+  padding-inline-start: 1.25rem;
+}
+
+.jabex-editor .tiptap li {
+  margin: 0.15rem 0;
+}
+
+.jabex-editor .tiptap li p {
+  margin: 0;
+}
+
+.jabex-editor .tiptap blockquote {
+  margin: 0.5rem 0;
+  border-inline-start: 3px solid var(--border);
+  padding-inline-start: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.jabex-editor .tiptap hr {
+  margin: 0.75rem 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.jabex-editor .tiptap pre {
+  margin: 0.5rem 0;
+  overflow-x: auto;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--muted);
+  padding: 0.65rem 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.jabex-editor .tiptap pre code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+.jabex-editor .tiptap code {
+  border-radius: calc(var(--radius) - 4px);
+  background: var(--muted);
+  padding: 0.1rem 0.3rem;
+  font-size: 0.85em;
+}
+
+.jabex-editor .tiptap a.jabex-editor-link,
+.jabex-editor .tiptap a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.jabex-editor .tiptap u {
+  text-underline-offset: 2px;
+}
+
+.jabex-editor .tiptap p.is-editor-empty:first-child::before {
+  pointer-events: none;
+  float: inline-start;
+  height: 0;
+  color: var(--muted-foreground);
+  content: attr(data-placeholder);
 }

@@ -1,8 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { AppPreloader } from "@/components/feedback/app-preloader";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { SkipToContent } from "@/components/layout/skip-to-content";
+import { InitialProfileSetupDialog } from "@/features/profiles/initial-profile-setup-dialog";
+import { useLocale, useTranslations } from "@/hooks/use-locale";
 import { useProfileStore } from "@/features/profiles/profile-store";
 
 const SIDEBAR_STORAGE_KEY = "jabex.sidebar.collapsed";
@@ -42,20 +46,40 @@ function useSidebarCollapsed() {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { collapsed, toggle } = useSidebarCollapsed();
   const hydrateProfiles = useProfileStore((s) => s.hydrate);
+  const { hydrated: localeReady } = useLocale();
+  const t = useTranslations();
+  const [bootReady, setBootReady] = useState(false);
 
   useEffect(() => {
-    void hydrateProfiles();
+    let cancelled = false;
+    void hydrateProfiles().finally(() => {
+      if (!cancelled) setBootReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [hydrateProfiles]);
+
+  if (!localeReady || !bootReady) {
+    return <AppPreloader />;
+  }
 
   return (
     <div className="flex h-svh overflow-hidden bg-background text-foreground">
+      <SkipToContent />
       <Sidebar collapsed={collapsed} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header collapsed={collapsed} onToggleSidebar={toggle} />
-        <main className="flex-1 overflow-auto p-6">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          aria-label={t.a11y.main}
+          className="flex-1 overflow-auto p-6 outline-none"
+        >
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>
       </div>
+      <InitialProfileSetupDialog />
     </div>
   );
 }

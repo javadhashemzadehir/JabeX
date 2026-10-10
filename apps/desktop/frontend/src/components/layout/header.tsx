@@ -40,7 +40,10 @@ export function Header({
               aria-controls="app-sidebar"
               onClick={onToggleSidebar}
             >
-              <ToggleIcon className={cn(direction === "rtl" && "rotate-180")} />
+              <ToggleIcon
+                aria-hidden
+                className={cn(direction === "rtl" && "rotate-180")}
+              />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">{toggleLabel}</TooltipContent>

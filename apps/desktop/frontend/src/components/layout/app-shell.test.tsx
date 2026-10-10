@@ -1,7 +1,12 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@/components/providers/app-providers";
 import { AppShell } from "./app-shell";
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+}));
 
 const STORAGE_KEY = "jabex.sidebar.collapsed";
 
@@ -69,5 +74,12 @@ describe("AppShell", () => {
   it("places page content in a wide wrapper", () => {
     renderShell();
     expect(screen.getByText("study content").parentElement).toHaveClass("max-w-7xl");
+  });
+
+  it("exposes a skip link to main content", () => {
+    renderShell();
+    const skip = screen.getByRole("link", { name: "پرش به محتوای اصلی" });
+    expect(skip).toHaveAttribute("href", "#main-content");
+    expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");
   });
 });

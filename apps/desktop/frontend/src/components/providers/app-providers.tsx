@@ -1,6 +1,7 @@
 "use client";
 
 import { DirectionProvider } from "@radix-ui/react-direction";
+import { MotionConfig } from "framer-motion";
 import { useEffect } from "react";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -28,11 +29,13 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     <ThemeProvider>
       <LocaleHydrator>
         <DirectionSync>
-          <TooltipProvider delayDuration={200}>
-            {children}
-            <TrayActionListener />
-            <Toaster richColors closeButton />
-          </TooltipProvider>
+          <MotionConfig reducedMotion="user">
+            <TooltipProvider delayDuration={200}>
+              {children}
+              <TrayActionListener />
+              <Toaster richColors closeButton />
+            </TooltipProvider>
+          </MotionConfig>
         </DirectionSync>
       </LocaleHydrator>
     </ThemeProvider>

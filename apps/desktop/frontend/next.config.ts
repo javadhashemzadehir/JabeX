@@ -6,6 +6,8 @@ import type { NextConfig } from "next";
  */
 const nextConfig: NextConfig = {
   output: "export",
+  // Hide the Next.js Dev Tools badge in the desktop webview; errors still surface.
+  devIndicators: false,
   images: {
     unoptimized: true,
   },
