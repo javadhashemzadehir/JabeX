@@ -1,9 +1,7 @@
 //! Optional launch-on-startup for Windows (HKCU Run key).
 //! Other platforms store the preference but do not register a launcher yet.
 
-use crate::domain::errors::{JabeXError, JabeXResult};
-
-const RUN_VALUE_NAME: &str = "JabeX";
+use crate::domain::errors::JabeXResult;
 
 /// Enable or disable launching JabeX when the user signs in.
 pub fn set_launch_on_startup(enabled: bool) -> JabeXResult<()> {
@@ -23,6 +21,10 @@ pub fn set_launch_on_startup(enabled: bool) -> JabeXResult<()> {
 fn windows_set_launch_on_startup(enabled: bool) -> JabeXResult<()> {
     use winreg::enums::{HKEY_CURRENT_USER, KEY_READ, KEY_SET_VALUE};
     use winreg::RegKey;
+
+    use crate::domain::errors::JabeXError;
+
+    const RUN_VALUE_NAME: &str = "JabeX";
 
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let (key, _) = hkcu
