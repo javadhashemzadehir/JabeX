@@ -72,6 +72,20 @@ body {
   font-family: var(--font-family);
 }
 
+/*
+ * Third-party overlays (Sonner toasts, etc.) set their own font stacks.
+ * Force every UI surface — including toasts — to follow locale fonts.
+ */
+[data-sonner-toaster],
+[data-sonner-toast],
+[data-sonner-toast] [data-title],
+[data-sonner-toast] [data-description],
+[data-sonner-toast] [data-button],
+[data-sonner-toast] [data-cancel],
+[data-sonner-toast] [data-close-button] {
+  font-family: var(--font-family) !important;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -114,6 +128,15 @@ body {
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Radix portals inherit from body; keep font explicit for consistency. */
+  [data-radix-portal],
+  [role="dialog"],
+  [role="menu"],
+  [role="listbox"],
+  [data-slot="tooltip-content"] {
+    font-family: var(--font-family);
   }
 }
 
