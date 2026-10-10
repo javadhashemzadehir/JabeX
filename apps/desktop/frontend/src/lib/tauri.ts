@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  AppPreferences,
   Card,
   CardId,
   Deck,
@@ -70,6 +71,10 @@ export const api = {
     call<ReviewOutcome>("submit_review", {
       input: { cardId, grade, durationMs },
     }),
+
+  getAppPreferences: () => call<AppPreferences>("get_app_preferences"),
+  setAppPreferences: (preferences: AppPreferences) =>
+    call<AppPreferences>("set_app_preferences", { preferences }),
 
   exportBackup: (outputPath?: string) =>
     call<string>("export_backup", {

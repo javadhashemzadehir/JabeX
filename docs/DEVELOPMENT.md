@@ -71,6 +71,42 @@ pnpm --filter @jabex/desktop tauri:dev
 
 Follow `.cursor/rules/` and keep changes aligned with ADRs. Do not add analytics, auth, or cloud dependencies.
 
+## System tray (Windows)
+
+JabeX can stay running in the notification area (near the clock) instead of quitting when the window is closed.
+
+### How tray mode works
+
+- With **Enable minimize to tray** on, a single tray icon (app branding) is installed once (`jabex-tray`).
+- **Minimize** (taskbar) keeps normal Windows minimize behaviour.
+- **Close (X)** hides the window when **Close button hides to tray** is on; the process keeps running.
+- **Left-click** the tray icon toggles the main window (show/focus ↔ hide).
+- **Right-click** opens: Open JabeX, Switch Profile, Create Backup, Restore Backup, Settings, Exit JabeX.
+- **Switch Profile** is available from the system tray: it restores/focuses the window (if hidden) and opens the existing header profile switcher. Profile list/switch still uses the normal frontend + profile IPC — no duplicate logic in Rust.
+
+### Restoring the window
+
+1. Left-click the tray icon, or  
+2. Right-click → **Open JabeX**, or  
+3. Use a tray menu item that opens Settings / Backup / Switch Profile (the window is shown first).
+
+### Completely exiting
+
+Use tray menu **Exit JabeX**. That calls a full process exit. Closing the window alone does **not** quit while close-to-tray is enabled.
+
+### Configuration
+
+Settings → Application (stored in `app.sqlite`, key `app_preferences`):
+
+| Option | Effect |
+|--------|--------|
+| Enable minimize to tray | Show/hide the tray icon; required for hide-on-close / start minimized |
+| Close button hides to tray | X hides instead of quitting |
+| Start minimized | Launch hidden in the tray |
+| Launch on system startup | Windows: register/unregister current-user Run key |
+
+Disabling the tray removes the icon and restores normal close → quit behaviour.
+
 ## Troubleshooting
 
 | Issue | Action |
@@ -78,4 +114,6 @@ Follow `.cursor/rules/` and keep changes aligned with ADRs. Do not add analytics
 | `cargo` / `rustc` not found | Install Rust via rustup |
 | Tauri build fails on Windows | Install WebView2 + MSVC build tools |
 | RTL looks wrong | Ensure `dir` on `<html>` matches locale |
+| Duplicate tray icons | Restart the app; tray rebuild always removes `jabex-tray` first |
+| Close quits unexpectedly | Enable tray + “Close button hides to tray” in Settings |
 | Theme flash | Confirm ThemeProvider + `suppressHydrationWarning` on `<html>` |

@@ -240,6 +240,29 @@ impl ProfileRegistry {
             id,
         })
     }
+
+    /// Read a device-level key from `app_meta` (not profile study settings).
+    pub fn get_meta(&self, key: &str) -> JabeXResult<Option<String>> {
+        let conn = self.conn.lock();
+        conn.query_row(
+            "SELECT value FROM app_meta WHERE key = ?1",
+            params![key],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(JabeXError::from)
+    }
+
+    /// Upsert a device-level key in `app_meta`.
+    pub fn set_meta(&self, key: &str, value: &str) -> JabeXResult<()> {
+        let conn = self.conn.lock();
+        conn.execute(
+            "INSERT INTO app_meta (key, value) VALUES (?1, ?2)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            params![key, value],
+        )?;
+        Ok(())
+    }
 }
 
 fn map_profile(row: &rusqlite::Row<'_>) -> rusqlite::Result<Profile> {

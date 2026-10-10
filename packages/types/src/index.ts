@@ -79,6 +79,22 @@ export interface AppSettings {
   theme: ThemePreference;
 }
 
+/** Device-level preferences (tray / window) — not per-profile study settings. */
+export interface AppPreferences {
+  enableMinimizeToTray: boolean;
+  closeButtonHidesToTray: boolean;
+  startMinimized: boolean;
+  launchOnStartup: boolean;
+}
+
+/** Payload for `tray://action` (Rust emits; frontend listens). */
+export type TrayActionPayload =
+  | { action: "switch-profile" }
+  | { action: "restoreBackup" }
+  | { action: "settings" }
+  | { action: "backupCreated"; path: string }
+  | { action: "backupFailed"; message: string };
+
 export interface ReviewOutcome {
   card: Card;
   review: Review;

@@ -65,6 +65,25 @@ See [BACKEND.md](./BACKEND.md) for data flow, scheduler rules, and IPC command l
 - **Validation**: Zod (TS) + Rust validation at IPC boundary
 - **Security**: least-privilege Tauri capabilities; no telemetry
 - **Storage**: SQLite (WAL) + content-addressed media files
+- **Desktop shell**: system tray / window visibility live in `src-tauri/src/desktop/` (not in domain services)
+
+## System tray (Windows)
+
+Tray mode is a **desktop-shell** concern managed in Rust:
+
+| Concern | Location |
+|---------|----------|
+| Tray icon + menu + close-to-hide | `desktop/tray.rs` |
+| Device preferences (JSON in `app.sqlite` `app_meta`) | `AppPreferences` + `AppPreferencesService` |
+| Launch on startup (HKCU Run) | `infrastructure/autostart.rs` (Windows) |
+| UI toggles | Settings → Application (`/settings`) |
+| Tray → UI actions | Event `tray://action` → frontend listener |
+
+`tray://action` payloads include UI-only intents such as `{ "action": "switch-profile" }` (opens the existing profile switcher), `settings`, and `restoreBackup`. Rust restores the window before emitting; profile switching still goes through existing profile commands/stores.
+
+Preferences are **device-level** (not per profile) so close-to-tray behaviour does not change when switching local profiles. Switch Profile is available from the system tray.
+
+See [DEVELOPMENT.md](./DEVELOPMENT.md#system-tray-windows) for user-facing restore/exit behaviour.
 
 ## Related ADRs
 

@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { TrayActionListener } from "@/features/settings/tray-action-listener";
 import { useLocaleStore } from "@/lib/i18n/locale-store";
 
 function LocaleHydrator({ children }: { children: React.ReactNode }) {
@@ -29,6 +30,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <DirectionSync>
           <TooltipProvider delayDuration={200}>
             {children}
+            <TrayActionListener />
             <Toaster richColors closeButton />
           </TooltipProvider>
         </DirectionSync>

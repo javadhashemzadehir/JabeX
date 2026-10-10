@@ -16,7 +16,7 @@ const items = [
   { key: "home" as const, icon: Home, href: "/" },
   { key: "decks" as const, icon: Layers, href: "/decks" },
   { key: "review" as const, icon: BookOpen, href: "#" },
-  { key: "settings" as const, icon: Settings, href: "#" },
+  { key: "settings" as const, icon: Settings, href: "/settings" },
 ];
 
 function isActivePath(pathname: string | null, href: string) {

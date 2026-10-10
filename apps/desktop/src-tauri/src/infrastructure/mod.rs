@@ -1,3 +1,4 @@
+pub mod autostart;
 pub mod database;
 pub mod error_map;
 pub mod filesystem;

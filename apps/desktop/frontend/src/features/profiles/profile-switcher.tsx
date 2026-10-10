@@ -24,11 +24,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslations } from "@/hooks/use-locale";
 import { useProfileStore } from "./profile-store";
+import { useProfileSwitcherUi } from "./profile-switcher-ui";
 
 export function ProfileSwitcher() {
   const t = useTranslations();
   const { profiles, active, desktop, hydrate, create, switchTo, remove } =
     useProfileStore();
+  const menuOpen = useProfileSwitcherUi((s) => s.menuOpen);
+  const setMenuOpen = useProfileSwitcherUi((s) => s.setMenuOpen);
   const [createOpen, setCreateOpen] = useState(false);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -81,7 +84,7 @@ export function ProfileSwitcher() {
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="gap-2">
             <UserRound className="size-4" />

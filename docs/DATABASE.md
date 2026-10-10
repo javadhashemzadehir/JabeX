@@ -55,7 +55,9 @@ Every table includes `created_at` / `updated_at` (ISO-8601 UTC).
 | Table | Notes |
 |-------|-------|
 | `profiles` | `id`, `display_name`, `avatar`, timestamps, soft-delete |
-| `app_meta` | Key/value (`active_profile_id`) |
+| `app_meta` | Key/value (`active_profile_id`, `app_preferences` JSON for tray/window) |
+
+`app_preferences` is device-level (not copied into `.jbx` study backups as profile settings).
 
 ## Card lifecycle (Leitner)
 

@@ -103,6 +103,26 @@
     "desktopOnly": "Backup is available in the desktop app.",
     "error": "Backup operation failed"
   },
+  "settings": {
+    "title": "Settings",
+    "description": "Application behaviour for this device. Study data stays in your local profile.",
+    "loading": "Loading settings…",
+    "saved": "Settings saved",
+    "error": "Could not update settings",
+    "desktopOnly": "Settings are available in the desktop app.",
+    "application": {
+      "title": "Application",
+      "description": "System tray and startup options. These apply to the whole device, not a single profile.",
+      "enableTray": "Enable minimize to tray",
+      "enableTrayHint": "Keep a JabeX icon near the Windows clock so the app can run in the background.",
+      "closeToTray": "Close button hides to tray",
+      "closeToTrayHint": "The window X hides JabeX instead of quitting. Use Exit JabeX from the tray menu to quit.",
+      "startMinimized": "Start minimized",
+      "startMinimizedHint": "Launch hidden in the tray (requires tray enabled).",
+      "launchOnStartup": "Launch on system startup",
+      "launchOnStartupHint": "Start JabeX when you sign in to Windows (current user only)."
+    }
+  },
   "theme": {
     "label": "Theme",
     "light": "Light",

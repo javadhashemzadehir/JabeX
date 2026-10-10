@@ -12,7 +12,8 @@ src-tauri/src/
 ├── commands/               # Thin IPC adapters
 ├── domain/                 # Pure models, ports, scheduler, errors
 ├── application/            # Use-cases / services
-├── infrastructure/         # SQLite, filesystem, repository adapters
+├── infrastructure/         # SQLite, filesystem, registry, autostart
+├── desktop/                # Tray / window shell (Tauri UI APIs only)
 └── shared/                 # IDs (UUIDv7), time helpers
 ```
 
@@ -82,8 +83,11 @@ Profiles: `list_profiles`, `get_active_profile`, `create_profile`, `update_profi
 Decks: `create_deck`, `list_decks`, `get_deck`, `rename_deck`, `delete_deck`  
 Cards: `create_card`, `get_card`, `list_cards`, `update_card`, `delete_card`  
 Reviews: `list_due_cards`, `submit_review`  
-Settings: `get_setting`, `set_setting`  
+Settings (per-profile study KV): `get_setting`, `set_setting`  
+App preferences (device-level tray/window): `get_app_preferences`, `set_app_preferences`  
 Media/Backup: `store_media`, `export_backup`, `validate_backup`, `import_backup` (`create_backup` alias)
+
+Tray menu emits frontend event `tray://action` for UI-only flows (`switch-profile`, settings, restore). Switch Profile only emits the event after showing the window; the frontend opens the existing profile switcher.
 
 ## Testing
 

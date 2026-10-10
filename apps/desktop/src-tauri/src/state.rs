@@ -4,7 +4,8 @@ use parking_lot::RwLock;
 use uuid::Uuid;
 
 use crate::application::{
-    BackupService, CardService, DeckService, ProfileService, ReviewService, SettingsService,
+    AppPreferencesService, BackupService, CardService, DeckService, ProfileService, ReviewService,
+    SettingsService,
 };
 use crate::domain::errors::JabeXResult;
 use crate::domain::profile::Profile;
@@ -59,6 +60,7 @@ impl ProfileSession {
 pub struct AppState {
     pub app_paths: AppPaths,
     pub profiles: ProfileService,
+    pub app_preferences: AppPreferencesService,
     pub backups: BackupService,
     session: RwLock<ProfileSession>,
 }
@@ -66,12 +68,15 @@ pub struct AppState {
 impl AppState {
     pub fn new(app_paths: AppPaths, db: Database, _active_profile_id: Uuid) -> JabeXResult<Self> {
         let registry = ProfileRegistry::open(app_paths.clone())?;
+        // Preferences share the registry connection; ProfileService keeps ownership of the clone.
+        let app_preferences = AppPreferencesService::new(registry.clone());
         let profiles = ProfileService::new(registry);
         let backups = BackupService::new(app_paths.clone());
         let session = ProfileSession::from_db(db);
         Ok(Self {
             app_paths,
             profiles,
+            app_preferences,
             backups,
             session: RwLock::new(session),
         })

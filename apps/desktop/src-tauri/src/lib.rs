@@ -1,5 +1,6 @@
 pub mod application;
 pub mod commands;
+pub mod desktop;
 pub mod domain;
 pub mod infrastructure;
 pub mod shared;
@@ -7,6 +8,7 @@ pub mod state;
 
 use tracing_subscriber::EnvFilter;
 
+use crate::desktop::tray::{install_tray, on_close_requested};
 use crate::infrastructure::database::open_database;
 use crate::state::AppState;
 
@@ -41,6 +43,18 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(state)
+        .setup(|app| {
+            // Tray is created once here; preference changes rebuild via sync_tray_with_preferences.
+            if let Err(err) = install_tray(app) {
+                tracing::error!(error = %err, "failed to install system tray");
+            }
+            Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                on_close_requested(window, api);
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             commands::list_profiles,
             commands::get_active_profile,
@@ -62,6 +76,8 @@ pub fn run() {
             commands::submit_review,
             commands::get_setting,
             commands::set_setting,
+            commands::get_app_preferences,
+            commands::set_app_preferences,
             commands::export_backup,
             commands::create_backup,
             commands::validate_backup,
