@@ -16,6 +16,10 @@ pub enum JabeXError {
     #[error("filesystem error: {0}")]
     Filesystem(String),
 
+    /// Optional network providers (translation / TTS). Never blocks card CRUD.
+    #[error("network error: {0}")]
+    Network(String),
+
     #[error("backup error: {0}")]
     Backup(String),
 

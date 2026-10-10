@@ -2,6 +2,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use super::language_assist::LanguageAssistOverrides;
+use super::leitner::DeckAlgorithmSettings;
 use crate::shared::ids::create_id;
 use crate::shared::time::now_utc;
 
@@ -13,6 +15,12 @@ pub struct DeckSettings {
     pub new_cards_per_day: Option<u32>,
     #[serde(default, alias = "reviews_per_day")]
     pub reviews_per_day: Option<u32>,
+    /// When unset / inherit, the profile Leitner algorithm is used.
+    #[serde(default)]
+    pub algorithm: DeckAlgorithmSettings,
+    /// Per-deck language assist overrides (profile settings remain the master gate).
+    #[serde(default)]
+    pub language_assist: LanguageAssistOverrides,
 }
 
 /// Pure domain model for a deck.
@@ -28,6 +36,9 @@ pub struct Deck {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
+    /// Local profile UUID that soft-deleted this deck (sync-ready; not an account).
+    #[serde(default)]
+    pub deleted_by: Option<Uuid>,
 }
 
 impl Deck {
@@ -42,6 +53,7 @@ impl Deck {
             created_at: now,
             updated_at: now,
             deleted_at: None,
+            deleted_by: None,
         }
     }
 
@@ -49,8 +61,16 @@ impl Deck {
         self.revision = self.revision.saturating_add(1);
     }
 
-    pub fn soft_delete(&mut self, at: DateTime<Utc>) {
+    pub fn soft_delete(&mut self, at: DateTime<Utc>, deleted_by: Option<Uuid>) {
         self.deleted_at = Some(at);
+        self.deleted_by = deleted_by;
+        self.updated_at = at;
+        self.bump_revision();
+    }
+
+    pub fn restore(&mut self, at: DateTime<Utc>) {
+        self.deleted_at = None;
+        self.deleted_by = None;
         self.updated_at = at;
         self.bump_revision();
     }

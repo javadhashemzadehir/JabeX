@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { Card, CardId, Deck, DeckId } from "@jabex/types";
+import type { Card, CardId, Deck, DeckId, RichTextDocument } from "@jabex/types";
 import { api, isTauri } from "@/lib/tauri";
 
 interface CardState {
@@ -13,15 +13,16 @@ interface CardState {
   desktop: boolean;
   hydrate: (deckId: DeckId) => Promise<void>;
   create: (
-    frontContent: string,
-    backContent: string,
+    frontContent: RichTextDocument,
+    backContent: RichTextDocument,
   ) => Promise<Card | null>;
   update: (
     id: CardId,
-    frontContent: string,
-    backContent: string,
+    frontContent: RichTextDocument,
+    backContent: RichTextDocument,
   ) => Promise<Card | null>;
   remove: (id: CardId) => Promise<void>;
+  setDeck: (deck: Deck) => void;
   reset: () => void;
 }
 
@@ -79,6 +80,9 @@ export const useCardStore = create<CardState>((set, get) => ({
     if (!isTauri() || !deckId) return;
     await api.deleteCard(id);
     await get().hydrate(deckId);
+  },
+  setDeck: (deck) => {
+    set({ deck });
   },
   reset: () => {
     set({

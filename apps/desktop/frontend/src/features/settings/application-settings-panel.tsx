@@ -4,7 +4,9 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import type { AppPreferences } from "@jabex/types";
+import { SettingsSkeleton } from "@/components/feedback/settings-skeleton";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useIsTauri } from "@/hooks/use-is-tauri";
 import { useTranslations } from "@/hooks/use-locale";
 import { useAppPreferencesStore } from "./app-preferences-store";
@@ -88,7 +90,7 @@ export function ApplicationSettingsPanel() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">{t.settings.loading}</p>
+        <SettingsSkeleton />
       ) : (
         <ul className="divide-y divide-border rounded-lg border border-border/60">
           {toggles.map((item) => {
@@ -110,15 +112,12 @@ export function ApplicationSettingsPanel() {
                     {t.settings.application[item.hintKey]}
                   </p>
                 </div>
-                <input
+                <Switch
                   id={id}
-                  type="checkbox"
-                  className="mt-1 size-4 shrink-0 rounded border border-input accent-primary"
+                  className="mt-1"
                   checked={checked}
                   disabled={disabled}
-                  onChange={(event) =>
-                    void onToggle(item.key, event.target.checked)
-                  }
+                  onCheckedChange={(next) => void onToggle(item.key, next)}
                 />
               </li>
             );

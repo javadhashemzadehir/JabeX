@@ -1,8 +1,8 @@
 use uuid::Uuid;
 
-use crate::domain::errors::JabeXResult;
+use crate::domain::errors::{JabeXError, JabeXResult};
 use crate::domain::profile::Profile;
-use crate::infrastructure::registry::ProfileRegistry;
+use crate::infrastructure::registry::{ProfileRegistry, INITIAL_PROFILE_SETUP_KEY};
 
 pub struct ProfileService {
     registry: ProfileRegistry,
@@ -44,5 +44,25 @@ impl ProfileService {
 
     pub fn set_active(&self, id: Uuid) -> JabeXResult<Profile> {
         self.registry.set_active_profile(id)
+    }
+
+    pub fn is_initial_profile_setup_pending(&self) -> JabeXResult<bool> {
+        Ok(self
+            .registry
+            .get_meta(INITIAL_PROFILE_SETUP_KEY)?
+            .as_deref()
+            == Some("true"))
+    }
+
+    /// Rename the active profile and clear the first-launch naming prompt.
+    pub fn complete_initial_profile_setup(&self, display_name: String) -> JabeXResult<Profile> {
+        let name = display_name.trim().to_string();
+        if name.is_empty() {
+            return Err(JabeXError::Validation("display name is required".into()));
+        }
+        let active = self.get_active()?;
+        let profile = self.update(active.id, Some(name), None)?;
+        self.registry.set_meta(INITIAL_PROFILE_SETUP_KEY, "false")?;
+        Ok(profile)
     }
 }

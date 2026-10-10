@@ -2,11 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Pencil, Plus, SquareStack, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Maximize2,
+  Minimize2,
+  Plus,
+  SquareStack,
+  Trash2,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import type { Card } from "@jabex/types";
+import type { Card, RichTextDocument } from "@jabex/types";
 import { Button } from "@/components/ui/button";
+import { ListSkeleton } from "@/components/feedback/list-skeleton";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import {
   Dialog,
   DialogContent,
@@ -16,10 +26,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Spinner } from "@/components/ui/spinner";
+import { DeckAlgorithmPanel } from "@/features/algorithm/deck-algorithm-panel";
+import { CardAttachmentsPanel } from "@/features/attachments/card-attachments-panel";
+import {
+  RichTextEditor,
+  type EditorLayoutWidth,
+} from "@/features/editor/rich-text-editor";
+import { InkEditor } from "@/features/ink/ink-editor";
+import { CardLanguageAssistPanel } from "@/features/language-assist/card-language-assist-panel";
+import { DeckLanguageAssistPanel } from "@/features/language-assist/deck-language-assist-panel";
+import { LanguageBadge } from "@/features/language-assist/language-badge";
 import { useIsTauri } from "@/hooks/use-is-tauri";
 import { useTranslations } from "@/hooks/use-locale";
 import { useProfileStore } from "@/features/profiles/profile-store";
+import {
+  emptyRichTextDocument,
+  isRichTextBlank,
+  plainTextFromDocument,
+} from "@/lib/rich-text";
+import { cn } from "@/lib/utils";
 import { useCardStore } from "./card-store";
 
 type DialogMode = "create" | "edit" | "delete" | null;
@@ -38,14 +64,19 @@ export function CardsPanel({ deckId }: { deckId: string }) {
     create,
     update,
     remove,
+    setDeck,
     reset,
   } = useCardStore();
 
   const [dialog, setDialog] = useState<DialogMode>(null);
   const [target, setTarget] = useState<Card | null>(null);
-  const [front, setFront] = useState("");
-  const [back, setBack] = useState("");
+  const [front, setFront] = useState<RichTextDocument>(emptyRichTextDocument);
+  const [back, setBack] = useState<RichTextDocument>(emptyRichTextDocument);
   const [busy, setBusy] = useState(false);
+  const [editorLayout, setEditorLayout] =
+    useState<EditorLayoutWidth>("medium");
+
+  const canSave = !isRichTextBlank(front) && !isRichTextBlank(back);
 
   useEffect(() => {
     void hydrate(deckId);
@@ -54,8 +85,8 @@ export function CardsPanel({ deckId }: { deckId: string }) {
 
   function openCreate() {
     setTarget(null);
-    setFront("");
-    setBack("");
+    setFront(emptyRichTextDocument());
+    setBack(emptyRichTextDocument());
     setDialog("create");
   }
 
@@ -78,17 +109,15 @@ export function CardsPanel({ deckId }: { deckId: string }) {
   }
 
   async function handleCreate() {
-    const frontTrimmed = front.trim();
-    const backTrimmed = back.trim();
-    if (!frontTrimmed || !backTrimmed) return;
+    if (!canSave) return;
     setBusy(true);
     try {
-      const card = await create(frontTrimmed, backTrimmed);
+      const card = await create(front, back);
       if (card) {
         toast.success(t.cards.created);
         setDialog(null);
-        setFront("");
-        setBack("");
+        setFront(emptyRichTextDocument());
+        setBack(emptyRichTextDocument());
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t.cards.error);
@@ -98,13 +127,10 @@ export function CardsPanel({ deckId }: { deckId: string }) {
   }
 
   async function handleEdit() {
-    if (!target) return;
-    const frontTrimmed = front.trim();
-    const backTrimmed = back.trim();
-    if (!frontTrimmed || !backTrimmed) return;
+    if (!target || !canSave) return;
     setBusy(true);
     try {
-      await update(target.id, frontTrimmed, backTrimmed);
+      await update(target.id, front, back);
       toast.success(t.cards.updated);
       setDialog(null);
       setTarget(null);
@@ -194,9 +220,7 @@ export function CardsPanel({ deckId }: { deckId: string }) {
         </div>
       </div>
 
-      {loading && cards.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t.cards.loading}</p>
-      ) : null}
+      {loading && cards.length === 0 ? <ListSkeleton rows={5} /> : null}
 
       {!loading && cards.length === 0 ? (
         <div className="flex flex-col items-start gap-4 rounded-lg border border-dashed border-border/80 bg-muted/20 px-6 py-10">
@@ -224,10 +248,19 @@ export function CardsPanel({ deckId }: { deckId: string }) {
               transition={{ delay: 0.03 * index, duration: 0.25 }}
               className="flex flex-wrap items-start justify-between gap-3 px-4 py-3"
             >
-              <div className="min-w-0 flex-1 space-y-1">
-                <p className="line-clamp-2 font-medium">{card.frontContent}</p>
+              <button
+                type="button"
+                onClick={() => openEdit(card)}
+                className="min-w-0 flex-1 space-y-1 rounded-md text-start outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="line-clamp-2 font-medium">
+                    {plainTextFromDocument(card.frontContent)}
+                  </p>
+                  <LanguageBadge card={card} />
+                </div>
                 <p className="line-clamp-2 text-sm text-muted-foreground">
-                  {card.backContent}
+                  {plainTextFromDocument(card.backContent)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {t.cards.boxLabel.replace(
@@ -235,16 +268,16 @@ export function CardsPanel({ deckId }: { deckId: string }) {
                     String(card.boxPosition),
                   )}
                 </p>
-              </div>
-              <div className="flex shrink-0 gap-1">
+              </button>
+              <div className="flex shrink-0 flex-wrap items-center gap-1">
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t.cards.edit}
+                  variant="outline"
+                  size="sm"
                   onClick={() => openEdit(card)}
                 >
-                  <Pencil className="size-4" />
+                  <SquareStack className="size-4" />
+                  {t.cards.open}
                 </Button>
                 <Button
                   type="button"
@@ -261,43 +294,109 @@ export function CardsPanel({ deckId }: { deckId: string }) {
         </ul>
       )}
 
+      {deck ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <DeckAlgorithmPanel deck={deck} onUpdated={setDeck} />
+          <DeckLanguageAssistPanel deck={deck} onUpdated={setDeck} />
+        </div>
+      ) : null}
+
       <Dialog
         open={dialog === "create" || dialog === "edit"}
         onOpenChange={(open) => {
           if (!open) closeDialog();
         }}
       >
-        <DialogContent>
+        <DialogContent
+          className={cn(
+            "max-h-[90vh] overflow-y-auto transition-[max-width] duration-200",
+            editorLayout === "large"
+              ? "max-w-[min(96rem,96vw)]"
+              : "max-w-4xl",
+          )}
+        >
           <DialogHeader>
-            <DialogTitle>
-              {dialog === "edit" ? t.cards.editTitle : t.cards.createTitle}
-            </DialogTitle>
-            <DialogDescription>
-              {dialog === "edit" ? t.cards.editHint : t.cards.createHint}
-            </DialogDescription>
+            <div className="flex items-start justify-between gap-3 pe-8">
+              <div className="space-y-1.5">
+                <DialogTitle>
+                  {dialog === "edit" ? t.cards.editTitle : t.cards.createTitle}
+                </DialogTitle>
+                <DialogDescription>
+                  {dialog === "edit" ? t.cards.editHint : t.cards.createHint}
+                </DialogDescription>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                aria-label={
+                  editorLayout === "large"
+                    ? t.editor.layoutMedium
+                    : t.editor.layoutLarge
+                }
+                title={
+                  editorLayout === "large"
+                    ? t.editor.layoutMedium
+                    : t.editor.layoutLarge
+                }
+                onClick={() =>
+                  setEditorLayout((current) =>
+                    current === "large" ? "medium" : "large",
+                  )
+                }
+              >
+                {editorLayout === "large" ? (
+                  <Minimize2 className="size-4" />
+                ) : (
+                  <Maximize2 className="size-4" />
+                )}
+              </Button>
+            </div>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="card-front">{t.cards.front}</Label>
-              <Textarea
+              <RichTextEditor
                 id="card-front"
                 value={front}
-                onChange={(event) => setFront(event.target.value)}
+                onChange={setFront}
                 placeholder={t.cards.frontPlaceholder}
                 autoFocus
-                rows={3}
+                aria-label={t.cards.front}
+                disabled={busy}
+                layoutWidth={editorLayout}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="card-back">{t.cards.back}</Label>
-              <Textarea
+              <RichTextEditor
                 id="card-back"
                 value={back}
-                onChange={(event) => setBack(event.target.value)}
+                onChange={setBack}
                 placeholder={t.cards.backPlaceholder}
-                rows={3}
+                aria-label={t.cards.back}
+                disabled={busy}
+                layoutWidth={editorLayout}
               />
             </div>
+            {dialog === "edit" && target ? (
+              <>
+                <CardLanguageAssistPanel
+                  card={target}
+                  onCardUpdated={(next) => {
+                    setTarget(next);
+                    useCardStore.setState((state) => ({
+                      cards: state.cards.map((c) =>
+                        c.id === next.id ? next : c,
+                      ),
+                    }));
+                  }}
+                />
+                <CardAttachmentsPanel cardId={target.id} />
+                <InkEditor cardId={target.id} />
+              </>
+            ) : null}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closeDialog} disabled={busy}>
@@ -307,44 +406,32 @@ export function CardsPanel({ deckId }: { deckId: string }) {
               onClick={() =>
                 void (dialog === "edit" ? handleEdit() : handleCreate())
               }
-              disabled={busy || !front.trim() || !back.trim()}
+              disabled={busy || !canSave}
             >
+              {busy ? <Spinner /> : null}
               {dialog === "edit" ? t.cards.save : t.cards.create}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog
+      <ConfirmDeleteDialog
         open={dialog === "delete"}
         onOpenChange={(open) => {
           if (!open) closeDialog();
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t.cards.deleteTitle}</DialogTitle>
-            <DialogDescription>
-              {t.cards.deleteHint.replace(
-                "{front}",
-                target?.frontContent ?? "",
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={closeDialog} disabled={busy}>
-              {t.cards.cancel}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => void handleDelete()}
-              disabled={busy}
-            >
-              {t.cards.delete}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t.cards.deleteTitle}
+        description={t.cards.deleteHint.replace(
+          "{front}",
+          plainTextFromDocument(target?.frontContent) || "…",
+        )}
+        cancelLabel={t.cards.cancel}
+        deleteLabel={t.cards.delete}
+        holdHint={t.common.holdToDeleteHint}
+        confirmingLabel={t.common.holdToDeleteConfirming}
+        busy={busy}
+        onConfirm={() => void handleDelete()}
+      />
     </motion.section>
   );
 }

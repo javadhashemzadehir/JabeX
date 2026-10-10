@@ -74,6 +74,9 @@ pub struct DatabasePaths {
     pub root: PathBuf,
     pub database_file: PathBuf,
     pub media_root: PathBuf,
+    pub attachments_dir: PathBuf,
+    pub ink_dir: PathBuf,
+    /// Legacy folders (may exist on upgraded installs; not created for new profiles).
     pub images_dir: PathBuf,
     pub audio_dir: PathBuf,
     pub drawings_dir: PathBuf,
@@ -85,6 +88,8 @@ impl DatabasePaths {
         let paths = Self {
             profile_id,
             database_file: root.join("database.sqlite"),
+            attachments_dir: media_root.join("attachments"),
+            ink_dir: media_root.join("ink"),
             images_dir: media_root.join("images"),
             audio_dir: media_root.join("audio"),
             drawings_dir: media_root.join("drawings"),
@@ -104,9 +109,9 @@ impl DatabasePaths {
         for dir in [
             &self.root,
             &self.media_root,
-            &self.images_dir,
+            &self.attachments_dir,
+            &self.ink_dir,
             &self.audio_dir,
-            &self.drawings_dir,
         ] {
             std::fs::create_dir_all(dir).map_err(|e| {
                 JabeXError::Filesystem(format!("failed to create {}: {e}", dir.display()))
@@ -163,6 +168,21 @@ impl Database {
     {
         let mut conn = self.conn.lock();
         f(&mut conn)
+    }
+
+    /// Run `f` inside a SQLite transaction; commit on `Ok`, roll back on `Err` or panic.
+    pub fn with_transaction<T, F>(&self, f: F) -> JabeXResult<T>
+    where
+        F: FnOnce(&rusqlite::Transaction<'_>) -> JabeXResult<T>,
+    {
+        let mut conn = self.conn.lock();
+        let tx = conn
+            .transaction()
+            .map_err(|e| JabeXError::Database(e.to_string()))?;
+        let value = f(&tx)?;
+        tx.commit()
+            .map_err(|e| JabeXError::Database(e.to_string()))?;
+        Ok(value)
     }
 
     fn migrate(&mut self) -> JabeXResult<()> {
@@ -229,38 +249,166 @@ mod tests {
     use super::*;
     use tempfile::tempdir;
 
+    fn table_exists(conn: &Connection, name: &str) -> rusqlite::Result<bool> {
+        let count: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?1",
+            [name],
+            |row| row.get(0),
+        )?;
+        Ok(count == 1)
+    }
+
+    fn column_exists(conn: &Connection, table: &str, column: &str) -> rusqlite::Result<bool> {
+        let count: i64 = conn.query_row(
+            &format!("SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name=?1"),
+            [column],
+            |row| row.get(0),
+        )?;
+        Ok(count == 1)
+    }
+
     #[test]
     fn opens_and_migrates_fresh_database() {
         let dir = tempdir().expect("tempdir");
         let db = open_database_at(dir.path()).expect("open db");
         db.with_conn(|conn| {
-            let count: i64 = conn.query_row(
-                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='cards'",
-                [],
-                |row| row.get(0),
-            )?;
-            assert_eq!(count, 1);
-            let revision_col: i64 = conn.query_row(
-                "SELECT COUNT(*) FROM pragma_table_info('cards') WHERE name='revision'",
-                [],
-                |row| row.get(0),
-            )?;
-            assert_eq!(revision_col, 1);
+            assert!(table_exists(conn, "cards")?);
+            assert!(column_exists(conn, "cards", "revision")?);
             Ok(())
         })
         .expect("query");
     }
 
     #[test]
-    fn enables_foreign_keys() {
+    fn fresh_schema_has_expected_tables_and_columns_through_v7() {
+        let dir = tempdir().expect("tempdir");
+        let db = open_database_at(dir.path()).expect("open db");
+        db.with_conn(|conn| {
+            for table in [
+                "decks",
+                "cards",
+                "reviews",
+                "attachments",
+                "ink_documents",
+                "settings",
+            ] {
+                assert!(table_exists(conn, table)?, "missing table {table}");
+            }
+            assert!(!table_exists(conn, "drawings")?, "legacy drawings should be gone");
+
+            for column in [
+                "revision",
+                "deleted_by",
+                "detected_language",
+                "translation",
+                "pronunciation_audio_path",
+                "transliteration_json",
+                "language_assist_status",
+                "language_assist_overrides_json",
+            ] {
+                assert!(
+                    column_exists(conn, "cards", column)?,
+                    "missing cards.{column}"
+                );
+            }
+            assert!(column_exists(conn, "decks", "revision")?);
+            assert!(column_exists(conn, "decks", "deleted_by")?);
+            assert!(column_exists(conn, "attachments", "owner_type")?);
+            assert!(column_exists(conn, "ink_documents", "content_hash")?);
+            Ok(())
+        })
+        .expect("schema");
+    }
+
+    #[test]
+    fn migrations_are_idempotent_on_reopen() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().to_path_buf();
+        let db1 = open_database_at(&path).expect("open db1");
+        let version1: i64 = db1
+            .with_conn(|conn| {
+                Ok(conn.query_row(
+                    "SELECT version FROM refinery_schema_history ORDER BY version DESC LIMIT 1",
+                    [],
+                    |row| row.get(0),
+                )?)
+            })
+            .expect("version1");
+        drop(db1);
+
+        let db2 = open_database_at(&path).expect("open db2");
+        let version2: i64 = db2
+            .with_conn(|conn| {
+                Ok(conn.query_row(
+                    "SELECT version FROM refinery_schema_history ORDER BY version DESC LIMIT 1",
+                    [],
+                    |row| row.get(0),
+                )?)
+            })
+            .expect("version2");
+        assert_eq!(version1, version2);
+        assert!(version2 >= 7, "expected migrations through V7, got {version2}");
+    }
+
+    #[test]
+    fn enables_foreign_keys_and_wal() {
         let dir = tempdir().expect("tempdir");
         let db = open_database_at(dir.path()).expect("open db");
         db.with_conn(|conn| {
             let enabled: i64 = conn.query_row("PRAGMA foreign_keys", [], |row| row.get(0))?;
             assert_eq!(enabled, 1);
+            let journal: String = conn.query_row("PRAGMA journal_mode", [], |row| row.get(0))?;
+            assert_eq!(journal.to_ascii_lowercase(), "wal");
             Ok(())
         })
         .expect("pragma");
+    }
+
+    #[test]
+    fn with_transaction_commits_and_rolls_back() {
+        let dir = tempdir().expect("tempdir");
+        let db = open_database_at(dir.path()).expect("open db");
+
+        db.with_transaction(|tx| {
+            tx.execute(
+                "INSERT INTO settings (key, value, revision, created_at, updated_at, deleted_at, deleted_by)
+                 VALUES ('tx.commit', '{}', 1, '2020-01-01T00:00:00Z', '2020-01-01T00:00:00Z', NULL, NULL)",
+                [],
+            )?;
+            Ok(())
+        })
+        .expect("commit");
+
+        let found: i64 = db
+            .with_conn(|conn| {
+                Ok(conn.query_row(
+                    "SELECT COUNT(*) FROM settings WHERE key = 'tx.commit'",
+                    [],
+                    |row| row.get(0),
+                )?)
+            })
+            .expect("count");
+        assert_eq!(found, 1);
+
+        let err: JabeXResult<()> = db.with_transaction(|tx| {
+            tx.execute(
+                "INSERT INTO settings (key, value, revision, created_at, updated_at, deleted_at, deleted_by)
+                 VALUES ('tx.rollback', '{}', 1, '2020-01-01T00:00:00Z', '2020-01-01T00:00:00Z', NULL, NULL)",
+                [],
+            )?;
+            Err(JabeXError::Internal("force rollback".into()))
+        });
+        assert!(err.is_err());
+        let rolled: i64 = db
+            .with_conn(|conn| {
+                Ok(conn.query_row(
+                    "SELECT COUNT(*) FROM settings WHERE key = 'tx.rollback'",
+                    [],
+                    |row| row.get(0),
+                )?)
+            })
+            .expect("count");
+        assert_eq!(rolled, 0);
     }
 
     #[test]

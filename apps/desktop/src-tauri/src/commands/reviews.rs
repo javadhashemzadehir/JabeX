@@ -2,6 +2,7 @@ use serde::Serialize;
 use tauri::State;
 use uuid::Uuid;
 
+use crate::application::ReviewCompletedEvent;
 use crate::domain::card::Card;
 use crate::domain::errors::JabeXError;
 use crate::domain::review::{Grade, Review};
@@ -42,6 +43,21 @@ pub async fn submit_review(
             session
                 .reviews
                 .submit_review(input.card_id, input.grade, input.duration_ms, None)?;
+
+        // Project each graded review into daily study activity (streaks / heatmap).
+        let event = ReviewCompletedEvent::from_review(
+            session.profile_id,
+            outcome.card.deck_id,
+            outcome.review.duration_ms,
+        );
+        if let Err(err) = session.study_activity.handle_review_completed(&event) {
+            tracing::warn!(
+                error = %err,
+                card_id = %input.card_id,
+                "failed to record study activity"
+            );
+        }
+
         Ok(ReviewOutcomeDto {
             card: outcome.card,
             review: outcome.review,

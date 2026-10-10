@@ -17,14 +17,21 @@ const TRAY_ACTION_EVENT = "tray://action";
  * Listens for tray menu actions that need UI (settings, restore, profile).
  * Backup create is handled in Rust; we only surface toast feedback here.
  * Window show/focus for tray actions is done in Rust before the event is emitted.
+ *
+ * Outer shell avoids calling `useRouter` outside the desktop app (and in unit tests).
  */
 export function TrayActionListener() {
   const tauri = useIsTauri();
+  if (!tauri) return null;
+  return <TrayActionListenerInner />;
+}
+
+function TrayActionListenerInner() {
   const router = useRouter();
   const t = useTranslations();
 
   useEffect(() => {
-    if (!tauri || !isTauri()) return;
+    if (!isTauri()) return;
 
     let unlisten: (() => void) | undefined;
     let cancelled = false;
@@ -67,7 +74,7 @@ export function TrayActionListener() {
       cancelled = true;
       unlisten?.();
     };
-  }, [tauri, router, t]);
+  }, [router, t]);
 
   return null;
 }

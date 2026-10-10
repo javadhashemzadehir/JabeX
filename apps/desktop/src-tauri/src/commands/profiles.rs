@@ -63,3 +63,28 @@ pub async fn switch_profile(state: State<'_, AppState>, id: Uuid) -> Result<Prof
     tracing::debug!(command = "switch_profile", %id, "command invoked");
     state.switch_profile(id)
 }
+
+#[tauri::command]
+pub async fn is_initial_profile_setup_pending(
+    state: State<'_, AppState>,
+) -> Result<bool, JabeXError> {
+    tracing::debug!(command = "is_initial_profile_setup_pending", "command invoked");
+    state.profiles.is_initial_profile_setup_pending()
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CompleteInitialProfileSetupInput {
+    pub display_name: String,
+}
+
+#[tauri::command]
+pub async fn complete_initial_profile_setup(
+    state: State<'_, AppState>,
+    input: CompleteInitialProfileSetupInput,
+) -> Result<Profile, JabeXError> {
+    tracing::debug!(command = "complete_initial_profile_setup", "command invoked");
+    state
+        .profiles
+        .complete_initial_profile_setup(input.display_name)
+}

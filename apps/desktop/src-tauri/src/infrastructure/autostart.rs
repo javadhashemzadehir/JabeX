@@ -19,19 +19,6 @@ pub fn set_launch_on_startup(enabled: bool) -> JabeXResult<()> {
     }
 }
 
-/// Whether the OS currently has JabeX registered for autostart.
-#[allow(dead_code)]
-pub fn is_launch_on_startup_enabled() -> JabeXResult<bool> {
-    #[cfg(windows)]
-    {
-        windows_is_launch_on_startup_enabled()
-    }
-    #[cfg(not(windows))]
-    {
-        Ok(false)
-    }
-}
-
 #[cfg(windows)]
 fn windows_set_launch_on_startup(enabled: bool) -> JabeXResult<()> {
     use winreg::enums::{HKEY_CURRENT_USER, KEY_READ, KEY_SET_VALUE};
@@ -66,20 +53,4 @@ fn windows_set_launch_on_startup(enabled: bool) -> JabeXResult<()> {
         }
     }
     Ok(())
-}
-
-#[cfg(windows)]
-fn windows_is_launch_on_startup_enabled() -> JabeXResult<bool> {
-    use winreg::enums::{HKEY_CURRENT_USER, KEY_READ};
-    use winreg::RegKey;
-
-    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-    let key = match hkcu
-        .open_subkey_with_flags(r"Software\Microsoft\Windows\CurrentVersion\Run", KEY_READ)
-    {
-        Ok(key) => key,
-        Err(_) => return Ok(false),
-    };
-    let value: Result<String, _> = key.get_value(RUN_VALUE_NAME);
-    Ok(value.is_ok())
 }

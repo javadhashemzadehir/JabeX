@@ -12,7 +12,9 @@ import {
 } from "@/components/ui/card";
 import { BackupPanel } from "@/features/profiles/backup-panel";
 import { useProfileStore } from "@/features/profiles/profile-store";
+import { StudyProgressPanel } from "@/features/study-progress/study-progress-panel";
 import { useTranslations } from "@/hooks/use-locale";
+import { StudyStatsPanel } from "./study-stats-panel";
 
 export function HomePanel() {
   const t = useTranslations();
@@ -27,7 +29,7 @@ export function HomePanel() {
       transition={{ duration: 0.35 }}
       className="flex w-full flex-col gap-4"
     >
-      <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-background via-muted/40 to-background shadow-none">
+      <Card className="overflow-hidden border-border/60 bg-linear-to-br from-background via-muted/40 to-background shadow-none">
         <CardHeader>
           <CardDescription>{t.app.tagline}</CardDescription>
           <CardTitle className="text-3xl tracking-tight text-balance">
@@ -50,6 +52,26 @@ export function HomePanel() {
             </Button>
             <p className="text-xs text-muted-foreground">{t.home.ctaHint}</p>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60 shadow-none">
+        <CardHeader>
+          <CardTitle className="text-lg">{t.stats.title}</CardTitle>
+          <CardDescription>{t.stats.description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <StudyStatsPanel />
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60 shadow-none">
+        <CardHeader>
+          <CardTitle className="text-lg">{t.studyProgress.title}</CardTitle>
+          <CardDescription>{t.studyProgress.description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <StudyProgressPanel />
         </CardContent>
       </Card>
 

@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { UserRound } from "lucide-react";
 import { toast } from "sonner";
+import type { Profile } from "@jabex/types";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +36,7 @@ export function ProfileSwitcher() {
   const menuOpen = useProfileSwitcherUi((s) => s.menuOpen);
   const setMenuOpen = useProfileSwitcherUi((s) => s.setMenuOpen);
   const [createOpen, setCreateOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -73,12 +77,17 @@ export function ProfileSwitcher() {
     }
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setBusy(true);
     try {
-      await remove(id);
+      await remove(deleteTarget.id);
       toast.success(t.profiles.deleted);
+      setDeleteTarget(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t.profiles.error);
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -86,8 +95,13 @@ export function ProfileSwitcher() {
     <>
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
-            <UserRound className="size-4" />
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            aria-label={t.profiles.label}
+          >
+            <UserRound className="size-4" aria-hidden />
             <span className="max-w-28 truncate">
               {active?.displayName ?? t.profiles.label}
             </span>
@@ -115,7 +129,8 @@ export function ProfileSwitcher() {
                   className="text-xs text-muted-foreground hover:text-destructive"
                   onClick={(event) => {
                     event.stopPropagation();
-                    void handleDelete(profile.id);
+                    setMenuOpen(false);
+                    setDeleteTarget(profile);
                   }}
                 >
                   {t.profiles.delete}
@@ -160,11 +175,30 @@ export function ProfileSwitcher() {
               {t.profiles.cancel}
             </Button>
             <Button onClick={() => void handleCreate()} disabled={busy || !name.trim()}>
+              {busy ? <Spinner /> : null}
               {t.profiles.create}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDeleteDialog
+        open={deleteTarget != null}
+        onOpenChange={(open) => {
+          if (!open && !busy) setDeleteTarget(null);
+        }}
+        title={t.profiles.deleteTitle}
+        description={t.profiles.deleteHint.replace(
+          "{name}",
+          deleteTarget?.displayName ?? "",
+        )}
+        cancelLabel={t.profiles.cancel}
+        deleteLabel={t.profiles.delete}
+        holdHint={t.common.holdToDeleteHint}
+        confirmingLabel={t.common.holdToDeleteConfirming}
+        busy={busy}
+        onConfirm={() => void handleDelete()}
+      />
     </>
   );
 }

@@ -1,22 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import { Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { useIsTauri } from "@/hooks/use-is-tauri";
 import { useTranslations } from "@/hooks/use-locale";
 import { api } from "@/lib/tauri";
 import { useProfileStore } from "./profile-store";
 
+const JBX_FILTER = [{ name: "JabeX backup", extensions: ["jbx"] }];
+
 export function BackupPanel() {
   const t = useTranslations();
   const desktop = useProfileStore((s) => s.desktop);
   const hydrate = useProfileStore((s) => s.hydrate);
+  const active = useProfileStore((s) => s.active);
   const tauri = useIsTauri();
-  const [importPath, setImportPath] = useState("");
   const [busy, setBusy] = useState(false);
 
   if (!desktop && !tauri) {
@@ -28,7 +30,22 @@ export function BackupPanel() {
   async function handleExport() {
     setBusy(true);
     try {
-      const path = await api.exportBackup();
+      const stamp = new Date().toISOString().replace(/[:.]/g, "").slice(0, 15);
+      const profileSlug = (active?.displayName ?? "profile")
+        .trim()
+        .replace(/[^\w\-]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 40);
+      const suggested = `jabex-${profileSlug || "profile"}-${stamp}.jbx`;
+
+      const outputPath = await save({
+        title: t.backup.exportDialogTitle,
+        defaultPath: suggested,
+        filters: JBX_FILTER,
+      });
+      if (!outputPath) return;
+
+      const path = await api.exportBackup(outputPath);
       toast.success(t.backup.exported.replace("{path}", path));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t.backup.error);
@@ -38,18 +55,23 @@ export function BackupPanel() {
   }
 
   async function handleImport() {
-    const path = importPath.trim();
-    if (!path) return;
     setBusy(true);
     try {
-      const result = await api.importBackup(path, "create_profile");
+      const selected = await open({
+        title: t.backup.importDialogTitle,
+        multiple: false,
+        directory: false,
+        filters: JBX_FILTER,
+      });
+      if (!selected || Array.isArray(selected)) return;
+
+      const result = await api.importBackup(selected, "create_profile");
       await hydrate();
       toast.success(
         t.backup.imported
           .replace("{decks}", String(result.decks))
           .replace("{cards}", String(result.cards)),
       );
-      setImportPath("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t.backup.error);
     } finally {
@@ -58,34 +80,22 @@ export function BackupPanel() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => void handleExport()} disabled={busy}>
-          <Download className="size-4" />
+          {busy ? <Spinner /> : <Download className="size-4" />}
           {t.backup.export}
         </Button>
+        <Button
+          variant="secondary"
+          onClick={() => void handleImport()}
+          disabled={busy}
+        >
+          {busy ? <Spinner /> : <Upload className="size-4" />}
+          {t.backup.import}
+        </Button>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="import-path">{t.backup.importPath}</Label>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Input
-            id="import-path"
-            value={importPath}
-            onChange={(event) => setImportPath(event.target.value)}
-            placeholder={t.backup.importPlaceholder}
-            disabled={busy}
-          />
-          <Button
-            variant="secondary"
-            onClick={() => void handleImport()}
-            disabled={busy || !importPath.trim()}
-          >
-            <Upload className="size-4" />
-            {t.backup.import}
-          </Button>
-        </div>
-        <p className="text-xs text-muted-foreground">{t.backup.importHint}</p>
-      </div>
+      <p className="text-xs text-muted-foreground">{t.backup.importHint}</p>
     </div>
   );
 }

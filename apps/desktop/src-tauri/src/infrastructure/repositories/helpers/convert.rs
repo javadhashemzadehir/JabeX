@@ -7,6 +7,14 @@ pub fn parse_uuid(value: &str) -> rusqlite::Result<Uuid> {
     })
 }
 
+pub fn parse_optional_uuid(value: Option<String>) -> rusqlite::Result<Option<Uuid>> {
+    match value {
+        None => Ok(None),
+        Some(s) if s.trim().is_empty() => Ok(None),
+        Some(s) => parse_uuid(&s).map(Some),
+    }
+}
+
 pub fn parse_time(value: &str) -> rusqlite::Result<DateTime<Utc>> {
     DateTime::parse_from_rfc3339(value)
         .map(|dt| dt.with_timezone(&Utc))
@@ -33,4 +41,31 @@ pub fn decode_enum<T: serde::de::DeserializeOwned>(value: &str) -> rusqlite::Res
     serde_json::from_str(&quoted).map_err(|e| {
         rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(e))
     })
+}
+
+pub fn encode_json<T: serde::Serialize>(
+    value: &T,
+) -> Result<String, crate::domain::errors::JabeXError> {
+    serde_json::to_string(value).map_err(|e| crate::domain::errors::JabeXError::Internal(e.to_string()))
+}
+
+pub fn encode_optional_json<T: serde::Serialize>(
+    value: &Option<T>,
+) -> Result<Option<String>, crate::domain::errors::JabeXError> {
+    match value {
+        None => Ok(None),
+        Some(v) => encode_json(v).map(Some),
+    }
+}
+
+pub fn decode_optional_json<T: serde::de::DeserializeOwned>(
+    raw: Option<String>,
+) -> rusqlite::Result<Option<T>> {
+    match raw {
+        None => Ok(None),
+        Some(s) if s.trim().is_empty() => Ok(None),
+        Some(s) => serde_json::from_str(&s).map(Some).map_err(|e| {
+            rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(e))
+        }),
+    }
 }

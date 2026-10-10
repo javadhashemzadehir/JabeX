@@ -15,6 +15,7 @@ pub struct SettingEntry {
     pub updated_at: DateTime<Utc>,
 }
 
+#[derive(Clone)]
 pub struct SettingsService {
     db: Database,
 }

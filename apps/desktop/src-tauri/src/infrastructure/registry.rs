@@ -15,6 +15,9 @@ use crate::infrastructure::repositories::helpers::{parse_time, parse_uuid};
 use crate::shared::time::now_utc;
 
 const ACTIVE_PROFILE_KEY: &str = "active_profile_id";
+/// Set to `"true"` when the first local profile is created; cleared after the user names it.
+pub const INITIAL_PROFILE_SETUP_KEY: &str = "initial_profile_setup_pending";
+const BOOTSTRAP_PROFILE_NAME: &str = "Default";
 
 /// App-level SQLite registry for local profiles (not study data).
 #[derive(Clone)]
@@ -166,7 +169,7 @@ impl ProfileRegistry {
             entity: "profile",
             id,
         })?;
-        profile.soft_delete(now_utc());
+        profile.soft_delete(now_utc(), Some(id));
         self.persist_profile(&profile)?;
         Ok(())
     }
@@ -277,6 +280,7 @@ fn map_profile(row: &rusqlite::Row<'_>) -> rusqlite::Result<Profile> {
             .get::<_, Option<String>>(6)?
             .map(|s| parse_time(&s))
             .transpose()?,
+        deleted_by: None,
     })
 }
 
@@ -287,9 +291,10 @@ pub fn ensure_bootstrapped(app_paths: &AppPaths) -> JabeXResult<(AppPaths, Datab
 
     let profiles = registry.list_profiles()?;
     let active_id = if profiles.is_empty() {
-        let profile = registry.create_profile("Default".into(), None)?;
+        let profile = registry.create_profile(BOOTSTRAP_PROFILE_NAME.into(), None)?;
         migrate_legacy_layout(app_paths, profile.id)?;
         registry.set_active_profile(profile.id)?;
+        registry.set_meta(INITIAL_PROFILE_SETUP_KEY, "true")?;
         profile.id
     } else if let Some(id) = registry.active_profile_id()? {
         if registry.find_profile(id)?.is_some() {
@@ -310,17 +315,6 @@ pub fn ensure_bootstrapped(app_paths: &AppPaths) -> JabeXResult<(AppPaths, Datab
     Ok((app_paths.clone(), db, active_id))
 }
 
-/// Remove a profile's on-disk directory (after soft-delete). Best-effort.
-#[allow(dead_code)]
-pub fn remove_profile_files(app_paths: &AppPaths, profile_id: Uuid) -> JabeXResult<()> {
-    let root = app_paths.profile_root(profile_id);
-    if root.exists() {
-        fs::remove_dir_all(&root)
-            .map_err(|e| JabeXError::Filesystem(format!("failed to remove profile data: {e}")))?;
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -338,7 +332,14 @@ mod tests {
         let registry = ProfileRegistry::open(app_paths).expect("registry");
         let listed = registry.list_profiles().expect("list");
         assert_eq!(listed.len(), 1);
-        assert_eq!(listed[0].display_name, "Default");
+        assert_eq!(listed[0].display_name, BOOTSTRAP_PROFILE_NAME);
+        assert_eq!(
+            registry
+                .get_meta(INITIAL_PROFILE_SETUP_KEY)
+                .expect("meta")
+                .as_deref(),
+            Some("true")
+        );
     }
 
     #[test]

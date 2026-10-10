@@ -1,13 +1,15 @@
 use chrono::{DateTime, Utc};
-use rusqlite::{params, OptionalExtension};
+use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
-use crate::domain::deck::{Deck, DeckSettings};
+use crate::domain::deck::Deck;
 use crate::domain::errors::{JabeXError, JabeXResult};
 use crate::domain::repositories::DeckRepository;
 use crate::infrastructure::database::Database;
 
-use super::helpers::{parse_time, parse_uuid};
+use super::helpers::require_changed;
+use super::mappers::map_deck;
+use super::queries::decks;
 
 pub struct SqliteDeckRepository {
     db: Database,
@@ -17,50 +19,61 @@ impl SqliteDeckRepository {
     pub fn new(db: Database) -> Self {
         Self { db }
     }
+
+    pub(crate) fn create_on(conn: &Connection, deck: &Deck) -> JabeXResult<()> {
+        let settings = serde_json::to_string(&deck.settings)
+            .map_err(|e| JabeXError::Internal(e.to_string()))?;
+        conn.execute(
+            decks::DECK_INSERT,
+            params![
+                deck.id.to_string(),
+                deck.name,
+                deck.description,
+                settings,
+                deck.revision,
+                deck.created_at.to_rfc3339(),
+                deck.updated_at.to_rfc3339(),
+                deck.deleted_at.map(|t| t.to_rfc3339()),
+                deck.deleted_by.map(|id| id.to_string()),
+            ],
+        )?;
+        Ok(())
+    }
 }
 
 impl DeckRepository for SqliteDeckRepository {
     fn create(&self, deck: &Deck) -> JabeXResult<()> {
-        let settings = serde_json::to_string(&deck.settings)
-            .map_err(|e| JabeXError::Internal(e.to_string()))?;
-        self.db.with_conn(|conn| {
-            conn.execute(
-                "INSERT INTO decks (id, name, description, settings, revision, created_at, updated_at, deleted_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-                params![
-                    deck.id.to_string(),
-                    deck.name,
-                    deck.description,
-                    settings,
-                    deck.revision,
-                    deck.created_at.to_rfc3339(),
-                    deck.updated_at.to_rfc3339(),
-                    deck.deleted_at.map(|t| t.to_rfc3339()),
-                ],
-            )?;
-            Ok(())
-        })
+        self.db.with_conn(|conn| Self::create_on(conn, deck))
     }
 
     fn find(&self, id: Uuid) -> JabeXResult<Option<Deck>> {
         self.db.with_conn(|conn| {
-            conn.query_row(
-                "SELECT id, name, description, settings, revision, created_at, updated_at, deleted_at
-                 FROM decks WHERE id = ?1 AND deleted_at IS NULL",
-                params![id.to_string()],
-                map_deck,
-            )
-            .optional()
-            .map_err(JabeXError::from)
+            conn.query_row(decks::DECK_FIND_ACTIVE, params![id.to_string()], map_deck)
+                .optional()
+                .map_err(JabeXError::from)
+        })
+    }
+
+    fn find_any(&self, id: Uuid) -> JabeXResult<Option<Deck>> {
+        self.db.with_conn(|conn| {
+            conn.query_row(decks::DECK_FIND_ANY, params![id.to_string()], map_deck)
+                .optional()
+                .map_err(JabeXError::from)
         })
     }
 
     fn list(&self) -> JabeXResult<Vec<Deck>> {
+        self.list_all(false)
+    }
+
+    fn list_all(&self, include_deleted: bool) -> JabeXResult<Vec<Deck>> {
         self.db.with_conn(|conn| {
-            let mut stmt = conn.prepare(
-                "SELECT id, name, description, settings, revision, created_at, updated_at, deleted_at
-                 FROM decks WHERE deleted_at IS NULL ORDER BY created_at ASC",
-            )?;
+            let sql = if include_deleted {
+                decks::DECK_LIST_ALL
+            } else {
+                decks::DECK_LIST_ACTIVE
+            };
+            let mut stmt = conn.prepare(sql)?;
             let rows = stmt
                 .query_map([], map_deck)?
                 .collect::<Result<Vec<_>, _>>()?;
@@ -73,10 +86,7 @@ impl DeckRepository for SqliteDeckRepository {
             .map_err(|e| JabeXError::Internal(e.to_string()))?;
         self.db.with_conn(|conn| {
             let changed = conn.execute(
-                "UPDATE decks
-                 SET name = ?2, description = ?3, settings = ?4, revision = ?5,
-                     updated_at = ?6, deleted_at = ?7
-                 WHERE id = ?1",
+                decks::DECK_UPDATE,
                 params![
                     deck.id.to_string(),
                     deck.name,
@@ -85,48 +95,36 @@ impl DeckRepository for SqliteDeckRepository {
                     deck.revision,
                     deck.updated_at.to_rfc3339(),
                     deck.deleted_at.map(|t| t.to_rfc3339()),
+                    deck.deleted_by.map(|id| id.to_string()),
                 ],
             )?;
-            if changed == 0 {
-                return Err(JabeXError::NotFound {
-                    entity: "deck",
-                    id: deck.id,
-                });
-            }
-            Ok(())
+            require_changed(changed, "deck", deck.id)
         })
     }
 
-    fn soft_delete(&self, id: Uuid, deleted_at: DateTime<Utc>) -> JabeXResult<()> {
+    fn soft_delete(
+        &self,
+        id: Uuid,
+        deleted_at: DateTime<Utc>,
+        deleted_by: Option<Uuid>,
+    ) -> JabeXResult<()> {
         self.db.with_conn(|conn| {
             let changed = conn.execute(
-                "UPDATE decks
-                 SET deleted_at = ?2, updated_at = ?2, revision = revision + 1
-                 WHERE id = ?1 AND deleted_at IS NULL",
-                params![id.to_string(), deleted_at.to_rfc3339()],
+                decks::DECK_SOFT_DELETE,
+                params![
+                    id.to_string(),
+                    deleted_at.to_rfc3339(),
+                    deleted_by.map(|u| u.to_string()),
+                ],
             )?;
-            if changed == 0 {
-                return Err(JabeXError::NotFound { entity: "deck", id });
-            }
-            Ok(())
+            require_changed(changed, "deck", id)
         })
     }
-}
 
-fn map_deck(row: &rusqlite::Row<'_>) -> rusqlite::Result<Deck> {
-    let settings_raw: String = row.get(3)?;
-    let settings: DeckSettings = serde_json::from_str(&settings_raw).unwrap_or_default();
-    Ok(Deck {
-        id: parse_uuid(&row.get::<_, String>(0)?)?,
-        name: row.get(1)?,
-        description: row.get(2)?,
-        settings,
-        revision: row.get::<_, i64>(4)? as u32,
-        created_at: parse_time(&row.get::<_, String>(5)?)?,
-        updated_at: parse_time(&row.get::<_, String>(6)?)?,
-        deleted_at: row
-            .get::<_, Option<String>>(7)?
-            .map(|s| parse_time(&s))
-            .transpose()?,
-    })
+    fn hard_delete(&self, id: Uuid) -> JabeXResult<()> {
+        self.db.with_conn(|conn| {
+            let changed = conn.execute(decks::DECK_HARD_DELETE, params![id.to_string()])?;
+            require_changed(changed, "deck", id)
+        })
+    }
 }

@@ -1,8 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { ProfileAlgorithmPanel } from "@/features/algorithm/profile-algorithm-panel";
 import { BackupPanel } from "@/features/profiles/backup-panel";
 import { useTranslations } from "@/hooks/use-locale";
+import { LanguageAssistSettingsPanel } from "@/features/language-assist/language-assist-settings-panel";
 import { ApplicationSettingsPanel } from "./application-settings-panel";
 
 export function SettingsPanel() {
@@ -25,6 +27,10 @@ export function SettingsPanel() {
       </div>
 
       <ApplicationSettingsPanel />
+
+      <LanguageAssistSettingsPanel />
+
+      <ProfileAlgorithmPanel />
 
       <section id="backup" className="space-y-4 scroll-mt-6">
         <div className="space-y-1">

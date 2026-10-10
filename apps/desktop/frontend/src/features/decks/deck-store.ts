@@ -11,7 +11,11 @@ interface DeckState {
   desktop: boolean;
   hydrate: () => Promise<void>;
   create: (name: string, description?: string | null) => Promise<Deck | null>;
-  rename: (id: DeckId, name: string) => Promise<Deck | null>;
+  rename: (
+    id: DeckId,
+    name: string,
+    description?: string | null,
+  ) => Promise<Deck | null>;
   remove: (id: DeckId) => Promise<void>;
 }
 
@@ -42,9 +46,9 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     await get().hydrate();
     return deck;
   },
-  rename: async (id, name) => {
+  rename: async (id, name, description) => {
     if (!isTauri()) return null;
-    const deck = await api.renameDeck(id, name);
+    const deck = await api.renameDeck(id, name, description);
     await get().hydrate();
     return deck;
   },

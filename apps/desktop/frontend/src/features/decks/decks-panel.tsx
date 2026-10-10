@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Layers, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Layers, Pencil, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import type { Deck } from "@jabex/types";
 import { Button } from "@/components/ui/button";
+import { ListSkeleton } from "@/components/feedback/list-skeleton";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { useIsTauri } from "@/hooks/use-is-tauri";
 import { useTranslations } from "@/hooks/use-locale";
 import { useProfileStore } from "@/features/profiles/profile-store";
@@ -94,10 +97,11 @@ export function DecksPanel() {
     if (!trimmed) return;
     setBusy(true);
     try {
-      await rename(target.id, trimmed);
+      await rename(target.id, trimmed, description.trim() || null);
       toast.success(t.decks.renamed);
       setDialog(null);
       setTarget(null);
+      setDescription("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t.decks.error);
     } finally {
@@ -146,9 +150,7 @@ export function DecksPanel() {
         </Button>
       </div>
 
-      {loading && decks.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t.decks.loading}</p>
-      ) : null}
+      {loading && decks.length === 0 ? <ListSkeleton rows={4} /> : null}
 
       {!loading && decks.length === 0 ? (
         <div className="flex flex-col items-start gap-4 rounded-lg border border-dashed border-border/80 bg-muted/20 px-6 py-10">
@@ -187,7 +189,16 @@ export function DecksPanel() {
                   </p>
                 ) : null}
               </Link>
-              <div className="flex shrink-0 gap-1">
+              <div className="flex shrink-0 flex-wrap items-center gap-1">
+                <Button variant="outline" size="sm" asChild>
+                  <Link
+                    href={`/decks/view?id=${encodeURIComponent(deck.id)}`}
+                  >
+                    <Layers className="size-4" />
+                    {t.decks.open}
+                    <ArrowRight className="size-4 rtl:rotate-180" />
+                  </Link>
+                </Button>
                 <Button
                   type="button"
                   variant="ghost"
@@ -245,17 +256,15 @@ export function DecksPanel() {
                 }}
               />
             </div>
-            {dialog === "create" ? (
-              <div className="space-y-2">
-                <Label htmlFor="deck-description">{t.decks.descriptionLabel}</Label>
-                <Input
-                  id="deck-description"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  placeholder={t.decks.descriptionPlaceholder}
-                />
-              </div>
-            ) : null}
+            <div className="space-y-2">
+              <Label htmlFor="deck-description">{t.decks.descriptionLabel}</Label>
+              <Input
+                id="deck-description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder={t.decks.descriptionPlaceholder}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closeDialog} disabled={busy}>
@@ -267,39 +276,27 @@ export function DecksPanel() {
               }
               disabled={busy || !name.trim()}
             >
+              {busy ? <Spinner /> : null}
               {dialog === "rename" ? t.decks.rename : t.decks.create}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog
+      <ConfirmDeleteDialog
         open={dialog === "delete"}
         onOpenChange={(open) => {
           if (!open) closeDialog();
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t.decks.deleteTitle}</DialogTitle>
-            <DialogDescription>
-              {t.decks.deleteHint.replace("{name}", target?.name ?? "")}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={closeDialog} disabled={busy}>
-              {t.decks.cancel}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => void handleDelete()}
-              disabled={busy}
-            >
-              {t.decks.delete}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t.decks.deleteTitle}
+        description={t.decks.deleteHint.replace("{name}", target?.name ?? "")}
+        cancelLabel={t.decks.cancel}
+        deleteLabel={t.decks.delete}
+        holdHint={t.common.holdToDeleteHint}
+        confirmingLabel={t.common.holdToDeleteConfirming}
+        busy={busy}
+        onConfirm={() => void handleDelete()}
+      />
     </motion.section>
   );
 }

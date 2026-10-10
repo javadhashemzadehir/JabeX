@@ -1,37 +1,42 @@
-use tauri::State;
+use tauri::{AppHandle, State};
 use uuid::Uuid;
 
 use crate::domain::card::Card;
 use crate::domain::errors::JabeXError;
+use crate::domain::rich_text::RichTextDocument;
 use crate::state::AppState;
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCardInput {
     pub deck_id: Uuid,
-    pub front_content: String,
-    pub back_content: String,
+    pub front_content: RichTextDocument,
+    pub back_content: RichTextDocument,
 }
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCardInput {
     pub id: Uuid,
-    pub front_content: String,
-    pub back_content: String,
+    pub front_content: RichTextDocument,
+    pub back_content: RichTextDocument,
 }
 
 #[tauri::command]
 pub async fn create_card(
+    app: AppHandle,
     state: State<'_, AppState>,
     input: CreateCardInput,
 ) -> Result<Card, JabeXError> {
     tracing::debug!(command = "create_card", deck_id = %input.deck_id, "command invoked");
-    state.with_session(|session| {
+    let card = state.with_session(|session| {
         session
             .cards
             .create_card(input.deck_id, input.front_content, input.back_content)
-    })
+    })?;
+    // Never block card creation on detection / optional network work.
+    state.schedule_language_assist(&app, card.id, false);
+    Ok(card)
 }
 
 #[tauri::command]
@@ -51,19 +56,29 @@ pub async fn list_cards(
 
 #[tauri::command]
 pub async fn update_card(
+    app: AppHandle,
     state: State<'_, AppState>,
     input: UpdateCardInput,
 ) -> Result<Card, JabeXError> {
     tracing::debug!(command = "update_card", id = %input.id, "command invoked");
-    state.with_session(|session| {
+    let card = state.with_session(|session| {
         session
             .cards
             .update_card_content(input.id, input.front_content, input.back_content)
-    })
+    })?;
+    state.schedule_language_assist(&app, card.id, false);
+    Ok(card)
 }
 
 #[tauri::command]
 pub async fn delete_card(state: State<'_, AppState>, id: Uuid) -> Result<(), JabeXError> {
     tracing::debug!(command = "delete_card", %id, "command invoked");
-    state.with_session(|session| session.cards.delete_card(id))
+    let deleted_by = state.active_profile_id();
+    state.with_session(|session| {
+        session.trash.soft_delete_item(
+            crate::domain::trash::TrashEntityKind::Card,
+            id,
+            Some(deleted_by),
+        )
+    })
 }

@@ -16,6 +16,9 @@ pub struct Profile {
     pub updated_at: DateTime<Utc>,
     pub last_active_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
+    /// Local profile that initiated deletion (usually self); sync-ready metadata.
+    #[serde(default)]
+    pub deleted_by: Option<Uuid>,
 }
 
 impl Profile {
@@ -29,11 +32,13 @@ impl Profile {
             updated_at: now,
             last_active_at: now,
             deleted_at: None,
+            deleted_by: None,
         }
     }
 
-    pub fn soft_delete(&mut self, at: DateTime<Utc>) {
+    pub fn soft_delete(&mut self, at: DateTime<Utc>, deleted_by: Option<Uuid>) {
         self.deleted_at = Some(at);
+        self.deleted_by = deleted_by;
         self.updated_at = at;
     }
 

@@ -18,6 +18,14 @@ pub struct CreateDeckInput {
 pub struct RenameDeckInput {
     pub id: Uuid,
     pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateDeckSettingsInput {
+    pub id: Uuid,
+    pub settings: DeckSettings,
 }
 
 #[tauri::command]
@@ -51,11 +59,31 @@ pub async fn rename_deck(
     input: RenameDeckInput,
 ) -> Result<Deck, JabeXError> {
     tracing::debug!(command = "rename_deck", id = %input.id, "command invoked");
-    state.with_session(|session| session.decks.rename_deck(input.id, input.name))
+    state.with_session(|session| {
+        session
+            .decks
+            .rename_deck(input.id, input.name, input.description)
+    })
+}
+
+#[tauri::command]
+pub async fn update_deck_settings(
+    state: State<'_, AppState>,
+    input: UpdateDeckSettingsInput,
+) -> Result<Deck, JabeXError> {
+    tracing::debug!(command = "update_deck_settings", id = %input.id, "command invoked");
+    state.with_session(|session| session.decks.update_deck_settings(input.id, input.settings))
 }
 
 #[tauri::command]
 pub async fn delete_deck(state: State<'_, AppState>, id: Uuid) -> Result<(), JabeXError> {
     tracing::debug!(command = "delete_deck", %id, "command invoked");
-    state.with_session(|session| session.decks.delete_deck(id))
+    let deleted_by = state.active_profile_id();
+    state.with_session(|session| {
+        session.trash.soft_delete_item(
+            crate::domain::trash::TrashEntityKind::Deck,
+            id,
+            Some(deleted_by),
+        )
+    })
 }

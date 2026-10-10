@@ -6,7 +6,11 @@ import { BookOpen, CheckCircle2, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import type { Grade } from "@jabex/types";
+import { ReviewSkeleton } from "@/components/feedback/review-skeleton";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { RichTextViewer } from "@/features/editor/rich-text-viewer";
+import { LanguageBadge } from "@/features/language-assist/language-badge";
 import { useIsTauri } from "@/hooks/use-is-tauri";
 import { useTranslations } from "@/hooks/use-locale";
 import { useProfileStore } from "@/features/profiles/profile-store";
@@ -128,7 +132,10 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
           </p>
         </div>
         {!loading && totalInSession > 0 ? (
-          <p className="text-sm text-muted-foreground tabular-nums">
+          <p
+            className="text-sm text-muted-foreground tabular-nums"
+            aria-live="polite"
+          >
             {t.review.progress
               .replace("{done}", String(reviewedCount))
               .replace("{total}", String(totalInSession))}
@@ -136,21 +143,24 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
         ) : null}
       </div>
 
-      {loading && remaining === 0 ? (
-        <p className="text-sm text-muted-foreground">{t.review.loading}</p>
-      ) : null}
+      {loading && remaining === 0 ? <ReviewSkeleton /> : null}
 
       {error ? (
-        <p className="text-sm text-destructive">{error}</p>
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
       ) : null}
 
       {!loading && !error && remaining === 0 ? (
-        <div className="flex flex-col items-start gap-4 rounded-lg border border-dashed border-border/80 bg-muted/20 px-6 py-10">
+        <div
+          className="flex flex-col items-start gap-4 rounded-lg border border-dashed border-border/80 bg-muted/20 px-6 py-10"
+          role="status"
+        >
           <div className="flex size-10 items-center justify-center rounded-md bg-muted">
             {reviewedCount > 0 ? (
-              <CheckCircle2 className="size-5 text-muted-foreground" />
+              <CheckCircle2 className="size-5 text-muted-foreground" aria-hidden />
             ) : (
-              <BookOpen className="size-5 text-muted-foreground" />
+              <BookOpen className="size-5 text-muted-foreground" aria-hidden />
             )}
           </div>
           <div className="space-y-1">
@@ -188,16 +198,20 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
 
       {current ? (
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-          <p className="text-xs text-muted-foreground">
-            {t.review.boxLabel.replace("{box}", String(current.boxPosition))}
-            {" · "}
-            {t.review.remaining.replace("{count}", String(remaining))}
-          </p>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>
+              {t.review.boxLabel.replace("{box}", String(current.boxPosition))}
+              {" · "}
+              {t.review.remaining.replace("{count}", String(remaining))}
+            </span>
+            <LanguageBadge card={current} />
+          </div>
 
           <AnimatePresence mode="wait">
-            <motion.button
+            <motion.div
               key={`${current.id}-${revealed ? "back" : "front"}`}
-              type="button"
+              role={revealed ? "region" : "button"}
+              tabIndex={revealed ? undefined : 0}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
@@ -205,8 +219,18 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
               onClick={() => {
                 if (!revealed) reveal();
               }}
-              disabled={revealed}
-              className="min-h-56 w-full rounded-lg border border-border/60 bg-gradient-to-br from-background via-muted/30 to-background px-6 py-10 text-start shadow-none transition-colors hover:bg-muted/20 disabled:cursor-default disabled:hover:bg-transparent"
+              onKeyDown={(event) => {
+                if (revealed) return;
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  reveal();
+                }
+              }}
+              className={
+                revealed
+                  ? "min-h-56 w-full rounded-lg border border-border/60 bg-linear-to-br from-background via-muted/30 to-background px-6 py-10 text-start"
+                  : "min-h-56 w-full cursor-pointer rounded-lg border border-border/60 bg-linear-to-br from-background via-muted/30 to-background px-6 py-10 text-start transition-colors hover:bg-muted/20"
+              }
               aria-label={
                 revealed ? t.review.backSide : t.review.revealHint
               }
@@ -214,21 +238,22 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
               <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {revealed ? t.review.backSide : t.review.frontSide}
               </p>
-              <p className="whitespace-pre-wrap text-xl leading-relaxed text-balance">
-                {revealed ? current.backContent : current.frontContent}
-              </p>
+              <RichTextViewer
+                document={revealed ? current.backContent : current.frontContent}
+                contentClassName="text-xl leading-relaxed text-balance"
+              />
               {!revealed ? (
                 <p className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
-                  <Eye className="size-4" />
+                  <Eye className="size-4" aria-hidden />
                   {t.review.revealHint}
                 </p>
               ) : null}
-            </motion.button>
+            </motion.div>
           </AnimatePresence>
 
           {!revealed ? (
             <Button type="button" onClick={reveal} className="self-start">
-              <Eye className="size-4" />
+              <Eye className="size-4" aria-hidden />
               {t.review.reveal}
               <kbd className="ms-1 rounded border border-border/80 bg-muted px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">
                 {t.review.shortcuts.space}
@@ -246,10 +271,16 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
                     onClick={() => void handleGrade(grade)}
                     className="flex-col gap-1 py-2 sm:h-auto"
                   >
-                    <span>{t.review.grades[grade]}</span>
-                    <kbd className="rounded border border-border/60 bg-muted/80 px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">
-                      {index + 1}
-                    </kbd>
+                    {submitting ? (
+                      <Spinner className="size-4" />
+                    ) : (
+                      <>
+                        <span>{t.review.grades[grade]}</span>
+                        <kbd className="rounded border border-border/60 bg-muted/80 px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">
+                          {index + 1}
+                        </kbd>
+                      </>
+                    )}
                   </Button>
                 ))}
               </div>

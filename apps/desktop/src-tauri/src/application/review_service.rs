@@ -3,23 +3,30 @@ use uuid::Uuid;
 
 use crate::domain::card::Card;
 use crate::domain::errors::{JabeXError, JabeXResult};
-use crate::domain::repositories::{CardRepository, ReviewRepository};
+use crate::domain::leitner::{
+    DeckAlgorithmSettings, LeitnerConfig, ProfileLeitnerSettings, PROFILE_ALGORITHM_SETTING_KEY,
+};
+use crate::domain::repositories::{CardRepository, DeckRepository, ReviewRepository};
 use crate::domain::review::{Grade, Review};
 use crate::domain::scheduler::{LeitnerScheduler, Scheduler};
 use crate::shared::time::now_utc;
 
-pub struct ReviewService<C: CardRepository, R: ReviewRepository, S: Scheduler> {
+use super::settings_service::SettingsService;
+
+pub struct ReviewService<C: CardRepository, R: ReviewRepository, D: DeckRepository> {
     cards: C,
     reviews: R,
-    scheduler: S,
+    decks: D,
+    settings: SettingsService,
 }
 
-impl<C: CardRepository, R: ReviewRepository, S: Scheduler> ReviewService<C, R, S> {
-    pub fn new(cards: C, reviews: R, scheduler: S) -> Self {
+impl<C: CardRepository, R: ReviewRepository, D: DeckRepository> ReviewService<C, R, D> {
+    pub fn new(cards: C, reviews: R, decks: D, settings: SettingsService) -> Self {
         Self {
             cards,
             reviews,
-            scheduler,
+            decks,
+            settings,
         }
     }
 
@@ -30,6 +37,35 @@ impl<C: CardRepository, R: ReviewRepository, S: Scheduler> ReviewService<C, R, S
     ) -> JabeXResult<Vec<Card>> {
         let now = now.unwrap_or_else(now_utc);
         self.cards.list_due(deck_id, now)
+    }
+
+    pub fn load_profile_algorithm(&self) -> JabeXResult<ProfileLeitnerSettings> {
+        match self.settings.get(PROFILE_ALGORITHM_SETTING_KEY)? {
+            Some(entry) => Ok(serde_json::from_value(entry.value).unwrap_or_default()),
+            None => Ok(ProfileLeitnerSettings::default()),
+        }
+    }
+
+    pub fn save_profile_algorithm(
+        &self,
+        settings: ProfileLeitnerSettings,
+    ) -> JabeXResult<ProfileLeitnerSettings> {
+        // Validate by resolving before persist.
+        let _ = settings.resolve()?;
+        let value = serde_json::to_value(&settings)
+            .map_err(|e| JabeXError::Internal(e.to_string()))?;
+        self.settings
+            .set(PROFILE_ALGORITHM_SETTING_KEY.to_string(), value)?;
+        Ok(settings)
+    }
+
+    pub fn effective_config_for_deck(&self, deck_id: Uuid) -> JabeXResult<LeitnerConfig> {
+        let deck = self.decks.find(deck_id)?.ok_or(JabeXError::NotFound {
+            entity: "deck",
+            id: deck_id,
+        })?;
+        let profile = self.load_profile_algorithm()?;
+        deck.settings.algorithm.resolve(&profile)
     }
 
     pub fn submit_review(
@@ -45,8 +81,10 @@ impl<C: CardRepository, R: ReviewRepository, S: Scheduler> ReviewService<C, R, S
             id: card_id,
         })?;
 
+        let config = self.effective_config_for_deck(card.deck_id)?;
+        let scheduler = LeitnerScheduler::new(config);
         let box_before = card.box_position;
-        let schedule = self.scheduler.schedule(&card, grade, now);
+        let schedule = scheduler.schedule(&card, grade, now);
 
         card.box_position = schedule.box_position;
         card.due_at = schedule.due_at;
@@ -76,13 +114,23 @@ impl<C: CardRepository, R: ReviewRepository, S: Scheduler> ReviewService<C, R, S
 
         Ok(ReviewOutcome { card, review })
     }
-}
 
-pub type DefaultReviewService<C, R> = ReviewService<C, R, LeitnerScheduler>;
-
-impl<C: CardRepository, R: ReviewRepository> ReviewService<C, R, LeitnerScheduler> {
-    pub fn with_leitner(cards: C, reviews: R) -> Self {
-        Self::new(cards, reviews, LeitnerScheduler)
+    /// Copy the profile algorithm onto every deck as an explicit override, or reset decks to inherit.
+    pub fn apply_profile_algorithm_to_all_decks(&self, inherit: bool) -> JabeXResult<u32> {
+        let profile = self.load_profile_algorithm()?;
+        let mut updated = 0u32;
+        for mut deck in self.decks.list()? {
+            deck.settings.algorithm = if inherit {
+                DeckAlgorithmSettings::inherit_profile()
+            } else {
+                DeckAlgorithmSettings::from_profile(&profile)
+            };
+            deck.updated_at = now_utc();
+            deck.bump_revision();
+            self.decks.update(&deck)?;
+            updated = updated.saturating_add(1);
+        }
+        Ok(updated)
     }
 }
 
