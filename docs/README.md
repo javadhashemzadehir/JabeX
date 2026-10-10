@@ -10,6 +10,7 @@ Start here if you are new to the repo.
 | [BACKEND.md](./BACKEND/BACKEND.md) | Rust clean architecture (domain → commands) |
 | [DATABASE.md](./DATABASE/DATABASE.md) | SQLite schema, migrations, privacy notes |
 | [PACKAGING.md](./PACKAGING/PACKAGING.md) | Local installers and tag-triggered releases |
+| [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) | Pre-tag / installer smoke checklist |
 | [TESTING.md](./TESTING/TESTING.md) | Frontend / Rust / CI test expectations |
 | [GIT_WORKFLOW.md](./GIT_WORKFLOW/GIT_WORKFLOW.md) | Branches, commits, PRs, releases |
 | [ROADMAP.md](./ROADMAP/ROADMAP.md) | Phased delivery checklist |

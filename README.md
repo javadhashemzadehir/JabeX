@@ -48,6 +48,22 @@ Open [http://localhost:3000](http://localhost:3000).
 pnpm tauri:dev
 ```
 
+### Windows installers (production)
+
+```bash
+pnpm typecheck
+pnpm tauri:build
+```
+
+Artifacts:
+
+```
+apps/desktop/src-tauri/target/release/bundle/nsis/JabeX_0.1.0_x64-setup.exe
+apps/desktop/src-tauri/target/release/bundle/msi/JabeX_0.1.0_x64_en-US.msi
+```
+
+See [Packaging](./docs/PACKAGING/PACKAGING.md) and [Release checklist](./docs/RELEASE_CHECKLIST.md). Tag `v*` to publish via GitHub Actions.
+
 ## Quality checks
 
 ```bash
@@ -64,6 +80,7 @@ pnpm test
 - [Database](./docs/DATABASE/DATABASE.md)
 - [Development](./docs/DEVELOPMENT/DEVELOPMENT.md)
 - [Packaging](./docs/PACKAGING/PACKAGING.md)
+- [Release checklist](./docs/RELEASE_CHECKLIST.md)
 - [Testing](./docs/TESTING/TESTING.md)
 - [Git workflow](./docs/GIT_WORKFLOW/GIT_WORKFLOW.md)
 - [Roadmap](./docs/ROADMAP/ROADMAP.md)

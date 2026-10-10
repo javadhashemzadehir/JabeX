@@ -2,6 +2,10 @@ name: Release
 
 # Builds installers and publishes a GitHub Release when a version tag is pushed.
 # Example: git tag -a v0.1.0 -m "Release v0.1.0" && git push origin v0.1.0
+#
+# Windows artifacts (unsigned — signing/notarization is future work):
+#   - JabeX_<version>_x64-setup.exe  (NSIS)
+#   - JabeX_<version>_x64_en-US.msi  (MSI)
 
 on:
   push:
@@ -22,9 +26,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: windows-msi
+          - name: windows
             platform: windows-latest
-            args: "--bundles msi"
+            # NSIS (.exe) + WiX MSI — matches tauri.conf.json bundle.targets
+            args: "--bundles nsis,msi"
           - name: macos-dmg
             platform: macos-latest
             args: "--target universal-apple-darwin --bundles dmg"
@@ -91,11 +96,14 @@ jobs:
 
             ### Downloads
 
-            - **Windows:** `.msi`
+            - **Windows:** `JabeX_*_x64-setup.exe` (NSIS) and `JabeX_*_x64_en-US.msi` (MSI)
             - **macOS:** `.dmg`
             - **Linux:** `.AppImage`
 
-            Privacy-first · offline-first · flashcards only.
+            Installers are **unsigned** for now (Authenticode / notarization planned later).
+            Windows SmartScreen may warn on first run — choose “More info” → “Run anyway” when you trust the build.
+
+            Privacy-first · offline-first · flashcards only · no accounts.
           releaseDraft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
           generateReleaseNotes: true

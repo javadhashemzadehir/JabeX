@@ -11,7 +11,7 @@
 
 | OS | Required |
 | -- | -------- |
-| **Windows** | [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with the **Desktop development with C++** workload (`link.exe`), plus WebView2 (usually preinstalled on Windows 10/11) |
+| **Windows** | [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with the **Desktop development with C++** workload (`link.exe`), plus WebView2 (usually preinstalled on Windows 10/11). For **MSI** installers, enable the Windows **VBScript** optional feature |
 | **macOS** | Xcode Command Line Tools (`xcode-select --install`) |
 | **Linux** | WebKitGTK and related packages (Ubuntu example: `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`, `librsvg2-dev`, `patchelf`) — match versions in `.github/workflows/ci.yml` / `release.yml` |
 
@@ -55,6 +55,23 @@ pnpm db:unseed               # remove only those seed rows
 pnpm db:unseed -- --purge    # wipe ALL decks/cards/reviews in the profile
 ```
 
+### Windows production installers
+
+```bash
+pnpm typecheck
+cd apps/desktop/src-tauri && cargo check && cd ../../..
+pnpm tauri:build
+```
+
+Outputs (version from `tauri.conf.json`, currently `0.1.0`):
+
+```
+apps/desktop/src-tauri/target/release/bundle/nsis/JabeX_0.1.0_x64-setup.exe
+apps/desktop/src-tauri/target/release/bundle/msi/JabeX_0.1.0_x64_en-US.msi
+```
+
+Full steps, CI tagging, and signing status: [PACKAGING.md](../PACKAGING/PACKAGING.md) · [RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md).
+
 Seed scripts target the local app-data directory (`directories` ProjectDirs). Quit the running app if you hit `SQLITE_BUSY`. Override the path with `JABEX_DATA_DIR` when needed.
 
 ## Workspace Layout
@@ -86,12 +103,14 @@ Seed scripts target the local app-data directory (`directories` ProjectDirs). Qu
 - Keep capabilities minimal (`dialog:allow-open` / `dialog:allow-save` for `.jbx` pickers only)
 - Backend docs: `docs/BACKEND/BACKEND.md`
 - Packaging / installers: [PACKAGING.md](../PACKAGING/PACKAGING.md)
+- Release checklist: [RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md)
 - Run Rust tests: `cd apps/desktop/src-tauri && cargo test`
 - Windows requires MSVC Build Tools (`link.exe`) for `cargo` / Tauri builds
 
 ## Git & contributions
 
 - Branching, commits, and releases: [GIT_WORKFLOW.md](../GIT_WORKFLOW/GIT_WORKFLOW.md)
+- Tag-triggered installers: push `v*` → `.github/workflows/release.yml` (Windows `.exe` + `.msi`)
 - Contribution steps: [CONTRIBUTING.md](../../CONTRIBUTING.md)
 
 ## Coding Standards
