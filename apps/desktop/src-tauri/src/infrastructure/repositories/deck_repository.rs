@@ -106,10 +106,7 @@ impl DeckRepository for SqliteDeckRepository {
                 params![id.to_string(), deleted_at.to_rfc3339()],
             )?;
             if changed == 0 {
-                return Err(JabeXError::NotFound {
-                    entity: "deck",
-                    id,
-                });
+                return Err(JabeXError::NotFound { entity: "deck", id });
             }
             Ok(())
         })

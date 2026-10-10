@@ -210,9 +210,8 @@ pub fn migrate_legacy_layout(app_paths: &AppPaths, profile_id: Uuid) -> JabeXRes
     }
 
     info!(profile_id = %profile_id, "migrating legacy single-database layout");
-    std::fs::rename(&legacy_db, &target.database_file).map_err(|e| {
-        JabeXError::Filesystem(format!("failed to move legacy database: {e}"))
-    })?;
+    std::fs::rename(&legacy_db, &target.database_file)
+        .map_err(|e| JabeXError::Filesystem(format!("failed to move legacy database: {e}")))?;
 
     if legacy_media.exists() {
         // Prefer renaming whole media tree; fall back to leaving it if blocked.
@@ -257,8 +256,7 @@ mod tests {
         let dir = tempdir().expect("tempdir");
         let db = open_database_at(dir.path()).expect("open db");
         db.with_conn(|conn| {
-            let enabled: i64 =
-                conn.query_row("PRAGMA foreign_keys", [], |row| row.get(0))?;
+            let enabled: i64 = conn.query_row("PRAGMA foreign_keys", [], |row| row.get(0))?;
             assert_eq!(enabled, 1);
             Ok(())
         })

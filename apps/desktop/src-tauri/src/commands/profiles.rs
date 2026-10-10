@@ -59,10 +59,7 @@ pub async fn delete_profile(state: State<'_, AppState>, id: Uuid) -> Result<(), 
 }
 
 #[tauri::command]
-pub async fn switch_profile(
-    state: State<'_, AppState>,
-    id: Uuid,
-) -> Result<Profile, JabeXError> {
+pub async fn switch_profile(state: State<'_, AppState>, id: Uuid) -> Result<Profile, JabeXError> {
     tracing::debug!(command = "switch_profile", %id, "command invoked");
     state.switch_profile(id)
 }

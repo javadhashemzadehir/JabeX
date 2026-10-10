@@ -41,7 +41,10 @@ pub async fn get_card(state: State<'_, AppState>, id: Uuid) -> Result<Card, Jabe
 }
 
 #[tauri::command]
-pub async fn list_cards(state: State<'_, AppState>, deck_id: Uuid) -> Result<Vec<Card>, JabeXError> {
+pub async fn list_cards(
+    state: State<'_, AppState>,
+    deck_id: Uuid,
+) -> Result<Vec<Card>, JabeXError> {
     tracing::debug!(command = "list_cards", %deck_id, "command invoked");
     state.with_session(|session| session.cards.list_cards(deck_id))
 }

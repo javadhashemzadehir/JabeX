@@ -470,9 +470,7 @@ mod tests {
         assert_eq!(imported.cards, 1);
 
         let imported_db = open_profile_database(&app_paths, imported.profile_id).expect("db2");
-        let decks = SqliteDeckRepository::new(imported_db)
-            .list()
-            .expect("list");
+        let decks = SqliteDeckRepository::new(imported_db).list().expect("list");
         assert_eq!(decks[0].name, "Vocab");
     }
 

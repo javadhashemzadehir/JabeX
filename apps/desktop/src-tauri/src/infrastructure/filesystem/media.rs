@@ -74,9 +74,8 @@ impl MediaManager {
             });
         }
 
-        let mut file = fs::File::create(&absolute).map_err(|e| {
-            JabeXError::Filesystem(format!("failed to create media file: {e}"))
-        })?;
+        let mut file = fs::File::create(&absolute)
+            .map_err(|e| JabeXError::Filesystem(format!("failed to create media file: {e}")))?;
         file.write_all(bytes)
             .map_err(|e| JabeXError::Filesystem(format!("failed to write media file: {e}")))?;
 

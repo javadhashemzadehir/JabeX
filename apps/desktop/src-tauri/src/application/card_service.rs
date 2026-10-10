@@ -34,10 +34,9 @@ impl<C: CardRepository, D: DeckRepository> CardService<C, D> {
     }
 
     pub fn get_card(&self, id: Uuid) -> JabeXResult<Card> {
-        self.cards.find(id)?.ok_or(JabeXError::NotFound {
-            entity: "card",
-            id,
-        })
+        self.cards
+            .find(id)?
+            .ok_or(JabeXError::NotFound { entity: "card", id })
     }
 
     pub fn list_cards(&self, deck_id: Uuid) -> JabeXResult<Vec<Card>> {

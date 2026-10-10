@@ -40,7 +40,9 @@ fn parse_kind(kind: &str) -> Result<MediaKind, JabeXError> {
         "image" => Ok(MediaKind::Image),
         "audio" => Ok(MediaKind::Audio),
         "drawing" => Ok(MediaKind::Drawing),
-        other => Err(JabeXError::Validation(format!("unknown media kind: {other}"))),
+        other => Err(JabeXError::Validation(format!(
+            "unknown media kind: {other}"
+        ))),
     }
 }
 
@@ -71,7 +73,10 @@ pub async fn export_backup(
 /// Deprecated alias — prefer `export_backup` (.jbx).
 #[tauri::command]
 pub async fn create_backup(state: State<'_, AppState>) -> Result<PathBuf, JabeXError> {
-    tracing::debug!(command = "create_backup", "command invoked (alias of export_backup)");
+    tracing::debug!(
+        command = "create_backup",
+        "command invoked (alias of export_backup)"
+    );
     state.export_backup(None)
 }
 

@@ -208,7 +208,9 @@ impl ProfileRegistry {
                 |row| row.get(0),
             )
             .optional()?;
-        value.map(|s| parse_uuid(&s).map_err(JabeXError::from)).transpose()
+        value
+            .map(|s| parse_uuid(&s).map_err(JabeXError::from))
+            .transpose()
     }
 
     pub fn set_active_profile(&self, id: Uuid) -> JabeXResult<Profile> {
@@ -290,9 +292,8 @@ pub fn ensure_bootstrapped(app_paths: &AppPaths) -> JabeXResult<(AppPaths, Datab
 pub fn remove_profile_files(app_paths: &AppPaths, profile_id: Uuid) -> JabeXResult<()> {
     let root = app_paths.profile_root(profile_id);
     if root.exists() {
-        fs::remove_dir_all(&root).map_err(|e| {
-            JabeXError::Filesystem(format!("failed to remove profile data: {e}"))
-        })?;
+        fs::remove_dir_all(&root)
+            .map_err(|e| JabeXError::Filesystem(format!("failed to remove profile data: {e}")))?;
     }
     Ok(())
 }

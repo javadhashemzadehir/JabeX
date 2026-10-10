@@ -35,10 +35,9 @@ impl<D: DeckRepository> DeckService<D> {
     }
 
     pub fn get_deck(&self, id: Uuid) -> JabeXResult<Deck> {
-        self.decks.find(id)?.ok_or(JabeXError::NotFound {
-            entity: "deck",
-            id,
-        })
+        self.decks
+            .find(id)?
+            .ok_or(JabeXError::NotFound { entity: "deck", id })
     }
 
     pub fn list_decks(&self) -> JabeXResult<Vec<Deck>> {

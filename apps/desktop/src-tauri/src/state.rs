@@ -96,7 +96,10 @@ impl AppState {
         Ok(profile)
     }
 
-    pub fn export_backup(&self, output: Option<std::path::PathBuf>) -> JabeXResult<std::path::PathBuf> {
+    pub fn export_backup(
+        &self,
+        output: Option<std::path::PathBuf>,
+    ) -> JabeXResult<std::path::PathBuf> {
         let profile = self.profiles.get_active()?;
         let session = self.session.read();
         self.backups.export_jbx(&session.db, &profile, output)
@@ -112,12 +115,17 @@ impl AppState {
             self.profiles.create(name, None)
         })?;
 
-        if matches!(mode, crate::application::backup_service::ImportMode::ReplaceActive) {
+        if matches!(
+            mode,
+            crate::application::backup_service::ImportMode::ReplaceActive
+        ) {
             // Reload session so in-memory services see replaced DB.
             let next = ProfileSession::open(&self.app_paths, active_id)?;
             *self.session.write() = next;
-        } else if matches!(mode, crate::application::backup_service::ImportMode::CreateProfile)
-        {
+        } else if matches!(
+            mode,
+            crate::application::backup_service::ImportMode::CreateProfile
+        ) {
             // Optionally switch to imported profile.
             let _ = self.switch_profile(result.profile_id);
         }
