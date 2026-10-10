@@ -317,6 +317,7 @@ pub fn ensure_bootstrapped(app_paths: &AppPaths) -> JabeXResult<(AppPaths, Datab
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
     use tempfile::tempdir;
 
     #[test]

@@ -138,6 +138,10 @@ Versioned ZIP of normalized JSON documents + optional media. See [ADR 008](../AD
 ## Migration Policy
 
 - Versioned migrations only (`V{n}__name.sql`) per profile database
+- Migrations run automatically on profile DB open (refinery)
+- **Upgrade safety:** when pending migrations exist on a database that already has applied history, JabeX copies `database.sqlite` beside the live file as `database.sqlite.pre-migrate-<UTC>.bak` before applying changes. A failed migration leaves that backup intact; recover by quitting the app and restoring the `.bak` over `database.sqlite` (remove stale `-wal`/`-shm` if present)
+- Fresh databases skip the pre-migration backup
+- Prefer additive migrations; avoid destructive changes without a backup path
 - Document each schema change here
 - Keep TypeScript types in `packages/types` aligned with Rust models
 

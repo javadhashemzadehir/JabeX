@@ -31,7 +31,21 @@ pub struct AppPaths {
 }
 
 impl AppPaths {
+    /// Resolve the writable app-data root.
+    ///
+    /// Priority:
+    /// 1. `JABEX_DATA_DIR` (absolute or relative) — used by portable smoke tests / tooling
+    /// 2. OS project data dir (`directories::ProjectDirs`) — never the install/portable folder
+    ///
+    /// Profiles, SQLite, media, and backups always live under this root so a portable
+    /// zip can sit on a read-only or USB path without writing next to `JabeX.exe`.
     pub fn resolve() -> JabeXResult<Self> {
+        if let Ok(override_dir) = std::env::var("JABEX_DATA_DIR") {
+            let trimmed = override_dir.trim();
+            if !trimmed.is_empty() {
+                return Self::from_root(PathBuf::from(trimmed));
+            }
+        }
         let project = ProjectDirs::from("app", "JabeX", "JabeX").ok_or_else(|| {
             JabeXError::Filesystem("unable to resolve application data directory".into())
         })?;
@@ -187,15 +201,96 @@ impl Database {
 
     fn migrate(&mut self) -> JabeXResult<()> {
         info!("running database migrations");
+
+        // Upgrade safety: copy the on-disk DB before applying pending migrations so a
+        // failed/partial migration never leaves the user without a recoverable file.
+        // Fresh databases (no applied migrations yet) skip the backup.
+        let backup_path = {
+            let conn = self.conn.lock();
+            let applied = Self::applied_migration_version(&conn)?;
+            let latest = Self::embedded_latest_version();
+            if applied > 0 && applied < latest {
+                let _ = conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);");
+                drop(conn);
+                Some(Self::create_pre_migration_backup(&self.paths.database_file)?)
+            } else {
+                None
+            }
+        };
+
+        if let Some(ref path) = backup_path {
+            info!(backup = %path.display(), "created pre-migration database backup");
+        }
+
         let mut conn = self.conn.lock();
         embedded::migrations::runner()
             .run(&mut *conn)
             .map_err(|e| {
                 error!(error = %e, "database migration failed");
-                JabeXError::Migration(e.to_string())
+                let hint = backup_path
+                    .as_ref()
+                    .map(|p| format!("; pre-migration backup kept at {}", p.display()))
+                    .unwrap_or_default();
+                JabeXError::Migration(format!("{e}{hint}"))
             })?;
         info!("database migrations complete");
         Ok(())
+    }
+
+    fn embedded_latest_version() -> u32 {
+        embedded::migrations::runner()
+            .get_migrations()
+            .iter()
+            .map(|m| m.version())
+            .max()
+            .unwrap_or(0)
+    }
+
+    fn applied_migration_version(conn: &Connection) -> JabeXResult<u32> {
+        let exists: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='refinery_schema_history'",
+                [],
+                |row| row.get(0),
+            )
+            .map_err(|e| JabeXError::Database(e.to_string()))?;
+        if exists == 0 {
+            return Ok(0);
+        }
+        let version: i64 = conn
+            .query_row(
+                "SELECT COALESCE(MAX(version), 0) FROM refinery_schema_history",
+                [],
+                |row| row.get(0),
+            )
+            .map_err(|e| JabeXError::Database(e.to_string()))?;
+        Ok(version as u32)
+    }
+
+    /// Snapshot `database.sqlite` beside the live file before an upgrade migration.
+    fn create_pre_migration_backup(database_file: &Path) -> JabeXResult<PathBuf> {
+        if !database_file.exists() {
+            return Err(JabeXError::Filesystem(format!(
+                "cannot backup missing database: {}",
+                database_file.display()
+            )));
+        }
+        let stamp = chrono::Utc::now().format("%Y%m%dT%H%M%SZ");
+        let file_name = format!(
+            "{}.pre-migrate-{stamp}.bak",
+            database_file
+                .file_name()
+                .map(|n| n.to_string_lossy())
+                .unwrap_or_else(|| "database.sqlite".into())
+        );
+        let backup_path = database_file.with_file_name(file_name);
+        std::fs::copy(database_file, &backup_path).map_err(|e| {
+            JabeXError::Filesystem(format!(
+                "failed to create pre-migration backup {}: {e}",
+                backup_path.display()
+            ))
+        })?;
+        Ok(backup_path)
     }
 }
 
@@ -351,7 +446,57 @@ mod tests {
             })
             .expect("version2");
         assert_eq!(version1, version2);
-        assert!(version2 >= 9, "expected migrations through V9, got {version2}");
+        assert!(
+            version2 >= 10,
+            "expected migrations through V10, got {version2}"
+        );
+    }
+
+    #[test]
+    fn pending_migration_creates_pre_migration_backup() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().to_path_buf();
+        let db = open_database_at(&path).expect("open");
+        db.with_conn(|conn| {
+            conn.execute(
+                "DELETE FROM refinery_schema_history WHERE version = (
+                    SELECT MAX(version) FROM refinery_schema_history
+                )",
+                [],
+            )?;
+            Ok(())
+        })
+        .expect("mark pending");
+        drop(db);
+
+        let _db2 = open_database_at(&path).expect("reopen migrates");
+        let backups: Vec<_> = std::fs::read_dir(dir.path())
+            .expect("read dir")
+            .filter_map(|e| e.ok())
+            .map(|e| e.file_name().to_string_lossy().into_owned())
+            .filter(|n| n.contains("pre-migrate") && n.ends_with(".bak"))
+            .collect();
+        assert_eq!(
+            backups.len(),
+            1,
+            "expected one pre-migration backup, got {backups:?}"
+        );
+    }
+
+    #[test]
+    fn fresh_database_skips_pre_migration_backup() {
+        let dir = tempdir().expect("tempdir");
+        let _db = open_database_at(dir.path()).expect("open");
+        let backups: Vec<_> = std::fs::read_dir(dir.path())
+            .expect("read dir")
+            .filter_map(|e| e.ok())
+            .map(|e| e.file_name().to_string_lossy().into_owned())
+            .filter(|n| n.contains("pre-migrate"))
+            .collect();
+        assert!(
+            backups.is_empty(),
+            "fresh DB must not create pre-migration backups: {backups:?}"
+        );
     }
 
     #[test]
@@ -421,5 +566,15 @@ mod tests {
         let paths = AppPaths::from_root(dir.path().to_path_buf()).expect("paths");
         assert!(paths.profiles_dir.exists());
         assert!(paths.backups_dir.exists());
+    }
+
+    #[test]
+    fn app_paths_resolve_honors_jabex_data_dir() {
+        let dir = tempdir().expect("tempdir");
+        std::env::set_var("JABEX_DATA_DIR", dir.path());
+        let paths = AppPaths::resolve().expect("resolve");
+        std::env::remove_var("JABEX_DATA_DIR");
+        assert_eq!(paths.root, dir.path());
+        assert!(paths.app_database.starts_with(dir.path()));
     }
 }
