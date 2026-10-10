@@ -1,3 +1,3 @@
 pub mod media;
 
-pub use media::MediaManager;
+pub use media::LocalMediaStorage;
