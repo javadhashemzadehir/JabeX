@@ -202,16 +202,28 @@ export interface DeckSettings {
 export type RichTextNode = Record<string, unknown>;
 
 /**
- * Versioned card-face document.
- * Shape: `{ version: 1, type: "doc", content: TipTapNodes[] }`
+ * Versioned card-face document (TipTap-compatible JSON).
+ * Shape: `{ version: 1|2, type: "doc", content: TipTapNodes[] }`
+ *
+ * v2 adds spoilers, math, tables, and highlighted code blocks (ADR 014).
  */
+export type RichTextDocumentVersion = 1 | 2;
+
 export interface RichTextDocument {
-  version: 1;
+  version: RichTextDocumentVersion;
   type: "doc";
   content: RichTextNode[];
 }
 
-export const RICH_TEXT_DOCUMENT_VERSION = 1 as const;
+/** Current write version for new/updated card faces. */
+export const RICH_TEXT_DOCUMENT_VERSION = 2 as const;
+
+/** Export / backup envelope for a single card face. */
+export interface JabexJsonFace {
+  format: "jabex-json";
+  version: typeof RICH_TEXT_DOCUMENT_VERSION;
+  content: RichTextDocument;
+}
 
 /** Local device profile — not an online account. */
 export interface Profile {

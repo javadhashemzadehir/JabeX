@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import type { RichTextDocument } from "@jabex/types";
 import { toTiptapContent } from "@/lib/rich-text";
 import { cn } from "@/lib/utils";
 import { createCardEditorExtensions } from "./extensions";
+import { bindSpoilerInteractions } from "./spoiler-interaction";
 
 type RichTextViewerProps = {
   document: RichTextDocument;
@@ -13,16 +14,18 @@ type RichTextViewerProps = {
   contentClassName?: string;
 };
 
-/** Read-only TipTap renderer — never injects raw HTML from user input. */
+/** Read-only TipTap renderer — never injects raw HTML from user input as storage. */
 export function RichTextViewer({
   document,
   className,
   contentClassName,
 }: RichTextViewerProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
   const editor = useEditor({
     immediatelyRender: false,
     editable: false,
-    extensions: createCardEditorExtensions(),
+    extensions: createCardEditorExtensions({ editable: false }),
     content: toTiptapContent(document),
     editorProps: {
       attributes: {
@@ -38,8 +41,17 @@ export function RichTextViewer({
     });
   }, [document, editor]);
 
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    return bindSpoilerInteractions(root);
+  }, []);
+
   return (
-    <div className={cn("jabex-editor jabex-editor--readonly", className)}>
+    <div
+      ref={rootRef}
+      className={cn("jabex-editor jabex-editor--readonly", className)}
+    >
       <EditorContent editor={editor} />
     </div>
   );

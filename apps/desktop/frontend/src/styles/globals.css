@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "katex/dist/katex.min.css";
 
 /* shadcn/ui design tokens — https://ui.shadcn.com/docs/theming */
 :root {
@@ -336,4 +337,182 @@ html.dark .brand-logo-on-dark {
   height: 0;
   color: var(--muted-foreground);
   content: attr(data-placeholder);
+}
+
+/* Spoilers (Telegram-style) */
+.jabex-editor .jabex-spoiler,
+.jabex-editor .jabex-spoiler-block {
+  cursor: pointer;
+  border-radius: calc(var(--radius) - 4px);
+  transition: filter 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.jabex-editor .jabex-spoiler:not([data-revealed]) {
+  color: transparent;
+  background: var(--foreground);
+  filter: none;
+  user-select: none;
+}
+
+.jabex-editor .jabex-spoiler[data-revealed] {
+  background: color-mix(in oklch, var(--muted) 80%, transparent);
+  color: inherit;
+}
+
+.jabex-editor .jabex-spoiler-block {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px dashed var(--border);
+}
+
+.jabex-editor .jabex-spoiler-block:not([data-revealed]) {
+  position: relative;
+  min-height: 2.5rem;
+  color: transparent;
+  background: var(--foreground);
+  user-select: none;
+}
+
+.jabex-editor .jabex-spoiler-block:not([data-revealed]) * {
+  visibility: hidden;
+}
+
+.jabex-editor .jabex-spoiler-block[data-revealed] {
+  background: color-mix(in oklch, var(--muted) 55%, transparent);
+  color: inherit;
+}
+
+/* Keep spoilers readable while editing */
+[data-mode="edit"] .jabex-spoiler:not([data-revealed]),
+[data-mode="edit"] .jabex-spoiler-block:not([data-revealed]) {
+  color: var(--foreground);
+  background: color-mix(in oklch, var(--muted) 70%, var(--foreground) 8%);
+  outline: 1px dashed color-mix(in oklch, var(--foreground) 35%, transparent);
+  user-select: text;
+}
+
+[data-mode="edit"] .jabex-spoiler-block:not([data-revealed]) * {
+  visibility: visible;
+}
+
+/* Math (always LTR) */
+.jabex-editor .jabex-math {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.jabex-editor .jabex-math--inline {
+  display: inline-block;
+  padding: 0 0.15rem;
+  vertical-align: middle;
+}
+
+.jabex-editor .jabex-math--display {
+  display: block;
+  margin: 0.65rem 0;
+  overflow-x: auto;
+  text-align: center;
+  padding: 0.35rem 0.25rem;
+}
+
+.jabex-editor .jabex-math--selected {
+  outline: 2px solid var(--ring);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.jabex-editor .jabex-math--error .jabex-math__fallback {
+  color: var(--destructive);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85em;
+}
+
+/* Tables */
+.jabex-editor .jabex-table,
+.jabex-editor table {
+  width: 100%;
+  margin: 0.6rem 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+  direction: ltr;
+  overflow: hidden;
+}
+
+.jabex-editor .jabex-table td,
+.jabex-editor .jabex-table th,
+.jabex-editor table td,
+.jabex-editor table th {
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.5rem;
+  vertical-align: top;
+  min-width: 2.5rem;
+}
+
+.jabex-editor .jabex-table th,
+.jabex-editor table th {
+  background: var(--muted);
+  font-weight: 600;
+  text-align: start;
+}
+
+.jabex-editor .tableWrapper {
+  margin: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.jabex-editor .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--ring);
+  pointer-events: none;
+}
+
+.jabex-editor.resize-cursor {
+  cursor: col-resize;
+}
+
+/* Code highlighting (lowlight / highlight.js classes) */
+.jabex-editor .jabex-code-block,
+.jabex-editor pre {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: left;
+}
+
+.jabex-editor .hljs-comment,
+.jabex-editor .hljs-quote {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.jabex-editor .hljs-keyword,
+.jabex-editor .hljs-selector-tag,
+.jabex-editor .hljs-literal {
+  color: color-mix(in oklch, var(--primary) 75%, var(--foreground));
+}
+
+.jabex-editor .hljs-string,
+.jabex-editor .hljs-attr {
+  color: color-mix(in oklch, oklch(0.55 0.14 145) 80%, var(--foreground));
+}
+
+.jabex-editor .hljs-number,
+.jabex-editor .hljs-built_in {
+  color: color-mix(in oklch, oklch(0.6 0.16 55) 80%, var(--foreground));
+}
+
+.jabex-editor .hljs-title,
+.jabex-editor .hljs-section {
+  color: color-mix(in oklch, oklch(0.55 0.14 250) 70%, var(--foreground));
+  font-weight: 600;
+}
+
+.jabex-editor-raw {
+  outline: none;
+}
+
+.jabex-editor-raw:focus {
+  box-shadow: 0 0 0 1px var(--ring);
 }

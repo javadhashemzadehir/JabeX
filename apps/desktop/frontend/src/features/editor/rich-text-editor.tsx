@@ -1,41 +1,38 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
-import {
-  Bold,
-  Code,
-  Code2,
-  Heading1,
-  Heading2,
-  Heading3,
-  Italic,
-  Link2,
-  Link2Off,
-  List,
-  ListOrdered,
-  Minus,
-  Quote,
-  Redo2,
-  RemoveFormatting,
-  Strikethrough,
-  Underline,
-  Undo2,
-} from "lucide-react";
+import { Copy } from "lucide-react";
 import type { RichTextDocument } from "@jabex/types";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Toggle } from "@/components/ui/toggle";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useTranslations } from "@/hooks/use-locale";
 import {
+  documentToMarkdown,
+  markdownToDocument,
+} from "@/lib/rich-text-markdown";
+import { createPasteHandler, type JsonPasteChoice } from "@/lib/rich-text-paste";
+import {
   isRichTextBlank,
+  parseRichTextJson,
   toRichTextDocument,
   toTiptapContent,
 } from "@/lib/rich-text";
 import { cn } from "@/lib/utils";
 import { createCardEditorExtensions } from "./extensions";
+import { EditorToolbar } from "./editor-toolbar";
+import { RichTextViewer } from "./rich-text-viewer";
+import { bindSpoilerInteractions } from "./spoiler-interaction";
 
 export type EditorLayoutWidth = "medium" | "large";
+export type EditorViewMode = "edit" | "preview" | "json" | "markdown";
 
 type RichTextEditorProps = {
   value: RichTextDocument;
@@ -49,257 +46,11 @@ type RichTextEditorProps = {
   layoutWidth?: EditorLayoutWidth;
 };
 
-function MarkToggle({
-  pressed,
-  onPressedChange,
-  label,
-  disabled,
-  children,
-}: {
-  pressed: boolean;
-  onPressedChange: () => void;
-  label: string;
-  disabled?: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <Toggle
-      size="sm"
-      pressed={pressed}
-      onPressedChange={() => onPressedChange()}
-      disabled={disabled}
-      aria-label={label}
-      title={label}
-    >
-      {children}
-    </Toggle>
-  );
-}
-
-function ActionButton({
-  onClick,
-  label,
-  disabled,
-  pressed,
-  children,
-}: {
-  onClick: () => void;
-  label: string;
-  disabled?: boolean;
-  pressed?: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <Button
-      type="button"
-      variant={pressed ? "secondary" : "ghost"}
-      size="icon"
-      className="size-8"
-      disabled={disabled}
-      aria-label={label}
-      title={label}
-      aria-pressed={pressed}
-      onClick={onClick}
-    >
-      {children}
-    </Button>
-  );
-}
-
-function promptForLinkUrl(current: string, message: string): string | null {
-  const next = window.prompt(message, current);
-  if (next === null) return null;
-  return next.trim();
-}
-
-function EditorToolbar({ editor }: { editor: Editor | null }) {
-  const t = useTranslations();
-  if (!editor) return null;
-
-  const locked = !editor.isEditable;
-  const canUndo = editor.can().undo();
-  const canRedo = editor.can().redo();
-  const linkActive = editor.isActive("link");
-
-  function setLink() {
-    if (!editor) return;
-    const previous = editor.getAttributes("link").href as string | undefined;
-    const url = promptForLinkUrl(previous ?? "https://", t.editor.linkPrompt);
-    if (url === null) return;
-    if (url === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
-      return;
-    }
-    editor
-      .chain()
-      .focus()
-      .extendMarkRange("link")
-      .setLink({ href: url })
-      .run();
-  }
-
-  return (
-    <div
-      className="flex flex-wrap items-center gap-0.5 border-b border-border/60 bg-muted/30 px-1.5 py-1"
-      role="toolbar"
-      aria-label={t.editor.toolbar}
-    >
-      <ActionButton
-        disabled={locked || !canUndo}
-        onClick={() => editor.chain().focus().undo().run()}
-        label={t.editor.undo}
-      >
-        <Undo2 className="size-4" />
-      </ActionButton>
-      <ActionButton
-        disabled={locked || !canRedo}
-        onClick={() => editor.chain().focus().redo().run()}
-        label={t.editor.redo}
-      >
-        <Redo2 className="size-4" />
-      </ActionButton>
-      <Separator orientation="vertical" className="mx-1 h-6" />
-      <MarkToggle
-        disabled={locked}
-        pressed={editor.isActive("bold")}
-        onPressedChange={() => editor.chain().focus().toggleBold().run()}
-        label={t.editor.bold}
-      >
-        <Bold />
-      </MarkToggle>
-      <MarkToggle
-        disabled={locked}
-        pressed={editor.isActive("italic")}
-        onPressedChange={() => editor.chain().focus().toggleItalic().run()}
-        label={t.editor.italic}
-      >
-        <Italic />
-      </MarkToggle>
-      <MarkToggle
-        disabled={locked}
-        pressed={editor.isActive("underline")}
-        onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
-        label={t.editor.underline}
-      >
-        <Underline />
-      </MarkToggle>
-      <MarkToggle
-        disabled={locked}
-        pressed={editor.isActive("strike")}
-        onPressedChange={() => editor.chain().focus().toggleStrike().run()}
-        label={t.editor.strike}
-      >
-        <Strikethrough />
-      </MarkToggle>
-      <MarkToggle
-        disabled={locked}
-        pressed={editor.isActive("code")}
-        onPressedChange={() => editor.chain().focus().toggleCode().run()}
-        label={t.editor.code}
-      >
-        <Code />
-      </MarkToggle>
-      <Separator orientation="vertical" className="mx-1 h-6" />
-      <MarkToggle
-        disabled={locked}
-        pressed={editor.isActive("heading", { level: 1 })}
-        onPressedChange={() =>
-          editor.chain().focus().toggleHeading({ level: 1 }).run()
-        }
-        label={t.editor.heading1}
-      >
-        <Heading1 />
-      </MarkToggle>
-      <MarkToggle
-        disabled={locked}
-        pressed={editor.isActive("heading", { level: 2 })}
-        onPressedChange={() =>
-          editor.chain().focus().toggleHeading({ level: 2 }).run()
-        }
-        label={t.editor.heading2}
-      >
-        <Heading2 />
-      </MarkToggle>
-      <MarkToggle
-        disabled={locked}
-        pressed={editor.isActive("heading", { level: 3 })}
-        onPressedChange={() =>
-          editor.chain().focus().toggleHeading({ level: 3 }).run()
-        }
-        label={t.editor.heading3}
-      >
-        <Heading3 />
-      </MarkToggle>
-      <Separator orientation="vertical" className="mx-1 h-6" />
-      <MarkToggle
-        disabled={locked}
-        pressed={editor.isActive("bulletList")}
-        onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
-        label={t.editor.bulletList}
-      >
-        <List />
-      </MarkToggle>
-      <MarkToggle
-        disabled={locked}
-        pressed={editor.isActive("orderedList")}
-        onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
-        label={t.editor.orderedList}
-      >
-        <ListOrdered />
-      </MarkToggle>
-      <MarkToggle
-        disabled={locked}
-        pressed={editor.isActive("blockquote")}
-        onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
-        label={t.editor.blockquote}
-      >
-        <Quote />
-      </MarkToggle>
-      <MarkToggle
-        disabled={locked}
-        pressed={editor.isActive("codeBlock")}
-        onPressedChange={() => editor.chain().focus().toggleCodeBlock().run()}
-        label={t.editor.codeBlock}
-      >
-        <Code2 />
-      </MarkToggle>
-      <ActionButton
-        disabled={locked}
-        onClick={() => editor.chain().focus().setHorizontalRule().run()}
-        label={t.editor.horizontalRule}
-      >
-        <Minus className="size-4" />
-      </ActionButton>
-      <Separator orientation="vertical" className="mx-1 h-6" />
-      <MarkToggle
-        disabled={locked}
-        pressed={linkActive}
-        onPressedChange={setLink}
-        label={t.editor.link}
-      >
-        <Link2 />
-      </MarkToggle>
-      <ActionButton
-        disabled={locked || !linkActive}
-        onClick={() =>
-          editor.chain().focus().extendMarkRange("link").unsetLink().run()
-        }
-        label={t.editor.unlink}
-      >
-        <Link2Off className="size-4" />
-      </ActionButton>
-      <ActionButton
-        disabled={locked}
-        onClick={() =>
-          editor.chain().focus().unsetAllMarks().clearNodes().run()
-        }
-        label={t.editor.clearFormat}
-      >
-        <RemoveFormatting className="size-4" />
-      </ActionButton>
-    </div>
-  );
-}
+type JsonPromptState = {
+  text: string;
+  asDocument: RichTextDocument | null;
+  resolve: (choice: JsonPasteChoice) => void;
+};
 
 export function RichTextEditor({
   value,
@@ -312,10 +63,30 @@ export function RichTextEditor({
   "aria-label": ariaLabel,
   layoutWidth = "medium",
 }: RichTextEditorProps) {
+  const t = useTranslations();
+  const [mode, setMode] = useState<EditorViewMode>("edit");
+  const [markdownDraft, setMarkdownDraft] = useState("");
+  const [jsonDraft, setJsonDraft] = useState("");
+  const [jsonError, setJsonError] = useState<string | null>(null);
+  const [jsonPrompt, setJsonPrompt] = useState<JsonPromptState | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<Editor | null>(null);
+  const askJsonRef = useRef<
+    (payload: {
+      text: string;
+      asDocument: RichTextDocument | null;
+    }) => Promise<JsonPasteChoice>
+  >(async () => "cancel");
+
+  askJsonRef.current = ({ text, asDocument }) =>
+    new Promise<JsonPasteChoice>((resolve) => {
+      setJsonPrompt({ text, asDocument, resolve });
+    });
+
   const editor = useEditor({
     immediatelyRender: false,
     shouldRerenderOnTransaction: true,
-    extensions: createCardEditorExtensions(placeholder),
+    extensions: createCardEditorExtensions({ placeholder }),
     content: toTiptapContent(value),
     editable: !disabled,
     autofocus: autoFocus ? "end" : false,
@@ -325,6 +96,13 @@ export function RichTextEditor({
         class: "jabex-editor-content",
         ...(ariaLabel ? { "aria-label": ariaLabel } : {}),
       },
+      handlePaste: (_view, event) => {
+        const current = editorRef.current;
+        if (!current) return false;
+        return createPasteHandler({
+          onAskJson: (payload) => askJsonRef.current(payload),
+        })({ editor: current, event: event as ClipboardEvent });
+      },
     },
     onUpdate: ({ editor: next }) => {
       onChange(toRichTextDocument(next.getJSON()));
@@ -332,9 +110,13 @@ export function RichTextEditor({
   });
 
   useEffect(() => {
+    editorRef.current = editor;
+  }, [editor]);
+
+  useEffect(() => {
     if (!editor) return;
-    editor.setEditable(!disabled);
-  }, [disabled, editor]);
+    editor.setEditable(!disabled && mode === "edit");
+  }, [disabled, editor, mode]);
 
   useEffect(() => {
     if (!editor) return;
@@ -345,8 +127,51 @@ export function RichTextEditor({
     editor.commands.setContent(toTiptapContent(value), { emitUpdate: false });
   }, [editor, value]);
 
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    return bindSpoilerInteractions(root);
+  }, []);
+
+  const prevModeRef = useRef<EditorViewMode>(mode);
+  useEffect(() => {
+    const entered = prevModeRef.current !== mode;
+    prevModeRef.current = mode;
+    if (!entered) return;
+    if (mode === "markdown") {
+      setMarkdownDraft(documentToMarkdown(value));
+    }
+    if (mode === "json") {
+      setJsonDraft(JSON.stringify(value, null, 2));
+      setJsonError(null);
+    }
+  }, [mode, value]);
+
+  function switchMode(next: EditorViewMode) {
+    if (mode === "markdown" && next !== "markdown") {
+      onChange(markdownToDocument(markdownDraft));
+    }
+    if (mode === "json" && next !== "json") {
+      const parsed = parseRichTextJson(jsonDraft);
+      if (parsed) onChange(parsed);
+    }
+    setMode(next);
+  }
+
+  function copyText(text: string) {
+    void navigator.clipboard.writeText(text);
+  }
+
+  const modes: { id: EditorViewMode; label: string }[] = [
+    { id: "edit", label: t.editor.modeEdit },
+    { id: "preview", label: t.editor.modePreview },
+    { id: "json", label: t.editor.modeJson },
+    { id: "markdown", label: t.editor.modeMarkdown },
+  ];
+
   return (
     <div
+      ref={rootRef}
       className={cn(
         "overflow-hidden rounded-md border border-input bg-transparent shadow-sm focus-within:ring-1 focus-within:ring-ring",
         layoutWidth === "large" && "jabex-editor--large",
@@ -355,9 +180,159 @@ export function RichTextEditor({
       )}
       data-blank={isRichTextBlank(value) ? "true" : "false"}
       data-layout={layoutWidth}
+      data-mode={mode}
     >
-      <EditorToolbar editor={editor} />
-      <EditorContent editor={editor} className="jabex-editor" />
+      <div
+        className="flex flex-wrap items-center gap-1 border-b border-border/60 bg-muted/20 px-1.5 py-1"
+        role="tablist"
+        aria-label={t.editor.modes}
+      >
+        {modes.map((item) => (
+          <Button
+            key={item.id}
+            type="button"
+            size="sm"
+            variant={mode === item.id ? "secondary" : "ghost"}
+            className="h-7 px-2.5 text-xs"
+            role="tab"
+            aria-selected={mode === item.id}
+            disabled={disabled && item.id === "edit"}
+            onClick={() => switchMode(item.id)}
+          >
+            {item.label}
+          </Button>
+        ))}
+      </div>
+
+      {mode === "edit" && <EditorToolbar editor={editor} />}
+
+      {mode === "edit" && (
+        <EditorContent editor={editor} className="jabex-editor" />
+      )}
+
+      {mode === "preview" && (
+        <div className="p-3">
+          <RichTextViewer document={value} />
+        </div>
+      )}
+
+      {mode === "json" && (
+        <div className="space-y-2 p-2">
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1.5 text-xs"
+              onClick={() => copyText(jsonDraft)}
+            >
+              <Copy className="size-3.5" />
+              {t.editor.copy}
+            </Button>
+          </div>
+          <textarea
+            className="jabex-editor-raw min-h-40 w-full resize-y rounded-md border border-border/60 bg-muted/30 p-2 font-mono text-xs leading-relaxed"
+            dir="ltr"
+            spellCheck={false}
+            value={jsonDraft}
+            aria-label={t.editor.modeJson}
+            disabled={disabled}
+            onChange={(e) => {
+              const next = e.target.value;
+              setJsonDraft(next);
+              const parsed = parseRichTextJson(next);
+              if (!parsed) {
+                setJsonError(t.editor.jsonInvalid);
+                return;
+              }
+              setJsonError(null);
+              onChange(parsed);
+            }}
+          />
+          {jsonError ? (
+            <p className="text-xs text-destructive" role="alert">
+              {jsonError}
+            </p>
+          ) : null}
+        </div>
+      )}
+
+      {mode === "markdown" && (
+        <div className="space-y-2 p-2">
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1.5 text-xs"
+              onClick={() => copyText(markdownDraft)}
+            >
+              <Copy className="size-3.5" />
+              {t.editor.copy}
+            </Button>
+          </div>
+          <textarea
+            className="jabex-editor-raw min-h-40 w-full resize-y rounded-md border border-border/60 bg-muted/30 p-2 font-mono text-xs leading-relaxed"
+            dir="auto"
+            spellCheck={false}
+            value={markdownDraft}
+            aria-label={t.editor.modeMarkdown}
+            disabled={disabled}
+            onChange={(e) => setMarkdownDraft(e.target.value)}
+            onBlur={() => onChange(markdownToDocument(markdownDraft))}
+          />
+        </div>
+      )}
+
+      <Dialog
+        open={jsonPrompt !== null}
+        onOpenChange={(open) => {
+          if (!open && jsonPrompt) {
+            jsonPrompt.resolve("cancel");
+            setJsonPrompt(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.editor.jsonPasteTitle}</DialogTitle>
+            <DialogDescription>{t.editor.jsonPasteDescription}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            {jsonPrompt?.asDocument ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  jsonPrompt.resolve("document");
+                  setJsonPrompt(null);
+                }}
+              >
+                {t.editor.jsonPasteAsDocument}
+              </Button>
+            ) : null}
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                jsonPrompt?.resolve("code");
+                setJsonPrompt(null);
+              }}
+            >
+              {t.editor.jsonPasteAsCode}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                jsonPrompt?.resolve("cancel");
+                setJsonPrompt(null);
+              }}
+            >
+              {t.editor.cancel}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,16 +1,19 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{json, Value};
 
-/// Schema version for card face documents (TipTap-compatible JSON).
-pub const RICH_TEXT_DOCUMENT_VERSION: u32 = 1;
+/// Current write schema version for card face documents (TipTap-compatible JSON).
+///
+/// v1: StarterKit nodes. v2: spoilers, math, tables, highlighted code (ADR 014).
+pub const RICH_TEXT_DOCUMENT_VERSION: u32 = 2;
 
 /// Versioned rich-text document stored on card faces.
 ///
 /// Wire / storage shape:
-/// `{ "version": 1, "type": "doc", "content": [ ...TipTap nodes ] }`
+/// `{ "version": 1|2, type: "doc", "content": [ ...TipTap nodes ] }`
 ///
 /// Legacy plain-text strings (pre-rich-text) are accepted on deserialize and
-/// normalized via [`RichTextDocument::parse_stored`].
+/// normalized via [`RichTextDocument::parse_stored`]. Readers accept v1–v2;
+/// new writes emit [`RICH_TEXT_DOCUMENT_VERSION`].
 #[derive(Debug, Clone, PartialEq)]
 pub struct RichTextDocument {
     pub version: u32,
@@ -165,11 +168,38 @@ fn append_plain_text(node: &Value, out: &mut String) {
     if let Some(text) = node.get("text").and_then(|v| v.as_str()) {
         out.push_str(text);
     }
+
+    // Math leaf nodes store LaTeX in attrs, not text children.
+    if matches!(
+        node.get("type").and_then(|v| v.as_str()),
+        Some("mathInline" | "mathDisplay")
+    ) {
+        if let Some(latex) = node
+            .get("attrs")
+            .and_then(|a| a.get("latex"))
+            .and_then(|v| v.as_str())
+        {
+            out.push_str(latex);
+        }
+        return;
+    }
+
     if let Some(children) = node.get("content").and_then(|v| v.as_array()) {
         for (index, child) in children.iter().enumerate() {
             let block_break = matches!(
                 child.get("type").and_then(|v| v.as_str()),
-                Some("paragraph" | "heading" | "bulletList" | "orderedList" | "listItem" | "codeBlock")
+                Some(
+                    "paragraph"
+                        | "heading"
+                        | "bulletList"
+                        | "orderedList"
+                        | "listItem"
+                        | "codeBlock"
+                        | "spoilerBlock"
+                        | "mathDisplay"
+                        | "table"
+                        | "tableRow"
+                )
             );
             if index > 0 && block_break {
                 out.push('\n');
@@ -198,7 +228,7 @@ mod tests {
     fn legacy_plain_string_parses() {
         let doc = RichTextDocument::parse_stored("سیب");
         assert_eq!(doc.plain_text(), "سیب");
-        assert!(doc.to_storage_string().contains("\"version\":1"));
+        assert!(doc.to_storage_string().contains("\"version\":2"));
     }
 
     #[test]
@@ -212,6 +242,44 @@ mod tests {
         )
         .expect("object");
         assert_eq!(from_object.plain_text(), "x");
+        assert_eq!(from_object.version, 1);
+    }
+
+    #[test]
+    fn accepts_v2_rejects_v3() {
+        let v2 = RichTextDocument::from_json_value(json!({
+            "version": 2,
+            "type": "doc",
+            "content": [{"type": "paragraph"}]
+        }))
+        .expect("v2");
+        assert_eq!(v2.version, 2);
+        assert!(v2.validate().is_ok());
+
+        let err = RichTextDocument::from_json_value(json!({
+            "version": 3,
+            "type": "doc",
+            "content": []
+        }));
+        assert!(err.is_err());
+    }
+
+    #[test]
+    fn math_nodes_contribute_plain_text() {
+        let doc = RichTextDocument::from_json_value(json!({
+            "version": 2,
+            "type": "doc",
+            "content": [{
+                "type": "paragraph",
+                "content": [{
+                    "type": "mathInline",
+                    "attrs": { "latex": "E=mc^2" }
+                }]
+            }]
+        }))
+        .expect("math doc");
+        assert_eq!(doc.plain_text(), "E=mc^2");
+        assert!(!doc.is_blank());
     }
 
     #[test]

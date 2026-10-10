@@ -133,7 +133,12 @@ export function CardAttachmentsPanel({ cardId }: CardAttachmentsPanelProps) {
         <h3 className="text-sm font-medium">{t.attachments.title}</h3>
         <p className="text-xs text-muted-foreground">{t.attachments.hint}</p>
       </div>
-      <AttachmentPicker loading={uploading} onFiles={handleFiles} />
+      <AttachmentPicker
+        loading={uploading}
+        onFiles={async (files) => {
+          await handleFiles(files);
+        }}
+      />
       <VoiceRecorder
         disabled={loading}
         saving={uploading}
