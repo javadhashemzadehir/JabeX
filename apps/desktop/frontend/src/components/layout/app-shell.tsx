@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { useProfileStore } from "@/features/profiles/profile-store";
 
 const SIDEBAR_STORAGE_KEY = "jabex.sidebar.collapsed";
 
@@ -40,6 +41,11 @@ function useSidebarCollapsed() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { collapsed, toggle } = useSidebarCollapsed();
+  const hydrateProfiles = useProfileStore((s) => s.hydrate);
+
+  useEffect(() => {
+    void hydrateProfiles();
+  }, [hydrateProfiles]);
 
   return (
     <div className="flex h-svh overflow-hidden bg-background text-foreground">

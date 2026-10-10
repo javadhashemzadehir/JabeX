@@ -15,12 +15,12 @@
 
 ## Phase 1 — Core Leitner MVP
 
-- [ ] Deck create / rename / delete
+- [x] Deck create / rename / delete
 - [ ] Card CRUD (front / back)
-- [ ] Local persistence (SQLite or chosen engine)
+- [x] Local persistence (SQLite or chosen engine)
 - [ ] Review session with box promotion/demotion
 - [ ] Due-card queue
-- [ ] Empty states optimized for ≤30s first deck / ≤2m first review
+- [x] Empty states optimized for ≤30s first deck / ≤2m first review (decks empty state)
 
 ## Phase 1.5 — Local profiles & backup
 

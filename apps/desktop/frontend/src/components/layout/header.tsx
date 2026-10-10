@@ -9,6 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ProfileSwitcher } from "@/features/profiles/profile-switcher";
 import { useLocale, useTranslations } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +57,7 @@ export function Header({
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
+        <ProfileSwitcher />
         <LanguageSwitcher />
         <ThemeToggle />
       </div>

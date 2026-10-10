@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -41,9 +43,13 @@ export function HomePanel() {
               {t.home.profiles}: {active.displayName}
               {profiles.length > 1 ? ` (${profiles.length})` : ""}
             </p>
-          ) : (
-            <p className="text-sm font-medium text-foreground/90">{t.home.cta}</p>
-          )}
+          ) : null}
+          <div className="space-y-2">
+            <Button asChild>
+              <Link href="/decks">{t.home.cta}</Link>
+            </Button>
+            <p className="text-xs text-muted-foreground">{t.home.ctaHint}</p>
+          </div>
         </CardContent>
       </Card>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BookOpen, Home, Layers, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations, useLocale } from "@/hooks/use-locale";
@@ -11,15 +13,22 @@ import {
 } from "@/components/ui/tooltip";
 
 const items = [
-  { key: "home" as const, icon: Home, href: "#" },
-  { key: "decks" as const, icon: Layers, href: "#" },
+  { key: "home" as const, icon: Home, href: "/" },
+  { key: "decks" as const, icon: Layers, href: "/decks" },
   { key: "review" as const, icon: BookOpen, href: "#" },
   { key: "settings" as const, icon: Settings, href: "#" },
 ];
 
+function isActivePath(pathname: string | null, href: string) {
+  if (!pathname || href === "#") return false;
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function Sidebar({ collapsed }: { collapsed: boolean }) {
   const t = useTranslations();
   const { direction } = useLocale();
+  const pathname = usePathname();
   const tooltipSide = direction === "rtl" ? "left" : "right";
 
   return (
@@ -64,27 +73,52 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
       <nav className="flex flex-1 flex-col gap-1 p-3" aria-label={t.sidebar.section}>
         {items.map((item, index) => {
           const Icon = item.icon;
-          const active = item.key === "home";
+          const active = isActivePath(pathname, item.href);
           const label = t.nav[item.key];
-          const link = (
-            <motion.a
-              key={item.key}
-              href={item.href}
-              initial={{ opacity: 0, x: direction === "rtl" ? 8 : -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.05 * index, duration: 0.25 }}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
-                active
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
-              )}
-              aria-current={active ? "page" : undefined}
-            >
+          const className = cn(
+            "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+            active
+              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+              : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
+          );
+
+          const content = (
+            <>
               <Icon className="size-4 shrink-0" />
               <span className={cn("truncate", collapsed && "sr-only")}>{label}</span>
-            </motion.a>
+            </>
           );
+
+          const link =
+            item.href === "#" ? (
+              <motion.a
+                key={item.key}
+                href="#"
+                initial={{ opacity: 0, x: direction === "rtl" ? 8 : -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 * index, duration: 0.25 }}
+                className={className}
+                aria-disabled="true"
+                onClick={(event) => event.preventDefault()}
+              >
+                {content}
+              </motion.a>
+            ) : (
+              <motion.div
+                key={item.key}
+                initial={{ opacity: 0, x: direction === "rtl" ? 8 : -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 * index, duration: 0.25 }}
+              >
+                <Link
+                  href={item.href}
+                  className={className}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {content}
+                </Link>
+              </motion.div>
+            );
 
           if (!collapsed) return link;
 
