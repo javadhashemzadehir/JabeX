@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AppShell } from "@/components/layout/app-shell";
 import { AppProviders } from "@/components/providers/app-providers";
 import { DEFAULT_LOCALE, getDirection } from "@/lib/i18n/config";
 import { comfortaa, yekanBakh } from "@/lib/fonts";
@@ -24,7 +25,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-svh font-sans antialiased">
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          <AppShell>{children}</AppShell>
+        </AppProviders>
       </body>
     </html>
   );

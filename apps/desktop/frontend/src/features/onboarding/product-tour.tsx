@@ -13,7 +13,17 @@ import { useOnboardingTourStore } from "./tour-store";
 import { readTourTheme } from "./tour-theme";
 import { waitForSelector } from "./wait-for-selector";
 
-async function ensurePath(pathname: string, href: string, router: { push: (url: string) => void }) {
+function livePathname(fallback: string) {
+  if (typeof window === "undefined") return fallback;
+  return window.location.pathname || fallback;
+}
+
+async function ensurePath(
+  fallbackPathname: string,
+  href: string,
+  router: { push: (url: string) => void },
+) {
+  const pathname = livePathname(fallbackPathname);
   if (pathname === href || pathname.startsWith(`${href}/`)) return;
   router.push(href);
 }
@@ -34,7 +44,12 @@ export function ProductTour() {
   const initialSetupPending = useProfileStore((s) => s.initialSetupPending);
   const profileId = useProfileStore((s) => s.active?.id);
   const startToken = useOnboardingTourStore((s) => s.startToken);
-  const autoStartedForProfile = useRef<string | null>(null);
+  const startedToken = useOnboardingTourStore((s) => s.startedToken);
+  const autoStartedProfileId = useOnboardingTourStore((s) => s.autoStartedProfileId);
+  const dismissed = useOnboardingTourStore((s) => s.dismissed);
+  const markStarted = useOnboardingTourStore((s) => s.markStarted);
+  const markAutoStarted = useOnboardingTourStore((s) => s.markAutoStarted);
+  const dismissTour = useOnboardingTourStore((s) => s.dismiss);
 
   // CSS variables; re-read each render so light/dark switches apply.
   const theme = readTourTheme();
@@ -48,6 +63,7 @@ export function ProductTour() {
         placement: "center",
         title: tour.welcomeTitle,
         content: tour.welcomeBody,
+        isFixed: true,
         skipBeacon: true,
         before: async () => {
           await ensurePath(pathnameRef.current, "/", router);
@@ -60,6 +76,7 @@ export function ProductTour() {
         placement: direction === "rtl" ? "left" : "right",
         title: tour.decksTitle,
         content: tour.decksBody,
+        isFixed: true,
         skipBeacon: true,
       },
       {
@@ -68,6 +85,7 @@ export function ProductTour() {
         placement: "bottom",
         title: tour.createDeckTitle,
         content: tour.createDeckBody,
+        isFixed: true,
         skipBeacon: true,
         before: async () => {
           await ensurePath(pathnameRef.current, "/decks", router);
@@ -80,6 +98,7 @@ export function ProductTour() {
         placement: "bottom",
         title: tour.createCardTitle,
         content: tour.createCardBody,
+        isFixed: true,
         skipBeacon: true,
         before: async () => {
           const openDeck = document.querySelector<HTMLAnchorElement>(
@@ -107,6 +126,7 @@ export function ProductTour() {
         placement: direction === "rtl" ? "left" : "right",
         title: tour.reviewTitle,
         content: tour.reviewBody,
+        isFixed: true,
         skipBeacon: true,
       },
       {
@@ -115,6 +135,7 @@ export function ProductTour() {
         placement: direction === "rtl" ? "left" : "right",
         title: tour.settingsTitle,
         content: tour.settingsBody,
+        isFixed: true,
         skipBeacon: true,
       },
       {
@@ -123,6 +144,7 @@ export function ProductTour() {
         placement: "top",
         title: tour.appSettingsTitle,
         content: tour.appSettingsBody,
+        isFixed: true,
         skipBeacon: true,
         before: async () => {
           await ensurePath(pathnameRef.current, "/settings", router);
@@ -135,6 +157,7 @@ export function ProductTour() {
         placement: "bottom",
         title: tour.appearanceTitle,
         content: tour.appearanceBody,
+        isFixed: true,
         skipBeacon: true,
       },
       {
@@ -143,6 +166,7 @@ export function ProductTour() {
         placement: "center",
         title: tour.doneTitle,
         content: tour.doneBody,
+        isFixed: true,
         skipBeacon: true,
         before: async () => {
           await ensurePath(pathnameRef.current, "/", router);
@@ -152,9 +176,9 @@ export function ProductTour() {
     ];
   }, [t, direction, router]);
 
-  const { Tour, controls, on, state } = useJoyride({
+  const { Tour, controls, on } = useJoyride({
     continuous: true,
-    scrollToFirstStep: true,
+    scrollToFirstStep: false,
     steps,
     locale: {
       back: t.onboarding.tour.back,
@@ -167,12 +191,15 @@ export function ProductTour() {
     options: {
       buttons: ["back", "skip", "primary"],
       closeButtonAction: "skip",
+      blockTargetInteraction: true,
       overlayClickAction: false,
       showProgress: true,
       skipBeacon: true,
+      // Scrolling a sidebar target can leave the tooltip at opacity 0, so Next/Skip never appear.
+      skipScroll: true,
       targetWaitTimeout: 5000,
       beforeTimeout: 8000,
-      zIndex: 80,
+      zIndex: 10000,
       primaryColor: theme.primaryColor,
       backgroundColor: theme.backgroundColor,
       textColor: theme.textColor,
@@ -183,28 +210,31 @@ export function ProductTour() {
   });
 
   useEffect(() => {
-    return on("tour:end", (data) => {
-      if (!profileId) return;
-      if (
-        data.status === STATUS.FINISHED ||
-        data.status === STATUS.SKIPPED
-      ) {
-        markProductTourCompleted(profileId);
-      }
+    return on("tour:end", () => {
+      const status = controls.info().status;
+      if (status !== STATUS.FINISHED && status !== STATUS.SKIPPED) return;
+      if (profileId) markProductTourCompleted(profileId);
+      dismissTour();
     });
-  }, [on, profileId]);
+  }, [on, profileId, controls, dismissTour]);
 
-  // Auto-start once per profile after first-run setup (empty library path).
+  // Auto-start once per profile after first-run setup.
+  // The claim lives in the store so a route change cannot start the tour again.
   useEffect(() => {
     if (!desktop || loading || initialSetupPending || !profileId) return;
-    if (isProductTourCompleted(profileId)) return;
-    if (autoStartedForProfile.current === profileId) return;
-    if (state.status === STATUS.RUNNING || state.status === STATUS.WAITING) {
-      return;
-    }
-    autoStartedForProfile.current = profileId;
+    if (dismissed || isProductTourCompleted(profileId)) return;
+    if (autoStartedProfileId === profileId) return;
     const timer = window.setTimeout(() => {
-      controls.start();
+      const tour = useOnboardingTourStore.getState();
+      if (tour.dismissed || tour.autoStartedProfileId === profileId) return;
+      if (isProductTourCompleted(profileId)) return;
+      const status = controls.info().status;
+      if (status === STATUS.RUNNING || status === STATUS.WAITING) {
+        markAutoStarted(profileId);
+        return;
+      }
+      markAutoStarted(profileId);
+      controls.start(0);
     }, 450);
     return () => window.clearTimeout(timer);
   }, [
@@ -212,15 +242,20 @@ export function ProductTour() {
     loading,
     initialSetupPending,
     profileId,
+    dismissed,
+    autoStartedProfileId,
     controls,
-    state.status,
+    markAutoStarted,
   ]);
 
-  // Explicit restart from Home / Settings.
+  // Explicit restart from Home / Settings. Ignore a token we already started,
+  // otherwise remounting the shell replays the tour from step one.
   useEffect(() => {
-    if (startToken === 0 || !desktop || !profileId) return;
-    controls.start();
-  }, [startToken, desktop, profileId, controls]);
+    if (startToken === 0 || startToken === startedToken) return;
+    if (!desktop || !profileId) return;
+    markStarted(startToken);
+    controls.start(0);
+  }, [startToken, startedToken, desktop, profileId, controls, markStarted]);
 
   if (!desktop) return null;
 
