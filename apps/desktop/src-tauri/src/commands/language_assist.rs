@@ -79,9 +79,8 @@ pub async fn set_card_language_assist(
 pub async fn list_tts_voices(state: State<'_, AppState>) -> Result<Vec<TtsVoiceInfo>, JabeXError> {
     tracing::debug!(command = "list_tts_voices", "command invoked");
     let app_root = state.app_paths.root.clone();
-    let (db, media) = state.with_session(|session| {
-        Ok((session.db.clone(), session.media.clone()))
-    })?;
+    let (db, media) =
+        state.with_session(|session| Ok((session.db.clone(), session.media.clone())))?;
     tokio::task::spawn_blocking(move || {
         crate::application::LanguageAssistService::from_session(db, media, app_root)
             .list_tts_voices()

@@ -281,8 +281,7 @@ impl AppState {
             let session = self.session.read();
             (session.db.clone(), session.media.clone())
         };
-        let service =
-            LanguageAssistService::from_session(db, media, self.app_paths.root.clone());
+        let service = LanguageAssistService::from_session(db, media, self.app_paths.root.clone());
         service.process_card(card_id, force)
     }
 
@@ -385,9 +384,8 @@ impl AppState {
     }
 
     pub fn cancel_piper_generation(&self) {
-        let piper = crate::infrastructure::providers::PiperProvider::from_app_root(
-            &self.app_paths.root,
-        );
+        let piper =
+            crate::infrastructure::providers::PiperProvider::from_app_root(&self.app_paths.root);
         piper.cancel_current();
     }
 

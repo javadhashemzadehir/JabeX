@@ -1,8 +1,8 @@
 //! Piper TTS provider — local binary + optional voice models (no cloud).
 
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
-use std::io::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -177,9 +177,8 @@ impl PiperProvider {
     fn temp_wav_path() -> JabeXResult<PathBuf> {
         let mut dir = std::env::temp_dir();
         dir.push("jabex-tts");
-        std::fs::create_dir_all(&dir).map_err(|e| {
-            JabeXError::Filesystem(format!("failed to create temp TTS dir: {e}"))
-        })?;
+        std::fs::create_dir_all(&dir)
+            .map_err(|e| JabeXError::Filesystem(format!("failed to create temp TTS dir: {e}")))?;
         let nanos = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map(|d| d.as_nanos())
@@ -310,9 +309,8 @@ impl TtsProvider for PiperProvider {
         if !self.voices_dir.is_dir() {
             return Ok(voices);
         }
-        let entries = std::fs::read_dir(&self.voices_dir).map_err(|e| {
-            JabeXError::Filesystem(format!("failed to read voices dir: {e}"))
-        })?;
+        let entries = std::fs::read_dir(&self.voices_dir)
+            .map_err(|e| JabeXError::Filesystem(format!("failed to read voices dir: {e}")))?;
         for entry in entries.flatten() {
             let lang_path = entry.path();
             if !lang_path.is_dir() {

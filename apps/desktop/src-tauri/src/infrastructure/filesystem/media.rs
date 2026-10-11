@@ -45,14 +45,12 @@ impl LocalMediaStorage {
     fn write_relative(&self, relative: &str, bytes: &[u8]) -> JabeXResult<()> {
         let absolute = self.absolute_path(relative);
         if let Some(parent) = absolute.parent() {
-            fs::create_dir_all(parent).map_err(|e| {
-                JabeXError::Filesystem(format!("failed to create media dir: {e}"))
-            })?;
+            fs::create_dir_all(parent)
+                .map_err(|e| JabeXError::Filesystem(format!("failed to create media dir: {e}")))?;
         }
         self.ensure_under_media(&absolute)?;
-        let mut file = fs::File::create(&absolute).map_err(|e| {
-            JabeXError::Filesystem(format!("failed to create media file: {e}"))
-        })?;
+        let mut file = fs::File::create(&absolute)
+            .map_err(|e| JabeXError::Filesystem(format!("failed to create media file: {e}")))?;
         file.write_all(bytes)
             .map_err(|e| JabeXError::Filesystem(format!("failed to write media file: {e}")))?;
         Ok(())
@@ -213,12 +211,7 @@ impl PronunciationAudioStorage for LocalMediaStorage {
         Ok(relative)
     }
 
-    fn store_cached_audio(
-        &self,
-        hash: &str,
-        bytes: &[u8],
-        extension: &str,
-    ) -> JabeXResult<String> {
+    fn store_cached_audio(&self, hash: &str, bytes: &[u8], extension: &str) -> JabeXResult<String> {
         let ext = sanitize_audio_ext(extension);
         let safe_hash = hash
             .chars()

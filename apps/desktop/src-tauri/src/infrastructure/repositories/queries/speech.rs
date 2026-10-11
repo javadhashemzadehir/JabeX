@@ -25,11 +25,13 @@ ON CONFLICT(hash) DO UPDATE SET
     duration_ms = excluded.duration_ms,
     updated_at = excluded.updated_at";
 
-pub const CARD_AUDIO_FIND_BY_HASH: &str = "SELECT id, card_id, language, provider, voice, file_path,
+pub const CARD_AUDIO_FIND_BY_HASH: &str =
+    "SELECT id, card_id, language, provider, voice, file_path,
         duration_ms, hash, created_at, updated_at
  FROM card_audio WHERE hash = ?1 LIMIT 1";
 
-pub const CARD_AUDIO_FIND_BY_CARD: &str = "SELECT id, card_id, language, provider, voice, file_path,
+pub const CARD_AUDIO_FIND_BY_CARD: &str =
+    "SELECT id, card_id, language, provider, voice, file_path,
         duration_ms, hash, created_at, updated_at
  FROM card_audio WHERE card_id = ?1 ORDER BY created_at DESC";
 

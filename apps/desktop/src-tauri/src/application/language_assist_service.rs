@@ -129,9 +129,7 @@ where
         SUPPORTED_SPEECH_LANGUAGES.to_vec()
     }
 
-    pub fn list_tts_voices(
-        &self,
-    ) -> JabeXResult<Vec<crate::domain::speech::TtsVoiceInfo>> {
+    pub fn list_tts_voices(&self) -> JabeXResult<Vec<crate::domain::speech::TtsVoiceInfo>> {
         let profile = self.load_settings()?;
         let piper = Arc::new(PiperProvider::from_app_root(&self.app_root));
         let sapi = Arc::new(WindowsSapiProvider::new());
@@ -397,9 +395,9 @@ where
             .store_cached_audio(&hash, &audio.bytes, &audio.extension)?;
 
         // Also mirror under card id for quick review lookup.
-        let card_path =
-            self.audio
-                .store_pronunciation(card_id, &audio.bytes, &audio.extension)?;
+        let card_path = self
+            .audio
+            .store_pronunciation(card_id, &audio.bytes, &audio.extension)?;
 
         let now = now_utc();
         let row = CardAudio {

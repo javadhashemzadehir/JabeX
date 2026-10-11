@@ -64,8 +64,7 @@ impl SqliteLanguagePreferencesRepository {
 
 fn map_pref(row: &rusqlite::Row<'_>) -> rusqlite::Result<LanguagePreference> {
     let provider_raw: String = row.get("provider")?;
-    let provider: TtsProviderKind =
-        decode_enum(&provider_raw).unwrap_or(TtsProviderKind::Auto);
+    let provider: TtsProviderKind = decode_enum(&provider_raw).unwrap_or(TtsProviderKind::Auto);
     Ok(LanguagePreference {
         id: get_uuid(row, "id")?,
         language: row.get("language")?,

@@ -21,9 +21,8 @@ impl WindowsSapiProvider {
     fn temp_wav_path() -> JabeXResult<std::path::PathBuf> {
         let mut dir = std::env::temp_dir();
         dir.push("jabex-tts");
-        std::fs::create_dir_all(&dir).map_err(|e| {
-            JabeXError::Filesystem(format!("failed to create temp TTS dir: {e}"))
-        })?;
+        std::fs::create_dir_all(&dir)
+            .map_err(|e| JabeXError::Filesystem(format!("failed to create temp TTS dir: {e}")))?;
         let nanos = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map(|d| d.as_nanos())
@@ -148,9 +147,8 @@ $synth.Dispose()
                 )));
             }
 
-            let bytes = std::fs::read(&out).map_err(|e| {
-                JabeXError::Filesystem(format!("failed to read SAPI wav: {e}"))
-            })?;
+            let bytes = std::fs::read(&out)
+                .map_err(|e| JabeXError::Filesystem(format!("failed to read SAPI wav: {e}")))?;
             let _ = std::fs::remove_file(&out);
             if bytes.len() < 44 {
                 return Err(JabeXError::Internal(
@@ -158,11 +156,7 @@ $synth.Dispose()
                 ));
             }
 
-            Ok(AudioFile::wav(
-                bytes,
-                "windows_sapi",
-                request.voice.clone(),
-            ))
+            Ok(AudioFile::wav(bytes, "windows_sapi", request.voice.clone()))
         }
     }
 

@@ -39,12 +39,7 @@ impl OfflineTranslationProvider {
             .to_ascii_lowercase()
     }
 
-    fn lookup_cache(
-        &self,
-        text: &str,
-        source: &str,
-        target: &str,
-    ) -> JabeXResult<Option<String>> {
+    fn lookup_cache(&self, text: &str, source: &str, target: &str) -> JabeXResult<Option<String>> {
         Ok(self
             .cache
             .find(text, source, target)?

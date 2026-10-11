@@ -117,8 +117,7 @@ pub trait TtsProvider: Send + Sync {
 }
 
 /// Supported study languages for speech / packs UI.
-pub const SUPPORTED_SPEECH_LANGUAGES: &[&str] =
-    &["en", "fa", "fr", "de", "es", "ar", "ja", "zh"];
+pub const SUPPORTED_SPEECH_LANGUAGES: &[&str] = &["en", "fa", "fr", "de", "es", "ar", "ja", "zh"];
 
 /// Per-language voice preference row.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

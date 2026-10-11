@@ -4,9 +4,7 @@ use std::sync::Arc;
 
 use crate::domain::errors::{JabeXError, JabeXResult};
 use crate::domain::language_assist::{SpeechAudio, SpeechProvider};
-use crate::domain::speech::{
-    AudioFile, TtsProvider, TtsProviderKind, TtsRequest, TtsVoiceInfo,
-};
+use crate::domain::speech::{AudioFile, TtsProvider, TtsProviderKind, TtsRequest, TtsVoiceInfo};
 
 use super::piper::PiperProvider;
 use super::windows_sapi::WindowsSapiProvider;
@@ -95,11 +93,7 @@ impl SpeechProvider for CascadingTtsProvider {
 pub struct BrowserDeferredSpeechProvider;
 
 impl SpeechProvider for BrowserDeferredSpeechProvider {
-    fn synthesize(
-        &self,
-        _text: &str,
-        _language: &str,
-    ) -> JabeXResult<SpeechAudio> {
+    fn synthesize(&self, _text: &str, _language: &str) -> JabeXResult<SpeechAudio> {
         Err(JabeXError::Validation(
             "Browser Speech API is handled by the frontend".into(),
         ))
@@ -119,14 +113,8 @@ mod tests {
             dir.path().join("voices"),
         ));
         let sapi = Arc::new(WindowsSapiProvider::new());
-        let cascading = CascadingTtsProvider::new(
-            TtsProviderKind::Auto,
-            piper,
-            sapi,
-            1.0,
-            1.0,
-            None,
-        );
+        let cascading =
+            CascadingTtsProvider::new(TtsProviderKind::Auto, piper, sapi, 1.0, 1.0, None);
         // On non-Windows this fails; on Windows SAPI may succeed — either is fine.
         let _ = cascading.synthesize_request("hello", "en");
     }
