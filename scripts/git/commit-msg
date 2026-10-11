@@ -1,0 +1,40 @@
+#!/bin/sh
+# Strip AI assistant attribution trailers from commit messages.
+# Preserves legitimate human Co-authored-by trailers.
+#
+# Enforced by repository policy: docs/MAINTENANCE/GIT_COMMIT_POLICY.md
+
+commit_msg_file=$1
+
+if [ -z "$commit_msg_file" ] || [ ! -f "$commit_msg_file" ]; then
+  exit 0
+fi
+
+tmp="${commit_msg_file}.jabex-strip.$$"
+
+# Remove AI assistant co-author trailers and known assistant emails only.
+# Do not alter subjects, bodies, or human co-authors.
+grep -viE '^[[:space:]]*Co-authored-by:[[:space:]]*Cursor([[:space:]]|<|$)' "$commit_msg_file" \
+  | grep -viE '^[[:space:]]*Co-authored-by:.*[Cc]ursor' \
+  | grep -viE 'cursoragent@cursor\.com' \
+  > "$tmp"
+
+# Collapse runs of blank lines left after trailer removal (keep a single blank).
+# Portable awk: trim trailing blank lines at EOF only via rewrite.
+awk '
+  BEGIN { blank = 0 }
+  /^[[:space:]]*$/ { blank++; next }
+  {
+    if (blank > 0) {
+      # Keep at most one blank line between content blocks
+      print ""
+      blank = 0
+    }
+    print
+  }
+' "$tmp" > "${tmp}.norm"
+
+mv "${tmp}.norm" "$commit_msg_file"
+rm -f "$tmp"
+
+exit 0

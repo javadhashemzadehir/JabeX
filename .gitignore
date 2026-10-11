@@ -9,11 +9,12 @@ apps/desktop/frontend/out/
 # Tauri / Rust
 apps/desktop/src-tauri/target/
 apps/desktop/src-tauri/gen/
+apps/desktop/src-tauri/WixTools/
+apps/desktop/src-tauri/nsis/
 
-# Env
+# Env / secrets
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
 
 # Logs & debug
@@ -26,17 +27,28 @@ yarn-error.log*
 # Test / coverage
 coverage/
 .nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+*.lcov
 
 # OS / editor
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 .idea/
-.vscode/*
-!.vscode/extensions.json
+.vs/
+*.user
+*.suo
 *.swp
 *.swo
+*~
+.vscode/*
+!.vscode/extensions.json
 
-# Build
+# Build / release artifacts
 dist/
 release/
 build/
@@ -46,11 +58,30 @@ build/
 *.db
 *.sqlite
 *.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
 
-# Misc
+# Misc caches
 .turbo/
 .cache/
 .tmp/
+.temp/
+*.tmp
+*.temp
+*.orig
+*.rej
+*.bak
+
+# Python (local tooling / scripts)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.python-version
+
+# Local Git hooks directory (machine-local only; not shared)
+.githooks/
 
 # ==================================================
 # Local AI Assistant / IDE Configuration
@@ -76,3 +107,9 @@ AGENTS.local.md
 # Other AI coding assistants
 .claude/
 .windsurf/
+.codex/
+.gemini/
+.aider*
+.clinerules
+.roo/
+.trae/

@@ -20,27 +20,27 @@ Legitimate human `Co-authored-by` trailers (real people collaborating on a chang
 
 ## Enforcement
 
-This repository uses a version-controlled `commit-msg` hook:
+Install the repository `commit-msg` hook into your local Git hooks directory. The hook runs before a commit is finalized and **automatically removes** AI assistant attribution trailers. It does not block normal commits and does not modify source files.
 
 | Path | Role |
 | ---- | ---- |
-| `.githooks/commit-msg` | Canonical hook (tracked in Git) |
-| `core.hooksPath` | Set to `.githooks` for this repository |
+| `scripts/git/commit-msg` | Canonical hook template (tracked) |
+| `.git/hooks/commit-msg` | Active local hook (not tracked) |
+| `.githooks/` | Ignored local override directory — do not commit |
 
-The hook runs before a commit is finalized and **automatically removes** AI assistant attribution trailers from the commit message. It does not block normal commits and does not modify source files.
+Do **not** set `core.hooksPath` to `.githooks` in this repository. Use the default Git hooks path (`.git/hooks`).
 
 ### One-time setup (new clones)
 
-After cloning, ensure the repository uses the tracked hooks directory:
-
 ```bash
-git config core.hooksPath .githooks
+cp scripts/git/commit-msg .git/hooks/commit-msg
+chmod +x .git/hooks/commit-msg
 ```
 
-On Unix-like systems, ensure the hook is executable if your clone does not preserve the mode:
+On Windows (Git Bash):
 
 ```bash
-chmod +x .githooks/commit-msg
+cp scripts/git/commit-msg .git/hooks/commit-msg
 ```
 
 ## Related
