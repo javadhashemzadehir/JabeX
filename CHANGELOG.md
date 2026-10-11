@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-11
+
+### Fixed
+
+- Guided tour stays on the current step when you press Next or Skip. Leaving the decks step no longer restarts the walkthrough.
+
 ## [0.1.1] - 2026-10-10
 
 ### Changed
@@ -42,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Least-privilege Tauri capabilities; user data stays on device
 - No auto-updater in this release (user-downloaded builds only)
 
-[Unreleased]: https://github.com/javadhashemzadehir/JabeX/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/javadhashemzadehir/JabeX/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.2
 [0.1.1]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.1
 [0.1.0]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.0

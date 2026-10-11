@@ -1,6 +1,6 @@
 {
   "name": "@jabex/desktop",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "JabeX desktop host — Tauri entry for frontend + Rust",
   "scripts": {

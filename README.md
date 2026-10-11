@@ -54,9 +54,9 @@ pnpm tauri:dev
 
 | Distribution | File |
 |--------------|------|
-| NSIS installer (recommended) | `JabeX_0.1.1_x64-setup.exe` |
-| MSI installer | `JabeX_0.1.1_x64_en-US.msi` |
-| Portable ZIP (no admin) | `JabeX-0.1.1-portable.zip` |
+| NSIS installer (recommended) | `JabeX_0.1.2_x64-setup.exe` |
+| MSI installer | `JabeX_0.1.2_x64_en-US.msi` |
+| Portable ZIP (no admin) | `JabeX-0.1.2-portable.zip` |
 
 Checksums: `SHA256SUMS.txt` next to the artifacts. Installers are **unsigned** for now — SmartScreen may warn; choose “More info” → “Run anyway” when you trust the build.
 
@@ -74,9 +74,9 @@ Artifacts:
 
 ```
 release/
-├── JabeX_0.1.1_x64-setup.exe
-├── JabeX_0.1.1_x64_en-US.msi
-├── JabeX-0.1.1-portable.zip
+├── JabeX_0.1.2_x64-setup.exe
+├── JabeX_0.1.2_x64_en-US.msi
+├── JabeX-0.1.2-portable.zip
 └── SHA256SUMS.txt
 ```
 
@@ -87,7 +87,7 @@ pnpm portable:build
 ```
 
 ```
-dist/JabeX-0.1.1-portable/JabeX.exe
+dist/JabeX-0.1.2-portable/JabeX.exe
 ```
 
 See [Packaging](./docs/PACKAGING/PACKAGING.md) and [Release checklist](./docs/RELEASE_CHECKLIST.md). Tag `v*` to publish installers via GitHub Actions.
