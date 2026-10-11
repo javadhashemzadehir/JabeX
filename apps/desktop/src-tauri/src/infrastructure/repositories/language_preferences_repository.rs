@@ -32,7 +32,7 @@ impl SqliteLanguagePreferencesRepository {
     pub fn list(&self) -> JabeXResult<Vec<LanguagePreference>> {
         self.db.with_conn(|conn| {
             let mut stmt = conn.prepare_cached(LANGUAGE_PREF_LIST)?;
-            let rows = stmt.query_map([], |row| map_pref(row))?;
+            let rows = stmt.query_map([], map_pref)?;
             let mut out = Vec::new();
             for row in rows {
                 out.push(row?);

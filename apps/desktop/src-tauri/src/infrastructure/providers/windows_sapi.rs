@@ -3,10 +3,14 @@
 //! Uses PowerShell + System.Speech.Synthesis so we avoid heavy COM crates while
 //! remaining compatible with voices already installed on Windows.
 
+#[cfg(windows)]
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::domain::errors::{JabeXError, JabeXResult};
-use crate::domain::speech::{AudioFile, TtsProvider, TtsProviderKind, TtsRequest, TtsVoiceInfo};
+#[cfg(windows)]
+use crate::domain::speech::TtsProviderKind;
+use crate::domain::speech::{AudioFile, TtsProvider, TtsRequest, TtsVoiceInfo};
+#[cfg(windows)]
 use crate::infrastructure::process;
 
 #[derive(Debug, Default, Clone)]
@@ -69,9 +73,9 @@ impl TtsProvider for WindowsSapiProvider {
         #[cfg(not(windows))]
         {
             let _ = request;
-            return Err(JabeXError::Validation(
+            Err(JabeXError::Validation(
                 "Windows SAPI is only available on Windows".into(),
-            ));
+            ))
         }
 
         #[cfg(windows)]
@@ -163,7 +167,7 @@ $synth.Dispose()
     fn list_voices(&self) -> JabeXResult<Vec<TtsVoiceInfo>> {
         #[cfg(not(windows))]
         {
-            return Ok(Vec::new());
+            Ok(Vec::new())
         }
 
         #[cfg(windows)]
@@ -226,6 +230,7 @@ $synth.Dispose()
     }
 }
 
+#[cfg(windows)]
 fn culture_for_language(language: &str) -> &'static str {
     match language
         .split(['-', '_'])
