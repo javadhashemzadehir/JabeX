@@ -139,7 +139,7 @@ export function LanguageAssistSettingsPanel() {
           </div>
           <select
             id="tts-voice"
-            className="h-9 max-w-[14rem] rounded-md border border-input bg-background px-2 text-sm"
+            className="h-9 max-w-56 rounded-md border border-input bg-background px-2 text-sm"
             value={settings.preferredVoice ?? ""}
             disabled={saving}
             onChange={(e) => {
