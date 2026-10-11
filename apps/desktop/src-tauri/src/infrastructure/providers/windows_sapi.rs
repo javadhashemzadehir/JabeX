@@ -3,11 +3,11 @@
 //! Uses PowerShell + System.Speech.Synthesis so we avoid heavy COM crates while
 //! remaining compatible with voices already installed on Windows.
 
-use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::domain::errors::{JabeXError, JabeXResult};
 use crate::domain::speech::{AudioFile, TtsProvider, TtsProviderKind, TtsRequest, TtsVoiceInfo};
+use crate::infrastructure::process;
 
 #[derive(Debug, Default, Clone)]
 pub struct WindowsSapiProvider;
@@ -126,10 +126,12 @@ $synth.Dispose()
 "#
             );
 
-            let output = Command::new("powershell")
+            let output = process::command("powershell")
                 .args([
                     "-NoProfile",
                     "-NonInteractive",
+                    "-WindowStyle",
+                    "Hidden",
                     "-ExecutionPolicy",
                     "Bypass",
                     "-Command",
@@ -181,10 +183,12 @@ $synth.GetInstalledVoices() | ForEach-Object {
 }
 $synth.Dispose()
 "#;
-            let output = Command::new("powershell")
+            let output = process::command("powershell")
                 .args([
                     "-NoProfile",
                     "-NonInteractive",
+                    "-WindowStyle",
+                    "Hidden",
                     "-ExecutionPolicy",
                     "Bypass",
                     "-Command",

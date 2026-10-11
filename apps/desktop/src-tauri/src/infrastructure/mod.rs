@@ -2,6 +2,7 @@ pub mod autostart;
 pub mod database;
 pub mod error_map;
 pub mod filesystem;
+pub mod process;
 pub mod providers;
 pub mod registry;
 pub mod repositories;

@@ -4,11 +4,11 @@
 //! `argos-translate` CLI locally.
 
 use std::collections::HashMap;
-use std::process::Command;
 
 use crate::domain::errors::{JabeXError, JabeXResult};
 use crate::domain::language_assist::{TranslationProvider, TranslationResult};
 use crate::domain::speech::TranslationCacheEntry;
+use crate::infrastructure::process;
 use crate::infrastructure::repositories::SqliteTranslationCacheRepository;
 use crate::shared::ids::create_id;
 use crate::shared::time::now_utc;
@@ -71,7 +71,7 @@ impl OfflineTranslationProvider {
     }
 
     fn try_argos(text: &str, source: &str, target: &str) -> Option<String> {
-        let output = Command::new("argos-translate")
+        let output = process::command("argos-translate")
             .args(["--from-lang", source, "--to-lang", target, text])
             .output()
             .ok()?;

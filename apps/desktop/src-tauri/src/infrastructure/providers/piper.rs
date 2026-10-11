@@ -1,7 +1,7 @@
 //! Piper TTS provider — local binary + optional voice models (no cloud).
 
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 use std::io::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -11,6 +11,7 @@ use parking_lot::Mutex;
 
 use crate::domain::errors::{JabeXError, JabeXResult};
 use crate::domain::speech::{AudioFile, TtsProvider, TtsProviderKind, TtsRequest, TtsVoiceInfo};
+use crate::infrastructure::process;
 
 /// Shared cancel flag for the in-flight Piper job (best-effort).
 #[derive(Debug, Default)]
@@ -90,7 +91,7 @@ impl PiperProvider {
             }
             // PATH lookup for bare names
             if path.components().count() == 1 {
-                if let Ok(output) = Command::new(if cfg!(windows) { "where" } else { "which" })
+                if let Ok(output) = process::command(if cfg!(windows) { "where" } else { "which" })
                     .arg(path.as_os_str())
                     .output()
                 {
@@ -243,7 +244,7 @@ impl TtsProvider for PiperProvider {
                 1.0
             };
 
-            let mut child = Command::new(&binary)
+            let mut child = process::command(&binary)
                 .arg("--model")
                 .arg(&model)
                 .arg("--output_file")
