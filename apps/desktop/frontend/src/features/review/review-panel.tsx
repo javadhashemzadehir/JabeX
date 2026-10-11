@@ -11,6 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { RichTextViewer } from "@/features/editor/rich-text-viewer";
 import { LanguageBadge } from "@/features/language-assist/language-badge";
+import { ReviewAudioButton } from "@/features/speech/review-audio-button";
+import {
+  playAudioBytes,
+} from "@/features/speech/audio-player";
+import {
+  browserTtsAvailable,
+  speakWithBrowser,
+} from "@/features/speech/browser-tts";
 import { formatChordLabel, matchesChord } from "@/features/shortcuts/chord";
 import { DEFAULT_KEYBOARD_SHORTCUTS } from "@/features/shortcuts/defaults";
 import {
@@ -21,6 +29,7 @@ import { useIsTauri } from "@/hooks/use-is-tauri";
 import { useTranslations } from "@/hooks/use-locale";
 import { useProfileStore } from "@/features/profiles/profile-store";
 import { useAppPreferencesStore } from "@/features/settings/app-preferences-store";
+import { api } from "@/lib/tauri";
 import { useReviewStore } from "./review-store";
 
 const GRADES: Grade[] = ["again", "hard", "good", "easy"];
@@ -54,12 +63,38 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
   const gradeHardChord = useShortcutChord("reviewGradeHard");
   const gradeGoodChord = useShortcutChord("reviewGradeGood");
   const gradeEasyChord = useShortcutChord("reviewGradeEasy");
+  const playAudioChord = useShortcutChord("reviewPlayAudio");
   const gradeChords = {
     again: gradeAgainChord,
     hard: gradeHardChord,
     good: gradeGoodChord,
     easy: gradeEasyChord,
   };
+
+  async function playCurrentAudio() {
+    if (!current) return;
+    try {
+      if (current.pronunciationAudioPath && tauri) {
+        const bytes = await api.readPronunciationAudio(current.id);
+        await playAudioBytes(bytes);
+        return;
+      }
+      if (browserTtsAvailable()) {
+        const lemma =
+          current.transliteration?.resolvedWord ||
+          current.pronunciationIpa?.replace(/\//g, "") ||
+          "";
+        if (lemma.trim()) {
+          await speakWithBrowser({
+            text: lemma,
+            language: current.detectedLanguage ?? "en",
+          });
+        }
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.languageAssist.playError);
+    }
+  }
 
   useEffect(() => {
     void hydrate(deckId ?? null);
@@ -87,6 +122,12 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
   const onReviewKeyDown = useEffectEvent((event: KeyboardEvent) => {
     if (!current || submitting || loading) return;
     if (isTypingTarget(event.target)) return;
+
+    if (matchesChord(event, shortcuts.reviewPlayAudio ?? "p")) {
+      event.preventDefault();
+      void playCurrentAudio();
+      return;
+    }
 
     if (
       matchesChord(event, shortcuts.reviewFlipOrGood) ||
@@ -229,6 +270,17 @@ export function ReviewPanel({ deckId }: { deckId?: string | null }) {
             </span>
             <LanguageBadge card={current} />
           </div>
+
+          <ReviewAudioButton
+            card={current}
+            side={revealed ? "back" : "front"}
+          />
+          <p className="text-xs text-muted-foreground">
+            {t.speech.playShortcutHint.replace(
+              "{key}",
+              formatChordLabel(playAudioChord),
+            )}
+          </p>
 
           <AnimatePresence mode="wait">
             <motion.div

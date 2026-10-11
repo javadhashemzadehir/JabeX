@@ -47,6 +47,9 @@ pub struct Card {
     pub translation: Option<String>,
     /// Profile-relative path under `media/audio/` when pronunciation was generated.
     pub pronunciation_audio_path: Option<String>,
+    /// Offline IPA hint when available (e.g. `/ˈæpəl/`).
+    #[serde(default)]
+    pub pronunciation_ipa: Option<String>,
     /// Present when the written form is a Persian (etc.) transliteration of a foreign lemma.
     pub transliteration: Option<TransliterationMetadata>,
     /// Async language-assist job status; failures never block card CRUD.
@@ -89,6 +92,7 @@ impl Card {
             detected_language: None,
             translation: None,
             pronunciation_audio_path: None,
+            pronunciation_ipa: None,
             transliteration: None,
             language_assist_status: LanguageAssistStatus::Idle,
             language_assist_overrides: LanguageAssistOverrides::default(),
@@ -105,6 +109,7 @@ impl Card {
         self.detected_language = None;
         self.translation = None;
         self.pronunciation_audio_path = None;
+        self.pronunciation_ipa = None;
         self.transliteration = None;
         self.language_assist_status = LanguageAssistStatus::Idle;
     }

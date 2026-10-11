@@ -4,5 +4,6 @@ pub mod decks;
 pub mod ink;
 pub mod reviews;
 pub mod search;
+pub mod speech;
 pub mod study_activity;
 pub mod trash;

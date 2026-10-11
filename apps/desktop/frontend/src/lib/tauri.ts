@@ -20,6 +20,7 @@ import type {
   InkOwnerType,
   LanguageAssistOverrides,
   LanguageAssistSettings,
+  TtsVoiceInfo,
   MediaIntegrityReport,
   MediaLibraryFilter,
   MediaLibraryItem,
@@ -130,6 +131,9 @@ export const api = {
     call<Card>("set_card_language_assist", {
       input: { cardId, overrides },
     }),
+  listTtsVoices: () => call<TtsVoiceInfo[]>("list_tts_voices"),
+  getSpeechVoicesDir: () => call<string>("get_speech_voices_dir"),
+  cancelPiperGeneration: () => call<void>("cancel_piper_generation"),
 
   listDueCards: (deckId?: DeckId | null, limit?: number) =>
     call<Card[]>("list_due_cards", {

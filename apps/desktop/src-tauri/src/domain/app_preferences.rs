@@ -20,6 +20,8 @@ pub struct KeyboardShortcuts {
     pub review_grade_good: String,
     #[serde(default = "default_review_grade_easy")]
     pub review_grade_easy: String,
+    #[serde(default = "default_review_play_audio")]
+    pub review_play_audio: String,
 }
 
 fn default_open_search() -> String {
@@ -43,6 +45,9 @@ fn default_review_grade_good() -> String {
 fn default_review_grade_easy() -> String {
     "4".into()
 }
+fn default_review_play_audio() -> String {
+    "p".into()
+}
 
 impl Default for KeyboardShortcuts {
     fn default() -> Self {
@@ -54,6 +59,7 @@ impl Default for KeyboardShortcuts {
             review_grade_hard: default_review_grade_hard(),
             review_grade_good: default_review_grade_good(),
             review_grade_easy: default_review_grade_easy(),
+            review_play_audio: default_review_play_audio(),
         }
     }
 }

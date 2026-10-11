@@ -126,12 +126,7 @@ pub fn detect_language(text: &str) -> LanguageDetectionResult {
 
     match script.as_str() {
         "arab" => detect_arabic_script(sample),
-        "latn" => LanguageDetectionResult {
-            language: "en".into(),
-            confidence: 0.55,
-            script,
-            transliteration: None,
-        },
+        "latn" => detect_latin(sample, script),
         "cyrl" => LanguageDetectionResult {
             language: "ru".into(),
             confidence: 0.5,
@@ -237,6 +232,78 @@ fn dominant_script(text: &str) -> String {
         "zyyy".into()
     }
 }
+
+fn detect_latin(sample: &str, script: String) -> LanguageDetectionResult {
+    let key = sample.to_ascii_lowercase();
+    if let Some((lang, confidence)) = LATIN_LEXICON
+        .iter()
+        .find(|(w, _, _)| *w == key)
+        .map(|(_, lang, conf)| (*lang, *conf))
+    {
+        return LanguageDetectionResult {
+            language: lang.into(),
+            confidence,
+            script,
+            transliteration: None,
+        };
+    }
+
+    // Light diacritic / orthography hints.
+    if key.chars().any(|c| "àâæçéèêëïîôœùûüÿ".contains(c)) {
+        return LanguageDetectionResult {
+            language: "fr".into(),
+            confidence: 0.6,
+            script,
+            transliteration: None,
+        };
+    }
+    if key.chars().any(|c| "äöüß".contains(c)) {
+        return LanguageDetectionResult {
+            language: "de".into(),
+            confidence: 0.6,
+            script,
+            transliteration: None,
+        };
+    }
+    if key.chars().any(|c| "ñ¿¡áéíóúü".contains(c)) {
+        return LanguageDetectionResult {
+            language: "es".into(),
+            confidence: 0.55,
+            script,
+            transliteration: None,
+        };
+    }
+
+    LanguageDetectionResult {
+        language: "en".into(),
+        confidence: 0.55,
+        script,
+        transliteration: None,
+    }
+}
+
+/// High-frequency study words for offline Latin language hints.
+const LATIN_LEXICON: &[(&str, &str, f64)] = &[
+    ("bonjour", "fr", 0.9),
+    ("merci", "fr", 0.85),
+    ("oui", "fr", 0.7),
+    ("non", "fr", 0.55),
+    ("eau", "fr", 0.75),
+    ("pomme", "fr", 0.85),
+    ("hallo", "de", 0.85),
+    ("danke", "de", 0.9),
+    ("wasser", "de", 0.85),
+    ("apfel", "de", 0.9),
+    ("hola", "es", 0.85),
+    ("gracias", "es", 0.9),
+    ("agua", "es", 0.8),
+    ("manzana", "es", 0.9),
+    ("hello", "en", 0.85),
+    ("apple", "en", 0.85),
+    ("water", "en", 0.8),
+    ("please", "en", 0.8),
+    ("computer", "en", 0.85),
+];
 
 fn detect_arabic_script(sample: &str) -> LanguageDetectionResult {
     let normalized = normalize_persian(sample);
@@ -368,6 +435,12 @@ pub fn study_lemma(detection: &LanguageDetectionResult, original: &str) -> (Stri
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn detects_french_bonjour() {
+        let r = detect_language("bonjour");
+        assert_eq!(r.language, "fr");
+    }
 
     #[test]
     fn detects_latin_as_english() {

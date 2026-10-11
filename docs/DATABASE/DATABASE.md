@@ -20,11 +20,16 @@
 │       │   ├── metadata.json
 │       │   └── thumbnails/
 │       ├── ink/{uuid}.json
-│       └── audio/pronunciation/{card_uuid}.mp3   # optional language-assist cache
+│       └── audio/
+│           ├── pronunciation/{card_uuid}.wav   # card TTS cache
+│           └── cache/{sha256}.wav              # content-addressed TTS
+├── data/
+│   ├── piper/          # optional Piper runtime
+│   └── voices/{lang}/  # optional Piper ONNX models
 └── backups/*.jbx
 ```
 
-Legacy folders (`media/images`, `media/drawings`) may exist on upgraded installs; new attachment writes use `attachments/` and `ink/`. Pronunciation TTS from Smart Language Assist uses `media/audio/pronunciation/` (ADR 011).
+Legacy folders (`media/images`, `media/drawings`) may exist on upgraded installs; new attachment writes use `attachments/` and `ink/`. Pronunciation TTS uses `media/audio/` (ADR 011 / ADR 016).
 
 Legacy single-file installs (`database.sqlite` at the app root) are migrated into a Default profile on first launch.
 
@@ -61,7 +66,10 @@ Migrations remain versioned SQL under `infrastructure/database/migrations/` (`V{
 | Table | Notes |
 |-------|-------|
 | `decks` | Soft-delete (`deleted_at` / `deleted_by`); `revision` |
-| `cards` | Soft-delete; Leitner `box_position`, `due_at`, `revision`; faces are versioned TipTap JSON in `front_content` / `back_content` TEXT; optional language-assist columns (`detected_language`, `translation`, `pronunciation_audio_path`, `transliteration_json`, `language_assist_status`, `language_assist_overrides_json`) |
+| `cards` | Soft-delete; Leitner `box_position`, `due_at`, `revision`; faces are versioned TipTap JSON in `front_content` / `back_content` TEXT; optional language-assist columns (`detected_language`, `translation`, `pronunciation_audio_path`, `pronunciation_ipa`, `transliteration_json`, `language_assist_status`, `language_assist_overrides_json`) |
+| `card_audio` | Content-addressed TTS metadata (`hash`, `provider`, `voice`, `file_path`) — ADR 016 |
+| `language_preferences` | Per-language preferred voice / speed / TTS provider |
+| `translation_cache` | Offline translation results (`source_text`, languages, `translated_text`) |
 | `reviews` | Append-only; `revision` (always 1 on insert) |
 | `study_activity` | Daily projection of reviews for streaks/heatmap (ADR 013); unique `(profile_id, activity_date)`; not a habit store |
 | `attachments` | Owner-polymorphic metadata only; files under `media/attachments/`; `revision`; soft-delete + library purge (hard delete) via media library |
@@ -109,9 +117,10 @@ Each deck may inherit that default or override it via `decks.settings.algorithm`
 (JSON: preset package or custom day intervals). Effective intervals are resolved
 at review time.
 
-Optional Smart Language Assist preferences live under `settings` key
+Optional Smart Language Assist / speech preferences live under `settings` key
 `language_assist` (JSON: `autoTranslation`, `pronunciationGeneration`,
-`provider`, `targetLanguage`). Defaults keep networking off.
+`ttsProvider`, `translationProvider`, `targetLanguage`, `speed`, `pitch`,
+`preferredVoice`, legacy `provider`). Defaults keep networking off (ADR 016).
 
 Per-deck overrides: `decks.settings.languageAssist` (`translation` /
 `pronunciation` ∈ `inherit` | `enabled` | `disabled`).
@@ -157,6 +166,7 @@ Versioned ZIP of normalized JSON documents + optional media. See [ADR 008](../AD
 | V8 | `study_activity` daily aggregates for learning consistency (ADR 013) |
 | V9 | Global search: `search_index` + FTS5, `recent_searches`, `search_history` (ADR 015) |
 | V10 | Partial indexes for active card lists / due queues (`idx_cards_deck_active_created`, `idx_cards_due_active`) |
+| V11 | Offline speech: `card_audio`, `language_preferences`, `translation_cache`, `cards.pronunciation_ipa` (ADR 016) |
 
 ## Privacy Notes
 

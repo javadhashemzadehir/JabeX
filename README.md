@@ -28,7 +28,6 @@ apps/desktop/frontend   # Next.js UI
 apps/desktop/src-tauri  # Tauri / Rust host
 packages/types          # Shared TypeScript contracts
 docs/                   # Product & architecture docs (one topic per folder)
-.cursor/rules/          # Cursor AI agent rules
 ```
 
 ## Quick start
@@ -99,6 +98,30 @@ pnpm lint
 pnpm typecheck
 pnpm test
 ```
+
+## Speech features
+
+JabeX includes an **offline-first** speech & language learning pipeline (ADR 016):
+
+| Capability | How it works |
+|------------|----------------|
+| Language detection | Local heuristics + lexicon (no network) |
+| Translation | Offline dictionary + SQLite `translation_cache`; optional local Argos CLI |
+| IPA hints | Bundled high-frequency dictionary |
+| TTS | **Piper** (optional models) → **Windows SAPI** → **Browser Speech API** |
+| Audio cache | SHA-256 of text + language + voice + speed; never regenerates duplicates |
+
+**Settings → Speech settings:** choose provider, voice, speed, auto-translate, auto-generate audio.
+
+**Optional Piper setup (high quality):**
+
+1. Download [Piper](https://github.com/rhasspy/piper) and place `piper.exe` under `%APPDATA%\JabeX\JabeX\data\piper\` (or set `JABEX_DATA_DIR`).
+2. Download voice `.onnx` (+ `.json`) models into `data\voices\{lang}\` (e.g. `en`, `fa`, `fr`).
+3. Select **Piper** or **Auto** in Speech settings.
+
+Windows voices already installed for English / Persian / French / etc. are used automatically via SAPI when Piper is unavailable.
+
+Review shortcut: **P** plays pronunciation (`Space` still flips / grades Good).
 
 ## Screenshots
 

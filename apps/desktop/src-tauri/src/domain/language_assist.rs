@@ -1,28 +1,67 @@
 use serde::{Deserialize, Serialize};
 
+use crate::domain::speech::TtsProviderKind;
+
 /// Profile settings key for optional language assist (stored in `settings`).
 pub const LANGUAGE_ASSIST_SETTING_KEY: &str = "language_assist";
 
-/// Optional network provider for translation / TTS. Default is none (fully offline).
+/// Translation backend. Offline is the default; Google is legacy/opt-out.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum TranslationProviderKind {
+    #[default]
+    Offline,
+    /// Legacy optional network adapter (disabled in UI; kept for stored settings).
+    Google,
+    None,
+}
+
+/// Legacy combined provider enum (ADR 011). Still accepted on deserialize.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum LanguageAssistProviderKind {
     #[default]
     None,
     Google,
+    Offline,
 }
 
 /// Per-profile toggles. Network work is never mandatory.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LanguageAssistSettings {
-    /// When true and a network provider is selected, translate after local detection.
+    /// When true, translate after local detection using the offline pack/cache.
     pub auto_translation: bool,
-    /// When true and a network provider is selected, synthesize pronunciation audio.
+    /// When true, synthesize pronunciation audio via the selected TTS provider.
     pub pronunciation_generation: bool,
-    pub provider: LanguageAssistProviderKind,
-    /// BCP-47 / Google-style language code for translation target (default Persian).
+    /// Preferred TTS backend (`auto` = Piper → SAPI → Browser).
+    #[serde(default)]
+    pub tts_provider: TtsProviderKind,
+    /// Preferred translation backend (default offline).
+    #[serde(default)]
+    pub translation_provider: TranslationProviderKind,
+    /// BCP-47-ish language code for translation target (default Persian).
     pub target_language: String,
+    /// Global TTS speed (overridden by language_preferences when set).
+    #[serde(default = "default_speed")]
+    pub speed: f32,
+    /// Global pitch hint for SAPI (1.0 = normal).
+    #[serde(default = "default_pitch")]
+    pub pitch: f32,
+    /// Optional preferred voice id (provider-specific).
+    #[serde(default)]
+    pub preferred_voice: Option<String>,
+    /// Legacy field from ADR 011 (`none` | `google` | `offline`).
+    #[serde(default)]
+    pub provider: LanguageAssistProviderKind,
+}
+
+fn default_speed() -> f32 {
+    1.0
+}
+
+fn default_pitch() -> f32 {
+    1.0
 }
 
 impl Default for LanguageAssistSettings {
@@ -30,27 +69,55 @@ impl Default for LanguageAssistSettings {
         Self {
             auto_translation: false,
             pronunciation_generation: false,
-            provider: LanguageAssistProviderKind::None,
+            tts_provider: TtsProviderKind::Auto,
+            translation_provider: TranslationProviderKind::Offline,
             target_language: "fa".into(),
+            speed: 1.0,
+            pitch: 1.0,
+            preferred_voice: None,
+            provider: LanguageAssistProviderKind::Offline,
         }
     }
 }
 
 impl LanguageAssistSettings {
+    /// Normalize legacy `provider` into the split translation/TTS fields.
+    pub fn normalize(mut self) -> Self {
+        match self.provider {
+            LanguageAssistProviderKind::Google => {
+                self.translation_provider = TranslationProviderKind::Google;
+            }
+            LanguageAssistProviderKind::Offline => {
+                self.translation_provider = TranslationProviderKind::Offline;
+            }
+            LanguageAssistProviderKind::None => {
+                // Old installs with provider=none meant "no network features".
+                // Keep translation_provider Offline so enabling toggles works locally.
+            }
+        }
+        self.speed = self.speed.clamp(0.5, 2.0);
+        self.pitch = self.pitch.clamp(0.5, 2.0);
+        self
+    }
+
     pub fn network_enabled(&self) -> bool {
-        !matches!(self.provider, LanguageAssistProviderKind::None)
+        matches!(self.translation_provider, TranslationProviderKind::Google)
             && (self.auto_translation || self.pronunciation_generation)
     }
 
+    /// Translation can run when an offline pack/cache or legacy Google is selected.
+    pub fn translation_ready(&self) -> bool {
+        !matches!(self.translation_provider, TranslationProviderKind::None)
+    }
+
     pub fn provider_ready(&self) -> bool {
-        !matches!(self.provider, LanguageAssistProviderKind::None)
+        self.translation_ready() || self.pronunciation_generation
     }
 }
 
 /// Per-deck / per-card override for a single language-assist feature.
 ///
 /// Resolution (most specific wins): card → deck → profile master toggle.
-/// Profile provider + feature flag remain the hard gate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum AssistToggle {
@@ -77,7 +144,7 @@ impl LanguageAssistOverrides {
         deck: &LanguageAssistOverrides,
     ) -> bool {
         resolve_assist_feature(
-            profile.provider_ready() && profile.auto_translation,
+            profile.auto_translation && profile.translation_ready(),
             deck.translation,
             self.translation,
         )
@@ -89,7 +156,7 @@ impl LanguageAssistOverrides {
         deck: &LanguageAssistOverrides,
     ) -> bool {
         resolve_assist_feature(
-            profile.provider_ready() && profile.pronunciation_generation,
+            profile.pronunciation_generation,
             deck.pronunciation,
             self.pronunciation,
         )
@@ -169,6 +236,17 @@ pub struct SpeechAudio {
     pub provider: &'static str,
 }
 
+impl From<crate::domain::speech::AudioFile> for SpeechAudio {
+    fn from(audio: crate::domain::speech::AudioFile) -> Self {
+        Self {
+            bytes: audio.bytes,
+            mime_type: audio.mime_type,
+            extension: audio.extension,
+            provider: audio.provider,
+        }
+    }
+}
+
 /// Port: detect language / transliteration without knowing providers.
 pub trait LanguageDetectionService: Send + Sync {
     fn detect(&self, text: &str) -> LanguageDetectionResult;
@@ -184,7 +262,7 @@ pub trait TranslationProvider: Send + Sync {
     ) -> crate::domain::errors::JabeXResult<TranslationResult>;
 }
 
-/// Port: optional TTS backend.
+/// Port: optional TTS backend (legacy thin wrapper around [`crate::domain::speech::TtsProvider`]).
 pub trait SpeechProvider: Send + Sync {
     fn synthesize(
         &self,
@@ -202,9 +280,18 @@ pub trait PronunciationAudioStorage: Send + Sync {
         extension: &str,
     ) -> crate::domain::errors::JabeXResult<String>;
 
+    fn store_cached_audio(
+        &self,
+        hash: &str,
+        bytes: &[u8],
+        extension: &str,
+    ) -> crate::domain::errors::JabeXResult<String>;
+
     fn remove_pronunciation(&self, relative_path: &str) -> crate::domain::errors::JabeXResult<()>;
 
     fn pronunciation_exists(&self, relative_path: &str) -> bool;
+
+    fn resolve_absolute(&self, relative_path: &str) -> std::path::PathBuf;
 }
 
 #[cfg(test)]
@@ -216,27 +303,30 @@ mod tests {
         let settings = LanguageAssistSettings::default();
         assert!(!settings.auto_translation);
         assert!(!settings.pronunciation_generation);
-        assert_eq!(settings.provider, LanguageAssistProviderKind::None);
+        assert_eq!(
+            settings.translation_provider,
+            TranslationProviderKind::Offline
+        );
+        assert_eq!(settings.tts_provider, TtsProviderKind::Auto);
         assert!(!settings.network_enabled());
     }
 
     #[test]
-    fn network_requires_provider_and_feature() {
-        let mut settings = LanguageAssistSettings {
+    fn offline_translation_ready_without_google() {
+        let settings = LanguageAssistSettings {
             auto_translation: true,
-            provider: LanguageAssistProviderKind::None,
             ..LanguageAssistSettings::default()
         };
-        assert!(!settings.network_enabled());
-        settings.provider = LanguageAssistProviderKind::Google;
-        assert!(settings.network_enabled());
+        assert!(settings.translation_ready());
+        let deck = LanguageAssistOverrides::default();
+        let card = LanguageAssistOverrides::default();
+        assert!(card.resolve_translation(&settings, &deck));
     }
 
     #[test]
-    fn card_can_disable_pronunciation_inside_enabled_deck() {
+    fn pronunciation_master_works_without_network() {
         let profile = LanguageAssistSettings {
             pronunciation_generation: true,
-            provider: LanguageAssistProviderKind::Google,
             ..LanguageAssistSettings::default()
         };
         let deck = LanguageAssistOverrides {
@@ -257,7 +347,7 @@ mod tests {
 
     #[test]
     fn profile_master_gates_all_overrides() {
-        let profile = LanguageAssistSettings::default(); // pronunciation off
+        let profile = LanguageAssistSettings::default();
         let deck = LanguageAssistOverrides {
             pronunciation: AssistToggle::Enabled,
             ..LanguageAssistOverrides::default()

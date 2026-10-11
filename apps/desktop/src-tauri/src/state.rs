@@ -240,10 +240,11 @@ impl AppState {
                 session.profile_id,
             )
         };
+        let app_root = self.app_paths.root.clone();
         let app = app.clone();
         tauri::async_runtime::spawn(async move {
             let result = tokio::task::spawn_blocking(move || {
-                let service = LanguageAssistService::from_session(db, media);
+                let service = LanguageAssistService::from_session(db, media, app_root);
                 service.process_card(card_id, force)
             })
             .await;
@@ -280,15 +281,16 @@ impl AppState {
             let session = self.session.read();
             (session.db.clone(), session.media.clone())
         };
-        let service = LanguageAssistService::from_session(db, media);
+        let service =
+            LanguageAssistService::from_session(db, media, self.app_paths.root.clone());
         service.process_card(card_id, force)
     }
 
     /// Run language assist off the async IPC worker.
     ///
-    /// `reqwest::blocking` (Google translate/TTS) builds its own Tokio runtime;
-    /// dropping that runtime on a `tokio-rt-worker` panics. Always call this from
-    /// async commands instead of [`Self::run_language_assist`].
+    /// Blocking TTS (SAPI/Piper) and legacy Google HTTP must not run on a
+    /// `tokio-rt-worker`. Always call this from async commands instead of
+    /// [`Self::run_language_assist`].
     pub async fn run_language_assist_blocking(
         &self,
         card_id: Uuid,
@@ -298,8 +300,9 @@ impl AppState {
             let session = self.session.read();
             (session.db.clone(), session.media.clone())
         };
+        let app_root = self.app_paths.root.clone();
         tokio::task::spawn_blocking(move || {
-            LanguageAssistService::from_session(db, media).process_card(card_id, force)
+            LanguageAssistService::from_session(db, media, app_root).process_card(card_id, force)
         })
         .await
         .map_err(|err| {
@@ -319,8 +322,9 @@ impl AppState {
             let session = self.session.read();
             (session.db.clone(), session.media.clone())
         };
+        let app_root = self.app_paths.root.clone();
         tokio::task::spawn_blocking(move || {
-            let service = LanguageAssistService::from_session(db, media);
+            let service = LanguageAssistService::from_session(db, media, app_root);
             let _ = service.set_card_overrides(card_id, overrides)?;
             service.process_card(card_id, true)
         })
@@ -339,7 +343,7 @@ impl AppState {
             let session = self.session.read();
             (session.db.clone(), session.media.clone())
         };
-        LanguageAssistService::from_session(db, media).load_settings()
+        LanguageAssistService::from_session(db, media, self.app_paths.root.clone()).load_settings()
     }
 
     pub fn set_language_assist_settings(
@@ -350,7 +354,8 @@ impl AppState {
             let session = self.session.read();
             (session.db.clone(), session.media.clone())
         };
-        LanguageAssistService::from_session(db, media).save_settings(settings)
+        LanguageAssistService::from_session(db, media, self.app_paths.root.clone())
+            .save_settings(settings)
     }
 
     pub fn set_card_language_assist_overrides(
@@ -362,7 +367,28 @@ impl AppState {
             let session = self.session.read();
             (session.db.clone(), session.media.clone())
         };
-        LanguageAssistService::from_session(db, media).set_card_overrides(card_id, overrides)
+        LanguageAssistService::from_session(db, media, self.app_paths.root.clone())
+            .set_card_overrides(card_id, overrides)
+    }
+
+    pub fn list_tts_voices(&self) -> JabeXResult<Vec<crate::domain::speech::TtsVoiceInfo>> {
+        let (db, media) = {
+            let session = self.session.read();
+            (session.db.clone(), session.media.clone())
+        };
+        LanguageAssistService::from_session(db, media, self.app_paths.root.clone())
+            .list_tts_voices()
+    }
+
+    pub fn speech_voices_dir(&self) -> std::path::PathBuf {
+        self.app_paths.root.join("data").join("voices")
+    }
+
+    pub fn cancel_piper_generation(&self) {
+        let piper = crate::infrastructure::providers::PiperProvider::from_app_root(
+            &self.app_paths.root,
+        );
+        piper.cancel_current();
     }
 
     pub fn read_pronunciation_bytes(&self, card_id: Uuid) -> JabeXResult<Vec<u8>> {

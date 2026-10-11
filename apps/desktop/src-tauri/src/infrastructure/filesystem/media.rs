@@ -21,7 +21,8 @@ use crate::infrastructure::database::DatabasePaths;
 /// media/attachments/{uuid}/metadata.json
 /// media/attachments/{uuid}/thumbnails/
 /// media/ink/{uuid}.json
-/// media/audio/pronunciation/{card_uuid}.mp3   # optional language-assist cache
+/// media/audio/pronunciation/{card_uuid}.wav   # optional language-assist cache
+/// media/audio/cache/{sha256}.wav              # content-addressed TTS cache
 /// ```
 #[derive(Clone)]
 pub struct LocalMediaStorage {
@@ -39,6 +40,22 @@ impl LocalMediaStorage {
 
     pub fn exists(&self, relative: &str) -> bool {
         self.absolute_path(relative).exists()
+    }
+
+    fn write_relative(&self, relative: &str, bytes: &[u8]) -> JabeXResult<()> {
+        let absolute = self.absolute_path(relative);
+        if let Some(parent) = absolute.parent() {
+            fs::create_dir_all(parent).map_err(|e| {
+                JabeXError::Filesystem(format!("failed to create media dir: {e}"))
+            })?;
+        }
+        self.ensure_under_media(&absolute)?;
+        let mut file = fs::File::create(&absolute).map_err(|e| {
+            JabeXError::Filesystem(format!("failed to create media file: {e}"))
+        })?;
+        file.write_all(bytes)
+            .map_err(|e| JabeXError::Filesystem(format!("failed to write media file: {e}")))?;
+        Ok(())
     }
 
     fn ensure_under_media(&self, absolute: &Path) -> JabeXResult<()> {
@@ -184,30 +201,41 @@ impl PronunciationAudioStorage for LocalMediaStorage {
         bytes: &[u8],
         extension: &str,
     ) -> JabeXResult<String> {
-        let ext = extension.trim_start_matches('.').to_ascii_lowercase();
-        let ext = if ext.is_empty() || !ext.chars().all(|c| c.is_ascii_alphanumeric()) {
-            "mp3".into()
-        } else {
-            ext
-        };
-
+        let ext = sanitize_audio_ext(extension);
         let dir = self.paths.audio_dir.join("pronunciation");
         fs::create_dir_all(&dir).map_err(|e| {
             JabeXError::Filesystem(format!("failed to create pronunciation audio dir: {e}"))
         })?;
 
         let relative = format!("media/audio/pronunciation/{card_id}.{ext}");
-        let absolute = self.absolute_path(&relative);
-        self.ensure_under_media(&absolute)?;
-
-        let mut file = fs::File::create(&absolute).map_err(|e| {
-            JabeXError::Filesystem(format!("failed to create pronunciation file: {e}"))
-        })?;
-        file.write_all(bytes).map_err(|e| {
-            JabeXError::Filesystem(format!("failed to write pronunciation file: {e}"))
-        })?;
-
+        self.write_relative(&relative, bytes)?;
         info!(%card_id, %relative, "pronunciation audio cached");
+        Ok(relative)
+    }
+
+    fn store_cached_audio(
+        &self,
+        hash: &str,
+        bytes: &[u8],
+        extension: &str,
+    ) -> JabeXResult<String> {
+        let ext = sanitize_audio_ext(extension);
+        let safe_hash = hash
+            .chars()
+            .filter(|c| c.is_ascii_hexdigit())
+            .collect::<String>();
+        if safe_hash.len() < 16 {
+            return Err(JabeXError::Validation("invalid audio cache hash".into()));
+        }
+        let dir = self.paths.audio_dir.join("cache");
+        fs::create_dir_all(&dir).map_err(|e| {
+            JabeXError::Filesystem(format!("failed to create audio cache dir: {e}"))
+        })?;
+        let relative = format!("media/audio/cache/{safe_hash}.{ext}");
+        if self.exists(&relative) {
+            return Ok(relative);
+        }
+        self.write_relative(&relative, bytes)?;
         Ok(relative)
     }
 
@@ -227,6 +255,19 @@ impl PronunciationAudioStorage for LocalMediaStorage {
 
     fn pronunciation_exists(&self, relative_path: &str) -> bool {
         !relative_path.trim().is_empty() && self.exists(relative_path)
+    }
+
+    fn resolve_absolute(&self, relative_path: &str) -> PathBuf {
+        self.absolute_path(relative_path)
+    }
+}
+
+fn sanitize_audio_ext(extension: &str) -> String {
+    let ext = extension.trim_start_matches('.').to_ascii_lowercase();
+    if ext.is_empty() || !ext.chars().all(|c| c.is_ascii_alphanumeric()) {
+        "wav".into()
+    } else {
+        ext
     }
 }
 

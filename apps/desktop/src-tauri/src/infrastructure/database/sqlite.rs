@@ -64,10 +64,23 @@ impl AppPaths {
     }
 
     fn ensure_directories(&self) -> JabeXResult<()> {
-        for dir in [&self.root, &self.profiles_dir, &self.backups_dir] {
+        let voices = self.root.join("data").join("voices");
+        let piper = self.root.join("data").join("piper");
+        for dir in [
+            &self.root,
+            &self.profiles_dir,
+            &self.backups_dir,
+            &voices,
+            &piper,
+        ] {
             std::fs::create_dir_all(dir).map_err(|e| {
                 JabeXError::Filesystem(format!("failed to create {}: {e}", dir.display()))
             })?;
+        }
+        // Starter language folders for optional Piper / pack downloads.
+        for lang in ["en", "fa", "fr", "de", "es", "ar", "ja", "zh"] {
+            let lang_dir = voices.join(lang);
+            let _ = std::fs::create_dir_all(lang_dir);
         }
         Ok(())
     }
@@ -235,7 +248,26 @@ impl Database {
                     .unwrap_or_default();
                 JabeXError::Migration(format!("{e}{hint}"))
             })?;
+        Self::ensure_pronunciation_ipa_column(&conn)?;
         info!("database migrations complete");
+        Ok(())
+    }
+
+    /// Idempotent additive column for offline IPA hints (ADR 016).
+    fn ensure_pronunciation_ipa_column(conn: &Connection) -> JabeXResult<()> {
+        let mut stmt = conn
+            .prepare("PRAGMA table_info(cards)")
+            .map_err(|e| JabeXError::Database(e.to_string()))?;
+        let names = stmt
+            .query_map([], |row| row.get::<_, String>(1))
+            .map_err(|e| JabeXError::Database(e.to_string()))?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| JabeXError::Database(e.to_string()))?;
+        if names.iter().any(|n| n == "pronunciation_ipa") {
+            return Ok(());
+        }
+        conn.execute("ALTER TABLE cards ADD COLUMN pronunciation_ipa TEXT", [])
+            .map_err(|e| JabeXError::Migration(e.to_string()))?;
         Ok(())
     }
 
@@ -452,8 +484,8 @@ mod tests {
             .expect("version2");
         assert_eq!(version1, version2);
         assert!(
-            version2 >= 10,
-            "expected migrations through V10, got {version2}"
+            version2 >= 11,
+            "expected migrations through V11, got {version2}"
         );
     }
 

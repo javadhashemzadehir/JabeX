@@ -40,6 +40,7 @@ pub fn map_card(row: &rusqlite::Row<'_>) -> rusqlite::Result<Card> {
         detected_language: row.get("detected_language")?,
         translation: row.get("translation")?,
         pronunciation_audio_path: row.get("pronunciation_audio_path")?,
+        pronunciation_ipa: row.get("pronunciation_ipa")?,
         transliteration: get_optional_json(row, "transliteration_json")?,
         language_assist_status,
         deleted_by: get_optional_uuid(row, "deleted_by")?,

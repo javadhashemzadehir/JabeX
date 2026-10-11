@@ -8,6 +8,7 @@ export const DEFAULT_KEYBOARD_SHORTCUTS: KeyboardShortcuts = {
   reviewGradeHard: "2",
   reviewGradeGood: "3",
   reviewGradeEasy: "4",
+  reviewPlayAudio: "p",
 };
 
 export type ShortcutActionId = keyof KeyboardShortcuts;
@@ -20,4 +21,5 @@ export const SHORTCUT_ACTION_ORDER: ShortcutActionId[] = [
   "reviewGradeHard",
   "reviewGradeGood",
   "reviewGradeEasy",
+  "reviewPlayAudio",
 ];

@@ -257,7 +257,12 @@ export type LanguageAssistStatus =
   | "failed"
   | "skipped";
 
-export type LanguageAssistProviderKind = "none" | "google";
+/** @deprecated Prefer translationProvider + ttsProvider (ADR 016). */
+export type LanguageAssistProviderKind = "none" | "google" | "offline";
+
+export type TranslationProviderKind = "offline" | "google" | "none";
+
+export type TtsProviderKind = "auto" | "piper" | "windows_sapi" | "browser";
 
 export interface TransliterationMetadata {
   isTransliteration: boolean;
@@ -270,8 +275,22 @@ export interface TransliterationMetadata {
 export interface LanguageAssistSettings {
   autoTranslation: boolean;
   pronunciationGeneration: boolean;
-  provider: LanguageAssistProviderKind;
+  /** Preferred TTS: Piper → Windows SAPI → Browser when `auto`. */
+  ttsProvider?: TtsProviderKind;
+  translationProvider?: TranslationProviderKind;
   targetLanguage: string;
+  speed?: number;
+  pitch?: number;
+  preferredVoice?: string | null;
+  /** Legacy ADR 011 field. */
+  provider?: LanguageAssistProviderKind;
+}
+
+export interface TtsVoiceInfo {
+  id: string;
+  name: string;
+  language: string;
+  provider: TtsProviderKind;
 }
 
 export interface Card {
@@ -289,6 +308,7 @@ export interface Card {
   detectedLanguage?: string | null;
   translation?: string | null;
   pronunciationAudioPath?: string | null;
+  pronunciationIpa?: string | null;
   transliteration?: TransliterationMetadata | null;
   languageAssistStatus?: LanguageAssistStatus;
   languageAssistOverrides?: LanguageAssistOverrides;
@@ -351,6 +371,8 @@ export interface KeyboardShortcuts {
   reviewGradeHard: string;
   reviewGradeGood: string;
   reviewGradeEasy: string;
+  /** Play card pronunciation audio during review (default `p`). */
+  reviewPlayAudio: string;
 }
 
 /** Device-level preferences (tray / window) — not per-profile study settings. */

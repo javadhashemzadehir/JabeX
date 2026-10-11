@@ -84,7 +84,7 @@ JabeX/
 Profiles: `list_profiles`, `get_active_profile`, `create_profile`, `update_profile`, `delete_profile`, `switch_profile`  
 Decks: `create_deck`, `list_decks`, `get_deck`, `rename_deck`, `delete_deck`  
 Cards: `create_card`, `get_card`, `list_cards`, `update_card`, `delete_card` (faces are versioned TipTap JSON `document_v2`; see ADR 009 / ADR 014)  
-Language assist: `get_language_assist_settings`, `set_language_assist_settings`, `regenerate_language_assist`, `read_pronunciation_audio` (ADR 011; create/update enqueue background detection)  
+Language assist / speech: `get_language_assist_settings`, `set_language_assist_settings`, `regenerate_language_assist`, `read_pronunciation_audio`, `set_card_language_assist`, `list_tts_voices`, `get_speech_voices_dir`, `cancel_piper_generation` (ADR 011 / ADR 016; create/update enqueue background detection)  
 Reviews: `list_due_cards`, `submit_review` (also projects into `study_activity` via `ReviewCompletedEvent`)  
 Stats: `get_study_stats` (local aggregates: decks, cards, due, reviews today, box distribution)  
 Study consistency: `get_study_consistency_stats`, `list_study_activity` (streaks / heatmap; ADR 013)  
@@ -114,5 +114,5 @@ Covers Leitner scheduling, migrations, media dedupe, card CRUD, profile bootstra
 - No telemetry / analytics SDKs
 - No online accounts — local profiles only
 - Core study path has no mandatory network calls
-- Optional Smart Language Assist may call Google Translate/TTS **only** when the user enables it in settings (ADR 011)
+- Offline speech (ADR 016) uses local dictionary/cache, Windows SAPI, and optional Piper — no network by default. Legacy Google adapters remain in code only for stored settings.
 - Logs never include card fronts/backs or other study content

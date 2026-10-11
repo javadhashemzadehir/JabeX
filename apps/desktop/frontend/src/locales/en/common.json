@@ -345,16 +345,16 @@
   "languageAssist": {
     "title": "Language assist",
     "settingsTitle": "Smart language assist",
-    "settingsDescription": "Optional local detection plus opt-in Google translation and spoken pronunciation. After enabling here, each deck and card can turn features on or off. Study always works offline.",
-    "provider": "Network provider",
-    "providerHint": "Leave off for fully offline use. Google is used only when you enable translation or spoken audio.",
-    "providerNone": "None (offline only)",
-    "providerGoogle": "Google Translate (optional)",
+    "settingsDescription": "Offline language detection, translation packs, and local TTS. After enabling here, each deck and card can turn features on or off.",
+    "provider": "Provider",
+    "providerHint": "Offline by default. Optional legacy Google remains available only if previously stored.",
+    "providerNone": "None",
+    "providerGoogle": "Google Translate (legacy)",
     "autoTranslation": "Text translation",
     "autoTranslationHint": "Master switch for this profile. Decks and cards can still disable or inherit.",
     "pronunciation": "Spoken pronunciation",
     "pronunciationHint": "Master switch for TTS audio. Example: enable for a deck, then disable on most cards and leave only a few with voice.",
-    "offlineNote": "Language detection always runs locally. Google is never required. Deck/card overrides only apply after you enable features here.",
+    "offlineNote": "Language detection, dictionary translation, and TTS stay on your device. No API keys.",
     "toggles": {
       "inherit": "Inherit",
       "enabled": "Enabled",
@@ -380,7 +380,38 @@
     "detectedHint": "Detected language: {lang}",
     "transliterationHint": "Persian transliteration of “{word}”",
     "emptyHint": "No language metadata yet. Detection runs after save; regenerate anytime.",
-    "failedHint": "Optional network assist failed. Your card is saved; try again when online."
+    "failedHint": "Language assist failed. Your card is saved; try regenerate."
+  },
+  "speech": {
+    "settingsTitle": "Speech settings",
+    "settingsDescription": "Offline pronunciation for flashcards. Piper (optional models), Windows SAPI, or browser speech — never a paid API.",
+    "languageTools": "Language tools",
+    "provider": "TTS provider",
+    "providerHint": "Auto tries Piper, then Windows SAPI, then browser speech.",
+    "providerAuto": "Auto (Piper → SAPI → Browser)",
+    "providerPiper": "Piper (offline high quality)",
+    "providerSapi": "Windows SAPI",
+    "providerBrowser": "Browser Speech API",
+    "voice": "Voice",
+    "voiceHint": "Installed SAPI / Piper voices for the selected provider.",
+    "voiceDefault": "Default",
+    "speed": "Speed",
+    "autoGenerateAudio": "Auto-generate audio",
+    "autoGenerateAudioHint": "Create and cache WAV pronunciation when cards are saved.",
+    "autoTranslateHint": "Translate using the offline dictionary cache (and Argos CLI if installed).",
+    "voicesDirHint": "Download Piper voice models into: {path}",
+    "offlineNote": "No telemetry. Audio and translations never leave this device.",
+    "detectedLanguage": "Detected language",
+    "unknownLanguage": "Unknown",
+    "pronunciation": "Pronunciation",
+    "generateAudio": "Generate audio",
+    "playAudio": "Play audio",
+    "stop": "Stop",
+    "repeat": "Repeat",
+    "shadowing": "Shadowing",
+    "shadowingHint": "Hear the audio, pause, then repeat aloud.",
+    "playShortcutHint": "Shortcut: {key}",
+    "failedHint": "Could not generate speech. Check Windows voices or Piper models under data/voices."
   },
   "profiles": {
     "label": "Profile",
@@ -556,7 +587,8 @@
         "reviewGradeAgain": "Grade: Again",
         "reviewGradeHard": "Grade: Hard",
         "reviewGradeGood": "Grade: Good",
-        "reviewGradeEasy": "Grade: Easy"
+        "reviewGradeEasy": "Grade: Easy",
+        "reviewPlayAudio": "Play pronunciation audio"
       }
     }
   },

@@ -2,11 +2,11 @@ pub const CARD_INSERT: &str = "INSERT INTO cards (
     id, deck_id, card_type, front_content, back_content,
     box_position, due_at, state, review_count, lapse_count,
     difficulty, revision, created_at, updated_at, deleted_at,
-    detected_language, translation, pronunciation_audio_path,
+    detected_language, translation, pronunciation_audio_path, pronunciation_ipa,
     transliteration_json, language_assist_status, deleted_by,
     language_assist_overrides_json
  ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15,
-           ?16, ?17, ?18, ?19, ?20, ?21, ?22)";
+           ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23)";
 
 pub const CARD_UPDATE: &str = "UPDATE cards SET
     deck_id = ?2,
@@ -25,10 +25,11 @@ pub const CARD_UPDATE: &str = "UPDATE cards SET
     detected_language = ?15,
     translation = ?16,
     pronunciation_audio_path = ?17,
-    transliteration_json = ?18,
-    language_assist_status = ?19,
-    deleted_by = ?20,
-    language_assist_overrides_json = ?21
+    pronunciation_ipa = ?18,
+    transliteration_json = ?19,
+    language_assist_status = ?20,
+    deleted_by = ?21,
+    language_assist_overrides_json = ?22
  WHERE id = ?1";
 
 pub const CARD_SOFT_DELETE: &str = "UPDATE cards
@@ -40,7 +41,7 @@ pub const CARD_HARD_DELETE: &str = "DELETE FROM cards WHERE id = ?1";
 pub const CARD_FIND_ACTIVE: &str = "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
-        detected_language, translation, pronunciation_audio_path,
+        detected_language, translation, pronunciation_audio_path, pronunciation_ipa,
         transliteration_json, language_assist_status, deleted_by,
         language_assist_overrides_json
  FROM cards WHERE id = ?1 AND deleted_at IS NULL";
@@ -48,7 +49,7 @@ pub const CARD_FIND_ACTIVE: &str = "SELECT id, deck_id, card_type, front_content
 pub const CARD_FIND_ANY: &str = "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
-        detected_language, translation, pronunciation_audio_path,
+        detected_language, translation, pronunciation_audio_path, pronunciation_ipa,
         transliteration_json, language_assist_status, deleted_by,
         language_assist_overrides_json
  FROM cards WHERE id = ?1";
@@ -57,7 +58,7 @@ pub const CARD_LIST_BY_DECK_ACTIVE: &str =
     "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
-        detected_language, translation, pronunciation_audio_path,
+        detected_language, translation, pronunciation_audio_path, pronunciation_ipa,
         transliteration_json, language_assist_status, deleted_by,
         language_assist_overrides_json
  FROM cards
@@ -68,7 +69,7 @@ pub const CARD_LIST_BY_DECK_ACTIVE_PAGE: &str =
     "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
-        detected_language, translation, pronunciation_audio_path,
+        detected_language, translation, pronunciation_audio_path, pronunciation_ipa,
         transliteration_json, language_assist_status, deleted_by,
         language_assist_overrides_json
  FROM cards
@@ -83,7 +84,7 @@ pub const CARD_LIST_BY_DECK_ALL: &str =
     "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
-        detected_language, translation, pronunciation_audio_path,
+        detected_language, translation, pronunciation_audio_path, pronunciation_ipa,
         transliteration_json, language_assist_status, deleted_by,
         language_assist_overrides_json
  FROM cards
@@ -93,7 +94,7 @@ pub const CARD_LIST_BY_DECK_ALL: &str =
 pub const CARD_LIST_ACTIVE: &str = "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
-        detected_language, translation, pronunciation_audio_path,
+        detected_language, translation, pronunciation_audio_path, pronunciation_ipa,
         transliteration_json, language_assist_status, deleted_by,
         language_assist_overrides_json
  FROM cards WHERE deleted_at IS NULL ORDER BY created_at ASC";
@@ -101,7 +102,7 @@ pub const CARD_LIST_ACTIVE: &str = "SELECT id, deck_id, card_type, front_content
 pub const CARD_LIST_ALL: &str = "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
-        detected_language, translation, pronunciation_audio_path,
+        detected_language, translation, pronunciation_audio_path, pronunciation_ipa,
         transliteration_json, language_assist_status, deleted_by,
         language_assist_overrides_json
  FROM cards ORDER BY created_at ASC";
@@ -110,7 +111,7 @@ pub const CARD_LIST_DUE_BY_DECK: &str =
     "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
-        detected_language, translation, pronunciation_audio_path,
+        detected_language, translation, pronunciation_audio_path, pronunciation_ipa,
         transliteration_json, language_assist_status, deleted_by,
         language_assist_overrides_json
  FROM cards
@@ -122,7 +123,7 @@ pub const CARD_LIST_DUE_BY_DECK_LIMITED: &str =
     "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
-        detected_language, translation, pronunciation_audio_path,
+        detected_language, translation, pronunciation_audio_path, pronunciation_ipa,
         transliteration_json, language_assist_status, deleted_by,
         language_assist_overrides_json
  FROM cards
@@ -134,7 +135,7 @@ pub const CARD_LIST_DUE_BY_DECK_LIMITED: &str =
 pub const CARD_LIST_DUE_ALL: &str = "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
-        detected_language, translation, pronunciation_audio_path,
+        detected_language, translation, pronunciation_audio_path, pronunciation_ipa,
         transliteration_json, language_assist_status, deleted_by,
         language_assist_overrides_json
  FROM cards
@@ -146,7 +147,7 @@ pub const CARD_LIST_DUE_ALL_LIMITED: &str =
     "SELECT id, deck_id, card_type, front_content, back_content,
         box_position, due_at, state, review_count, lapse_count,
         difficulty, revision, created_at, updated_at, deleted_at,
-        detected_language, translation, pronunciation_audio_path,
+        detected_language, translation, pronunciation_audio_path, pronunciation_ipa,
         transliteration_json, language_assist_status, deleted_by,
         language_assist_overrides_json
  FROM cards

@@ -8,6 +8,17 @@ import type { AssistToggle, Card, LanguageAssistOverrides } from "@jabex/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { PronunciationControls } from "@/features/speech/pronunciation-controls";
+import {
+  playAudioBytes,
+  sleep,
+  type PlaybackSpeed,
+} from "@/features/speech/audio-player";
+import {
+  browserTtsAvailable,
+  speakWithBrowser,
+  stopBrowserSpeech,
+} from "@/features/speech/browser-tts";
 import { useTranslations } from "@/hooks/use-locale";
 import { api, isTauri } from "@/lib/tauri";
 import { LanguageBadge } from "./language-badge";
@@ -17,6 +28,17 @@ const LANGUAGE_ASSIST_UPDATED_EVENT = "language-assist://updated";
 const DEFAULT_OVERRIDES: LanguageAssistOverrides = {
   translation: "inherit",
   pronunciation: "inherit",
+};
+
+const LANG_FLAGS: Record<string, string> = {
+  en: "🇬🇧",
+  fa: "🇮🇷",
+  fr: "🇫🇷",
+  de: "🇩🇪",
+  es: "🇪🇸",
+  ar: "🇸🇦",
+  ja: "🇯🇵",
+  zh: "🇨🇳",
 };
 
 type CardLanguageAssistPanelProps = {
@@ -31,10 +53,14 @@ export function CardLanguageAssistPanel({
   const t = useTranslations();
   const [busy, setBusy] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const objectUrlRef = useRef<string | null>(null);
+  const [speed, setSpeed] = useState<PlaybackSpeed>(1);
+  const [repeat, setRepeat] = useState(false);
+  const [shadowing, setShadowing] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   const overrides = card.languageAssistOverrides ?? DEFAULT_OVERRIDES;
+  const lang = card.detectedLanguage ?? "und";
+  const flag = LANG_FLAGS[lang] ?? "";
 
   const refreshCard = useCallback(async () => {
     if (!isTauri()) return;
@@ -66,31 +92,48 @@ export function CardLanguageAssistPanel({
 
   useEffect(() => {
     return () => {
-      if (objectUrlRef.current) {
-        URL.revokeObjectURL(objectUrlRef.current);
-        objectUrlRef.current = null;
-      }
-      audioRef.current?.pause();
+      abortRef.current?.abort();
+      stopBrowserSpeech();
     };
   }, []);
 
   async function playPronunciation() {
-    if (!isTauri() || !card.pronunciationAudioPath) return;
+    abortRef.current?.abort();
+    stopBrowserSpeech();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setPlaying(true);
     try {
-      const bytes = await api.readPronunciationAudio(card.id);
-      const blob = new Blob([new Uint8Array(bytes)], { type: "audio/mpeg" });
-      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-      const url = URL.createObjectURL(blob);
-      objectUrlRef.current = url;
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => setPlaying(false);
-      audio.onerror = () => setPlaying(false);
-      await audio.play();
+      do {
+        if (card.pronunciationAudioPath && isTauri()) {
+          const bytes = await api.readPronunciationAudio(card.id);
+          await playAudioBytes(bytes, {
+            playbackRate: speed,
+            signal: controller.signal,
+          });
+        } else if (browserTtsAvailable()) {
+          const text =
+            card.transliteration?.resolvedWord ||
+            card.pronunciationIpa ||
+            lemmaFromCard(card);
+          await speakWithBrowser({
+            text,
+            language: card.detectedLanguage ?? "en",
+            rate: speed,
+          });
+        } else {
+          throw new Error(t.languageAssist.playError);
+        }
+        if (shadowing) {
+          await sleep(1500, controller.signal);
+        }
+      } while (repeat && !controller.signal.aborted);
     } catch (err) {
+      if (!(err instanceof DOMException && err.name === "AbortError")) {
+        toast.error(err instanceof Error ? err.message : t.languageAssist.playError);
+      }
+    } finally {
       setPlaying(false);
-      toast.error(err instanceof Error ? err.message : t.languageAssist.playError);
     }
   }
 
@@ -127,13 +170,15 @@ export function CardLanguageAssistPanel({
   }
 
   const pending = card.languageAssistStatus === "pending" || busy;
+  const canPlay =
+    Boolean(card.pronunciationAudioPath) || browserTtsAvailable();
 
   return (
     <div className="space-y-3 rounded-md border border-border/60 bg-muted/15 px-3 py-2.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-xs font-medium text-muted-foreground">
-            {t.languageAssist.title}
+            {t.speech.languageTools}
           </p>
           <LanguageBadge card={card} />
           {pending ? (
@@ -144,7 +189,7 @@ export function CardLanguageAssistPanel({
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-1">
-          {card.pronunciationAudioPath ? (
+          {canPlay ? (
             <Button
               type="button"
               variant="outline"
@@ -169,10 +214,47 @@ export function CardLanguageAssistPanel({
             ) : (
               <RefreshCw className="size-3.5" />
             )}
-            {t.languageAssist.regenerate}
+            {t.speech.generateAudio}
           </Button>
         </div>
       </div>
+
+      <div className="space-y-1 text-sm">
+        <p className="text-pretty">
+          <span className="text-muted-foreground">
+            {t.speech.detectedLanguage}:{" "}
+          </span>
+          {flag ? `${flag} ` : null}
+          {lang === "und" ? t.speech.unknownLanguage : lang}
+        </p>
+        {card.translation ? (
+          <p className="text-pretty">
+            <span className="text-muted-foreground">
+              {t.languageAssist.translation}:{" "}
+            </span>
+            {card.translation}
+          </p>
+        ) : null}
+        <p className="text-pretty">
+          <span className="text-muted-foreground">
+            {t.speech.pronunciation}:{" "}
+          </span>
+          {card.pronunciationIpa ||
+            card.transliteration?.resolvedWord ||
+            lemmaFromCard(card) ||
+            "—"}
+        </p>
+      </div>
+
+      <PronunciationControls
+        speed={speed}
+        onSpeedChange={setSpeed}
+        repeat={repeat}
+        onRepeatChange={setRepeat}
+        shadowing={shadowing}
+        onShadowingChange={setShadowing}
+        disabled={playing}
+      />
 
       <p className="text-xs text-muted-foreground text-pretty">
         {t.languageAssist.cardHint}
@@ -201,15 +283,6 @@ export function CardLanguageAssistPanel({
         />
       </div>
 
-      {card.translation ? (
-        <p className="text-sm text-pretty">
-          <span className="text-muted-foreground">
-            {t.languageAssist.translation}:{" "}
-          </span>
-          {card.translation}
-        </p>
-      ) : null}
-
       {card.transliteration?.resolvedWord ? (
         <p className="text-xs text-muted-foreground text-pretty">
           {t.languageAssist.resolvedAs.replace(
@@ -221,11 +294,29 @@ export function CardLanguageAssistPanel({
 
       {card.languageAssistStatus === "failed" ? (
         <p className="text-xs text-destructive text-pretty">
-          {t.languageAssist.failedHint}
+          {t.speech.failedHint}
         </p>
       ) : null}
     </div>
   );
+}
+
+function lemmaFromCard(card: Card): string {
+  try {
+    const walk = (nodes: unknown[]): string =>
+      nodes
+        .map((n) => {
+          if (!n || typeof n !== "object") return "";
+          const node = n as { text?: string; content?: unknown[] };
+          if (typeof node.text === "string") return node.text;
+          if (Array.isArray(node.content)) return walk(node.content);
+          return "";
+        })
+        .join("");
+    return walk(card.frontContent.content ?? []).trim().split(/\s+/)[0] ?? "";
+  } catch {
+    return "";
+  }
 }
 
 function OverrideSelect({
