@@ -51,3 +51,28 @@ build/
 .turbo/
 .cache/
 .tmp/
+
+# ==================================================
+# Local AI Assistant / IDE Configuration
+# ==================================================
+# Personal / machine-local assistant tooling only.
+# Do NOT ignore project docs (README, ADRs, DEVELOPMENT, etc.).
+# Keep tracked AGENTS.md when it is legitimate project documentation
+# (e.g. Next.js-generated frontend AGENTS.md).
+
+.cursor/
+.cursorrules
+.cursorignore
+
+# Local agent instructions
+AGENTS.local.md
+*.agent.local.md
+
+# Local AI assistant configs
+.ai/
+.agent/
+.continue/
+
+# Other AI coding assistants
+.claude/
+.windsurf/
