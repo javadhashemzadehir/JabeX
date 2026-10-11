@@ -120,7 +120,7 @@ Seed scripts target the local app-data directory (`directories` ProjectDirs). Qu
   - Do not introduce non-shadcn UI kits (FarsiUI, MUI, Chakra, …)
 - Fonts: local only (no Google Fonts). Persian (`fa`) uses Iran Yekan Bakh FaNum; English (`en`) uses Comfortaa. Files live in `apps/desktop/frontend/src/fonts`.
 - RTL: `dir` on `<html>` + Radix `DirectionProvider`
-- Tailwind CSS v4: use canonical logical utilities (`inset-s-*` / `inset-e-*`, `ms-*` / `me-*`, `ps-*` / `pe-*`, `border-s-*` / `border-e-*`, `text-start` / `text-end`, `bg-linear-to-*`). Do not use deprecated inset aliases (`start-*` / `end-*`) or physical left/right spacing when a logical equivalent exists. See `.cursor/rules/frontend-guidelines.mdc`.
+- Tailwind CSS v4: use canonical logical utilities (`inset-s-*` / `inset-e-*`, `ms-*` / `me-*`, `ps-*` / `pe-*`, `border-s-*` / `border-e-*`, `text-start` / `text-end`, `bg-linear-to-*`). Do not use deprecated inset aliases (`start-*` / `end-*`) or physical left/right spacing when a logical equivalent exists.
 
 ## Tauri Notes
 
@@ -142,7 +142,7 @@ Seed scripts target the local app-data directory (`directories` ProjectDirs). Qu
 
 ## Coding Standards
 
-Follow `.cursor/rules/` and keep changes aligned with ADRs. Do not add analytics, auth, or cloud dependencies.
+Keep changes aligned with ADRs. Do not add analytics, auth, or cloud dependencies.
 
 ## System tray (Windows)
 

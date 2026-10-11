@@ -2,7 +2,6 @@
 
 ## Phase 0 — Foundation
 
-- [x] Cursor agent rules
 - [x] Product & architecture docs + ADRs
 - [x] Monorepo workspace layout
 - [x] Next.js + Tailwind + TypeScript

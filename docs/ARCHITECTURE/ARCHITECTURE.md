@@ -34,7 +34,6 @@ Local **profiles** isolate study data per person on the device (no online identi
 | `apps/desktop/src-tauri` | Tauri + Rust backend |
 | `packages/types` | Shared TypeScript contracts |
 | `docs/` | Product, architecture, ADRs (each doc in its own folder) |
-| `.cursor/rules/` | AI agent rules |
 
 ## Frontend Layers
 
