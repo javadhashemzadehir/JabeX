@@ -1,6 +1,6 @@
 [package]
 name = "jabex"
-version = "0.1.3"
+version = "0.1.4"
 description = "JabeX — private, offline-first Leitner Box"
 authors = ["JabeX Contributors"]
 edition = "2021"

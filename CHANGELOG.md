@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-10-11
+
+### Fixed
+
+- Hide console windows when spawning PowerShell (Windows SAPI voice list / TTS), Piper, and Argos from the desktop app — Settings no longer flashes a PowerShell window
+
 ## [0.1.3] - 2026-10-11
 
 ### Added
@@ -58,7 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Least-privilege Tauri capabilities; user data stays on device
 - No auto-updater in this release (user-downloaded builds only)
 
-[Unreleased]: https://github.com/javadhashemzadehir/JabeX/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/javadhashemzadehir/JabeX/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.4
 [0.1.3]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.3
 [0.1.2]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.2
 [0.1.1]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.1
