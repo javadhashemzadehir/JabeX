@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-11
+
+### Added
+
+- Offline pronunciation and translation pipeline for language assist
+
+### Fixed
+
+- TTS voice select max-width so the settings control fits the UI better
+
 ## [0.1.2] - 2026-10-11
 
 ### Fixed
@@ -48,7 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Least-privilege Tauri capabilities; user data stays on device
 - No auto-updater in this release (user-downloaded builds only)
 
-[Unreleased]: https://github.com/javadhashemzadehir/JabeX/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/javadhashemzadehir/JabeX/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.3
 [0.1.2]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.2
 [0.1.1]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.1
 [0.1.0]: https://github.com/javadhashemzadehir/JabeX/releases/tag/v0.1.0
